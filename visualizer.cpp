@@ -16,6 +16,14 @@ void Box::log()
 	}
 }
 
+void Box::set_selected_col(std::string hex)
+{
+}
+
+void Box::set_col(std::string hex)
+{
+}
+
 void Box::create_box()
 {
 
