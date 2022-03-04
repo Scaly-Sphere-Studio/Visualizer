@@ -9,6 +9,13 @@ Box::~Box()
 {
 }
 
+void Box::log()
+{
+	for (Vertex v : model) {
+		std::cout << v._x << " ; " << v._y << " ; " << v._z << std::endl;
+	}
+}
+
 void Box::create_box()
 {
 

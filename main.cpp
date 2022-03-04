@@ -3,6 +3,51 @@
 #include <SSS/GL.hpp>
 #include "shader.hpp"
 #include "visualizer.h"
+#include <sstream>
+
+
+std::vector<std::string> split_str(std::string src, unsigned int split_len){
+
+    unsigned int nb_split = static_cast<unsigned int>(std::floor(src.size() / split_len));
+    std::vector<std::string> split_vec;
+
+    for (unsigned int i = 0; i < nb_split; i++) {
+        split_vec.push_back(src.substr(i * split_len, split_len));
+    }
+
+    if (src.size() % split_len != 0) {
+        split_vec.push_back(src.substr(nb_split * split_len));
+    }
+
+    return split_vec;
+};
+
+
+glm::vec3 hex_to_rgb(std::string hex) {
+
+    //Delete the first # char if there is one
+    if (hex.at(0) == '#') {
+        hex.erase(0, 1);
+    }
+
+    //Check if the hex correspond to a color
+    if (hex.size() != 6) {
+        std::cout << "Hex value is invalid" << std::endl;
+        return glm::vec3{ 1.0f };
+    }
+    
+    std::vector<std::string> colors = split_str(hex, 2);
+    
+    float r = static_cast<float>(std::stoi(colors[0], NULL, 16))/255.0f;
+    float g = static_cast<float>(std::stoi(colors[1], NULL, 16))/255.0f;
+    float b = static_cast<float>(std::stoi(colors[2], NULL, 16))/255.0f;
+
+    std::cout << r << g << b << std::endl;
+
+    return glm::vec3(r,g,b);
+};
+
+
 
 int main(void)
 {
@@ -14,7 +59,11 @@ int main(void)
     // Create a window. This is where the OpenGL context is created.
     GLFWwindow* window;
 
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    int w_h = 640;
+    int w_w = 480;
+
+
+    window = glfwCreateWindow(w_h, w_w, "Hello World", NULL, NULL);
     if (!window)
     {
         __LOG_ERR("GLFW couldn't create the window context");
@@ -33,6 +82,7 @@ int main(void)
 
     //// Set the VSYNC
     //window->setVSYNC(false);
+
 
     // Enable blending (transparency)
     glEnable(GL_BLEND);
@@ -59,7 +109,10 @@ int main(void)
     };
 
 
-    Box box{ 0.5f , 0.5f };
+    Box box{ 0.0f , 0.0f };
+
+
+    box.log();
 
     // This will identify our vertex buffer
     GLuint vertexbuffer;
@@ -68,10 +121,30 @@ int main(void)
     // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, box.model.size() * sizeof(Vertex), &box.model, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, box.model.size() * sizeof(Vertex), box.model.data(), GL_STATIC_DRAW);
 
     GLuint programID = LoadShaders("triangle.vert", "triangle.frag");
     glUseProgram(programID);
+
+
+    //CAMERA SETUP AND CANVAS
+    glm::mat4 projection = glm::ortho(-static_cast<float>(w_h) / 2, static_cast<float>(w_h)/2, -static_cast<float>(w_w) / 2, static_cast<float>(w_w)/2, 0.0f, 100.0f);
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::lookAt(
+        glm::vec3(0, 0, 3), // Camera is at (4,3,3), in World Space
+        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+
+    glm::mat4 mvp = projection * view * model;
+    GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+
+    //CONVERTION FROM STR HEX TO INT
+    std::cout << std::stoi("2A", NULL, 16) << std::endl;
+
+    glm::vec3 clear_color = hex_to_rgb("#1D3958");
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -81,7 +154,10 @@ int main(void)
         
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0, 0, 1, 0);
+
+
+        glClearColor(clear_color.r, clear_color.g, clear_color.b, 0);
+        
 
         
 

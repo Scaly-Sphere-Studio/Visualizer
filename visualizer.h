@@ -15,8 +15,9 @@ public:
 	~Box();
 
 	std::vector<Vertex> model;
+	void log();
 private:
-	int _h, _w;
+	float _h = 150.0f, _w = 150.0f;
 	bool _selected;
 	
 	glm::vec3 pos = glm::vec3(0, 0, 0);
