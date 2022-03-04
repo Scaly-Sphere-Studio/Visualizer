@@ -1,17 +1,19 @@
 #pragma once
 #include <SSS/GL.hpp>
 #include <vector>
+#include "commons.h"
 
 
 struct Vertex {
-	Vertex(float x, float y, float z);
+	Vertex(float x, float y, float z, glm::vec3 col);
 	float _x, _y, _z;
+	glm::vec3 _col;
 };
 
 class Box
 {
 public:
-	Box(float width, float height);
+	Box(float width, float height, std::string hex = "FFFFFF");
 	~Box();
 
 	std::vector<Vertex> model;
@@ -23,8 +25,8 @@ private:
 	bool _selected;
 	
 	glm::vec3 pos = glm::vec3(0, 0, 0);
-	glm::vec4 base_color = glm::vec4(0, 0, 0, 1);
-	glm::vec4 selected_color = glm::vec4(1, 1, 1, 1);	
+	glm::vec3 base_color = glm::vec3(0, 0, 0);
+	glm::vec3 selected_color = glm::vec3(1, 1, 1);	
 
 	void create_box();
 };
