@@ -32,7 +32,7 @@ private:
 	
 	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::vec3 base_color = glm::vec3(0, 0, 0);
-	glm::vec3 selected_color = glm::vec3(1, 1, 1);	
+	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);	
 
 	void create_box();
 };
@@ -47,7 +47,7 @@ public:
 
 private:
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
-	Box box{ 0.0f , 0.0f };
+	Box box{ 0.0f , 0.0f, "FFCFD2"};
 	GLFWwindow* window;
 	GLuint vertexbuffer;
 

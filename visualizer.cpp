@@ -36,8 +36,8 @@ void Box::update()
 bool Box::check_collision(double x, double y)
 {
     //si x1 < x < x2 and y1 < y < y2
-    if( (x > pos.x && x < pos.x + _w) &&
-        (y > pos.y && y < pos.y + _h) )  {
+    if( (x > pos.x - _w / 2.0 && x < pos.x + _w / 2.0) &&
+        (y > pos.y - _h / 2.0 && y < pos.y + _h / 2.0) )  {
         
         if (!_selected) {
             //switch selected state
@@ -63,13 +63,13 @@ bool Box::check_collision(double x, double y)
 
 void Box::create_box()
 {
-	model.emplace_back(pos.x, pos.y, 0.0f, base_color);
-	model.emplace_back(pos.x, pos.y - _h, 0.0f, base_color);
-	model.emplace_back(pos.x + _w, pos.y - _h, 0.0, base_color);
+	model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0f, base_color);
+	model.emplace_back(pos.x - _w / 2.0f, pos.y - _h / 2.0f, 0.0f, base_color);
+	model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
 
-	model.emplace_back(pos.x + _w, pos.y - _h, 0.0, base_color);
-	model.emplace_back(pos.x + _w, pos.y, 0.0, base_color);
-	model.emplace_back(pos.x, pos.y, 0.0, base_color);
+	model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
+	model.emplace_back(pos.x + _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
+	model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
 }
 
 Vertex::Vertex(float x, float y, float z, glm::vec3 col)
@@ -90,7 +90,7 @@ Visualizer::Visualizer()
 
     // Create a window. This is where the OpenGL context is created.
 
-
+    box.set_selected_col("C32530");
 
 
     window = glfwCreateWindow(w_w, w_h, "Hello World", NULL, NULL);
@@ -105,13 +105,6 @@ Visualizer::Visualizer()
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
     }
-
-    //Set the multiple input callbacks
-    /*glfwSetCursorPosCallback(window, cursor_position_callback);*/
-
-    //// Set the window's callbacks
-    //window->setCallback(glfwSetKeyCallback, key_callback);
-    //window->setCallback(glfwSetMouseButtonCallback, mouse_button_callback);
 
 
 
@@ -185,9 +178,9 @@ void Visualizer::run()
 
 
         glfwGetCursorPos(window, &c_x, &c_y);
+        std::cout << "x : " << c_x << ", y :" << (w_h - c_y) << std::endl;
 
-
-        box.check_collision(c_x + cam_pos.x, c_y + cam_pos.y);
+        box.check_collision(c_x + cam_pos.x, (w_h - c_y) + cam_pos.y);
 
         float speed = 1.0f;
 
