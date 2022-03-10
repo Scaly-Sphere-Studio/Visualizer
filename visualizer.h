@@ -46,8 +46,15 @@ public:
 	void run();
 
 private:
+
+	void draw(GLuint buffer, void* data, size_t size);
+	void input();
+	void debug_show(GLuint buffer, void* data, size_t size);
+
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
-	Box box{ 0.0f , 0.0f, "FFCFD2"};
+	std::vector<Box> boxes;
+	std::vector<Vertex> test_batch;
+	/*Box box{ 0.0f , 0.0f, "FFCFD2"};*/
 	GLFWwindow* window;
 	GLuint vertexbuffer;
 
