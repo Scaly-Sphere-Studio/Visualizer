@@ -4,6 +4,7 @@
 #include "commons.h"
 #include "shader.hpp"
 #include "visualizer.h"
+#include <cmath>
 
 
 
@@ -53,10 +54,15 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
-	std::vector<Vertex> test_batch;
-	/*Box box{ 0.0f , 0.0f, "FFCFD2"};*/
+	std::vector<Vertex> batch;
+	
+
 	GLFWwindow* window;
 	GLuint vertexbuffer;
+
+	//DEBUG
+	GLuint debug_vb;
+	std::vector<Vertex> debug_batch;
 
 	double c_x = 0.0, c_y = 0.0;
 	glm::mat4 projection;
@@ -69,5 +75,8 @@ private:
 	int w_w = 640;
 
 	glm::vec3 cam_pos{ 0,0,3 };
+
+	void circle(float x, float y, float radius);
+	void square(float x, float y, float radius);
 	
 };

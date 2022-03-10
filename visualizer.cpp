@@ -1,6 +1,7 @@
 #include "visualizer.h"
 
 bool debugmode = true;
+glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
 
 Box::Box(float width, float height, std::string hex)
 {
@@ -128,8 +129,7 @@ Visualizer::Visualizer()
     glBindVertexArray(VertexArrayID);
 
     glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-
+    glGenBuffers(1, &debug_vb);
 
     GLuint programID = LoadShaders("triangle.vert", "triangle.frag");
     glUseProgram(programID);
@@ -155,12 +155,11 @@ Visualizer::Visualizer()
     boxes.emplace_back(-100.0f, 150.0f, "00CFD2");
 
 
-    
-
 }
 
 Visualizer::~Visualizer()
 {
+    debug_batch.clear();
 }
 
 void Visualizer::run()
@@ -171,10 +170,13 @@ void Visualizer::run()
         input();
 
 
+        //Gen batch
         for (int i = 0; i < boxes.size(); i++) {
             batch.insert(batch.end(), boxes[i].model.begin(), boxes[i].model.end());
         }
 
+
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
         glBufferData(GL_ARRAY_BUFFER,
             batch.size() * sizeof(Vertex),
             batch.data(),
@@ -182,15 +184,16 @@ void Visualizer::run()
 
         glClearColor(clear_color.r, clear_color.g, clear_color.b, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+ 
 
-
-
+        //Collision test
         glfwGetCursorPos(window, &c_x, &c_y);
-        /*std::cout << "x : " << c_x << ", y :" << (w_h - c_y) << std::endl;*/
-
         for (unsigned int i = 0; i < boxes.size();i++) {
-            boxes[i].check_collision(c_x + cam_pos.x, (w_h - c_y) + cam_pos.y);
+            if (boxes[i].check_collision(c_x + cam_pos.x, (w_h - c_y) + cam_pos.y)
+                && (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS )) {
+                std::cout << "clicked" << std::endl;
+            }
+            
         }
         
 
@@ -206,14 +209,19 @@ void Visualizer::run()
 
         draw(vertexbuffer, batch.data(), batch.size());
 
-        //if (debugmode) {
-        //    debug_show();
-        //}
 
 
+        glBindBuffer(GL_ARRAY_BUFFER, debug_vb);
+        glBufferData(GL_ARRAY_BUFFER,
+            debug_batch.size() * sizeof(Vertex),
+            debug_batch.data(),
+            GL_STATIC_DRAW);
+
+        debug_show(debug_vb, debug_batch.data(), debug_batch.size());
         glfwSwapBuffers(window);
 
         batch.clear();
+        //debug_batch.clear();
     }
 }
 
@@ -247,6 +255,7 @@ void Visualizer::draw(GLuint buffer, void* data, size_t size)
 
     // Draw the triangle !
     glDrawArrays(GL_TRIANGLES, 0, size); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }
@@ -303,5 +312,36 @@ void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
     glDrawArrays(GL_LINES, 0, size); // Starting from vertex 0; 3 vertices total -> 1 triangle
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+}
+
+void Visualizer::circle(float x, float y, float radius)
+{
+    float branch = 100.0f;
+    for (unsigned int i = 0; i < static_cast<unsigned int>(branch); i++) {
+
+        debug_batch.emplace_back(
+            x + radius * glm::cos(2.0f * i * glm::pi<float>() / branch),
+            y + radius * glm::sin(2.0f * i * glm::pi<float>() / branch),
+            0.1f, debug_color);
+        debug_batch.emplace_back(
+            x + radius * glm::cos(2.0f * ((i+1) % static_cast<int>(branch)) * glm::pi<float>() / branch),
+            y + radius * glm::sin(2.0f * ((i+1) % static_cast<int>(branch)) * glm::pi<float>() / branch),
+            0.1f, debug_color);
+    }
+}
+
+void Visualizer::square(float x, float y, float radius)
+{
+    debug_batch.emplace_back(x + radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x + radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+
+    debug_batch.emplace_back(x + radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x - radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+
+    debug_batch.emplace_back(x - radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x - radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
+
+    debug_batch.emplace_back(x - radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x + radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
 }
 
