@@ -71,12 +71,15 @@ private:
 
 	GLuint MatrixID;
 
-	int w_h = 480;
-	int w_w = 640;
+	int w_h = 700;
+	int w_w = 900;
 
 	glm::vec3 cam_pos{ 0,0,3 };
 
 	void circle(float x, float y, float radius);
 	void square(float x, float y, float radius);
+
+	void cross(float x, float y, float radius, float angle = 0);
+	void rectangle(float x, float y, float width, float height);
 	
 };

@@ -94,11 +94,6 @@ Visualizer::Visualizer()
         std::cout << "couldn't init glfw" << std::endl;
     }
 
-    // Create a window. This is where the OpenGL context is created.
-
-
-
-
     window = glfwCreateWindow(w_w, w_h, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -106,7 +101,7 @@ Visualizer::Visualizer()
     }
 
     glfwMakeContextCurrent(window);
-    /*glfwSetWindowPos(window, 100, 100);*/
+    glfwSetWindowPos(window, 600, 100);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -134,10 +129,10 @@ Visualizer::Visualizer()
     GLuint programID = LoadShaders("triangle.vert", "triangle.frag");
     glUseProgram(programID);
 
-    cam_pos = glm::vec3(-static_cast<float>(w_w)/2.0f, -static_cast<float>(w_h)/2.0f, 3.0f);
+    /*cam_pos = glm::vec3(-static_cast<float>(w_w)/2.0f, -static_cast<float>(w_h)/2.0f, 3.0f);*/
 
     //CAMERA SETUP AND CANVAS
-    projection = glm::ortho(0.0f, static_cast<float>(w_w), 0.0f, static_cast<float>(w_h), 0.0f, 100.0f);
+    projection = glm::ortho(-static_cast<float>(w_w)/2, static_cast<float>(w_w)/2, -static_cast<float>(w_h)/2, static_cast<float>(w_h)/2, 0.0f, 100.0f);
     view = glm::lookAt(
         cam_pos, // Camera is at (4,3,3), in World Space
         glm::vec3(cam_pos.x, cam_pos.y, 0), // and looks at the origin
@@ -155,11 +150,28 @@ Visualizer::Visualizer()
     boxes.emplace_back(-100.0f, 150.0f, "00CFD2");
 
 
+    rectangle(0, 0, 300, 150);
+
+    float cursor_size = 5;
+    cross(0, 0, cursor_size);
+    circle(0, 0, cursor_size);
+
+    circle(150, 0, cursor_size);
+    circle(-150, 0, cursor_size);    
+    circle(0, 75, cursor_size);
+    circle(0, -75, cursor_size); 
+
+    circle(150, 75, cursor_size);
+    circle(150, -75, cursor_size);    
+    circle(-150, 75, cursor_size);
+    circle(-150, -75, cursor_size);
+
 }
 
 Visualizer::~Visualizer()
 {
     debug_batch.clear();
+    batch.clear();
 }
 
 void Visualizer::run()
@@ -189,7 +201,7 @@ void Visualizer::run()
         //Collision test
         glfwGetCursorPos(window, &c_x, &c_y);
         for (unsigned int i = 0; i < boxes.size();i++) {
-            if (boxes[i].check_collision(c_x + cam_pos.x, (w_h - c_y) + cam_pos.y)
+            if (boxes[i].check_collision((c_x - w_w/2) + cam_pos.x, (w_h/2 - c_y) + cam_pos.y)
                 && (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS )) {
                 std::cout << "clicked" << std::endl;
             }
@@ -209,7 +221,26 @@ void Visualizer::run()
 
         draw(vertexbuffer, batch.data(), batch.size());
 
+        rectangle(0, 0, 300, 150);
 
+        float cursor_size = 5;
+        cross(0, 0, cursor_size);
+        circle(0, 0, cursor_size);
+
+        circle(150, 0, cursor_size);
+        circle(-150, 0, cursor_size);
+        circle(0, 75, cursor_size);
+        circle(0, -75, cursor_size);
+
+        circle(150, 75, cursor_size);
+        circle(150, -75, cursor_size);
+        circle(-150, 75, cursor_size);
+        circle(-150, -75, cursor_size);
+
+        std::cout << cam_pos.x << "," << cam_pos.y << std::endl;
+
+        //FRUSTRUM
+        rectangle(cam_pos.x, cam_pos.y, w_w * 2/3, w_h * 2/3);
 
         glBindBuffer(GL_ARRAY_BUFFER, debug_vb);
         glBufferData(GL_ARRAY_BUFFER,
@@ -221,7 +252,7 @@ void Visualizer::run()
         glfwSwapBuffers(window);
 
         batch.clear();
-        //debug_batch.clear();
+        debug_batch.clear();
     }
 }
 
@@ -316,7 +347,7 @@ void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
 
 void Visualizer::circle(float x, float y, float radius)
 {
-    float branch = 100.0f;
+    float branch = 20.0f;
     for (unsigned int i = 0; i < static_cast<unsigned int>(branch); i++) {
 
         debug_batch.emplace_back(
@@ -332,16 +363,43 @@ void Visualizer::circle(float x, float y, float radius)
 
 void Visualizer::square(float x, float y, float radius)
 {
-    debug_batch.emplace_back(x + radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
-    debug_batch.emplace_back(x + radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+    rectangle(x, y, radius, radius);
+}
 
-    debug_batch.emplace_back(x + radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
-    debug_batch.emplace_back(x - radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
+void Visualizer::rectangle(float x, float y, float width, float height)
+{
+    debug_batch.emplace_back(x + width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x + width / 2.0f, y + height / 2.0f, 0.1f, debug_color);
 
-    debug_batch.emplace_back(x - radius / 2.0f, y + radius / 2.0f, 0.1f, debug_color);
-    debug_batch.emplace_back(x - radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x + width / 2.0f, y + height / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x - width / 2.0f, y + height / 2.0f, 0.1f, debug_color);
+ 
+    debug_batch.emplace_back(x - width / 2.0f, y + height / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x - width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
 
-    debug_batch.emplace_back(x - radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
-    debug_batch.emplace_back(x + radius / 2.0f, y - radius / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x - width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
+    debug_batch.emplace_back(x + width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
+}
+
+void Visualizer::cross(float x, float y, float radius, float angle)
+{
+    debug_batch.emplace_back(
+        x + radius * glm::cos(glm::radians(angle)),
+        y + radius * glm::sin(glm::radians(angle)),
+        0.1f, debug_color);
+    debug_batch.emplace_back(
+        x + radius * glm::cos(glm::pi<float>() + glm::radians(angle)),
+        y + radius * glm::sin(glm::pi<float>() + glm::radians(angle)),
+        0.1f, debug_color);
+
+    debug_batch.emplace_back(
+        x + radius * glm::cos(0.5 * glm::pi<float>() + glm::radians(angle)),
+        y + radius * glm::sin(0.5 * glm::pi<float>() + glm::radians(angle)),
+        0.1f, debug_color);
+    debug_batch.emplace_back(
+        x + radius * glm::cos(1.5 * glm::pi<float>() + glm::radians(angle)),
+        y + radius * glm::sin(1.5 * glm::pi<float>() + glm::radians(angle)),
+        0.1f, debug_color);
+
 }
 
