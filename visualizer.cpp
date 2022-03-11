@@ -182,9 +182,14 @@ void Visualizer::run()
         input();
 
 
-        //Gen batch
+
+        //Gen batch trough the frustrum
         for (int i = 0; i < boxes.size(); i++) {
-            batch.insert(batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+            
+            if (check_frustrum_render(boxes[i])) {
+                
+                batch.insert(batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+            }  
         }
 
 
@@ -237,7 +242,7 @@ void Visualizer::run()
         circle(-150, 75, cursor_size);
         circle(-150, -75, cursor_size);
 
-        std::cout << cam_pos.x << "," << cam_pos.y << std::endl;
+        
 
         //FRUSTRUM
         rectangle(cam_pos.x, cam_pos.y, w_w * 2/3, w_h * 2/3);
@@ -293,7 +298,7 @@ void Visualizer::draw(GLuint buffer, void* data, size_t size)
 
 void Visualizer::input()
 {
-    float speed = 1.0f;
+    float speed = 10.0f;
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         cam_pos -= glm::vec3(0.0f, speed, 0.0f);
@@ -379,6 +384,22 @@ void Visualizer::rectangle(float x, float y, float width, float height)
 
     debug_batch.emplace_back(x - width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
     debug_batch.emplace_back(x + width / 2.0f, y - height / 2.0f, 0.1f, debug_color);
+}
+
+bool Visualizer::check_frustrum_render(Box &b)
+{
+    //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
+    float dx = glm::abs(cam_pos.x - b.pos.x);
+    float dxmax = b._w/2 + w_w*2/6;    
+    float dy = glm::abs(cam_pos.y - b.pos.y);
+    float dymax = b._h/2 + w_h*2/6;
+
+
+    if ((dx < dxmax) && (dy < dymax)) {
+        return true;
+    }
+    std::cout << "false" << std::endl;
+    return false;
 }
 
 void Visualizer::cross(float x, float y, float radius, float angle)

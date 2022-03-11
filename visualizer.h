@@ -27,15 +27,18 @@ public:
 	void update();
 
 	bool check_collision(double x, double y);
-private:
+
+	bool render = true;
 	float _h = 150.0f, _w = 300.0f;
 	bool _selected = false;
-	
+
+
 	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::vec3 base_color = glm::vec3(0, 0, 0);
-	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);	
+	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	void create_box();
+
 };
 
 
@@ -81,5 +84,7 @@ private:
 
 	void cross(float x, float y, float radius, float angle = 0);
 	void rectangle(float x, float y, float width, float height);
+
+	bool check_frustrum_render(Box &b);
 	
 };
