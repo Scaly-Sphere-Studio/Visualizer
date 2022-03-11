@@ -40,9 +40,9 @@ void Box::update()
 
 bool Box::check_collision(double x, double y)
 {
-    //si x1 < x < x2 and y1 < y < y2
-    if( (x > pos.x - _w / 2.0 && x < pos.x + _w / 2.0) &&
-        (y > pos.y - _h / 2.0 && y < pos.y + _h / 2.0) )  {
+    //Check if the cursor is hovering the box
+    if( (glm::abs(x - pos.x) < _w / 2.0) &&
+        (glm::abs(y - pos.y) < _h / 2.0) )  {
         
         if (!_selected) {
             //switch selected state
@@ -180,8 +180,8 @@ void Visualizer::run()
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         input();
-
-
+        static double current_c_x, current_c_y;
+        glfwGetCursorPos(window, &current_c_x, &current_c_y);
 
         //Gen batch trough the frustrum
         for (int i = 0; i < boxes.size(); i++) {

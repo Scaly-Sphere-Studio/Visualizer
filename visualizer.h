@@ -62,11 +62,6 @@ private:
 
 	GLFWwindow* window;
 	GLuint vertexbuffer;
-
-	//DEBUG
-	GLuint debug_vb;
-	std::vector<Vertex> debug_batch;
-
 	double c_x = 0.0, c_y = 0.0;
 	glm::mat4 projection;
 	glm::mat4 view;
@@ -76,15 +71,19 @@ private:
 
 	int w_h = 700;
 	int w_w = 900;
-
 	glm::vec3 cam_pos{ 0,0,3 };
 
+	//DEBUG
+	GLuint debug_vb;
+	std::vector<Vertex> debug_batch;
+
+	//Differents shapes for the debugging process
 	void circle(float x, float y, float radius);
 	void square(float x, float y, float radius);
-
 	void cross(float x, float y, float radius, float angle = 0);
 	void rectangle(float x, float y, float width, float height);
 
+	//Check if the box is on the screen
 	bool check_frustrum_render(Box &b);
 	
 };
