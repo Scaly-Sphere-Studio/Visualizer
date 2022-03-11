@@ -154,7 +154,7 @@ Visualizer::Visualizer()
 
     float cursor_size = 5;
     cross(0, 0, cursor_size);
-    circle(0, 0, cursor_size);
+    circle(0, 0, 250);
 
     circle(150, 0, cursor_size);
     circle(-150, 0, cursor_size);    
@@ -314,6 +314,10 @@ void Visualizer::input()
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         cam_pos -= glm::vec3(speed, 0.0f, 0.0f);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
     }
 }
 
