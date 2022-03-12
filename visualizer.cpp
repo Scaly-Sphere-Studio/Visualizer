@@ -18,8 +18,10 @@ Box::~Box()
 
 void Box::log()
 {
-	for (Vertex v : model) {
-		std::cout << v._x << " ; " << v._y << " ; " << v._z << std::endl;
+    for (size_t i = 0; i < model.size();i++) {
+		std::cout << model[i]._x << " ; " 
+            << model[i]._y << " ; " 
+            << model[i]._z << std::endl;
 	}
 }
 
@@ -35,12 +37,20 @@ void Box::set_col(std::string hex)
 
 void Box::update()
 {
-	
+    model.clear();
+    model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0f, base_color);
+    model.emplace_back(pos.x - _w / 2.0f, pos.y - _h / 2.0f, 0.0f, base_color);
+    model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
+
+    model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
+    model.emplace_back(pos.x + _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
+    model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
 }
 
 bool Box::check_collision(double x, double y)
 {
-    //Check if the cursor is hovering the box
+    //Check if a point is hovering the box
+    //Point to Box Collision test
     if( (glm::abs(x - pos.x) < _w / 2.0) &&
         (glm::abs(y - pos.y) < _h / 2.0) )  {
         
@@ -69,13 +79,7 @@ bool Box::check_collision(double x, double y)
 void Box::create_box()
 {
     set_selected_col("C32530");
-	model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0f, base_color);
-	model.emplace_back(pos.x - _w / 2.0f, pos.y - _h / 2.0f, 0.0f, base_color);
-	model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
-
-	model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
-	model.emplace_back(pos.x + _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
-	model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
+    update();
 }
 
 Vertex::Vertex(float x, float y, float z, glm::vec3 col)
@@ -94,7 +98,7 @@ Visualizer::Visualizer()
         std::cout << "couldn't init glfw" << std::endl;
     }
 
-    window = glfwCreateWindow(w_w, w_h, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(w_w, w_h, "VISUALISEUR", NULL, NULL);
     if (!window)
     {
         __LOG_ERR("GLFW couldn't create the window context");
@@ -106,8 +110,6 @@ Visualizer::Visualizer()
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
     }
-
-
 
     // Enable blending (transparency)
     glEnable(GL_BLEND);
@@ -129,8 +131,6 @@ Visualizer::Visualizer()
     GLuint programID = LoadShaders("triangle.vert", "triangle.frag");
     glUseProgram(programID);
 
-    /*cam_pos = glm::vec3(-static_cast<float>(w_w)/2.0f, -static_cast<float>(w_h)/2.0f, 3.0f);*/
-
     //CAMERA SETUP AND CANVAS
     projection = glm::ortho(-static_cast<float>(w_w)/2, static_cast<float>(w_w)/2, -static_cast<float>(w_h)/2, static_cast<float>(w_h)/2, 0.0f, 100.0f);
     view = glm::lookAt(
@@ -150,21 +150,9 @@ Visualizer::Visualizer()
     boxes.emplace_back(-100.0f, 150.0f, "00CFD2");
 
 
-    rectangle(0, 0, 300, 150);
+    
 
-    float cursor_size = 5;
-    cross(0, 0, cursor_size);
-    circle(0, 0, 250);
 
-    circle(150, 0, cursor_size);
-    circle(-150, 0, cursor_size);    
-    circle(0, 75, cursor_size);
-    circle(0, -75, cursor_size); 
-
-    circle(150, 75, cursor_size);
-    circle(150, -75, cursor_size);    
-    circle(-150, 75, cursor_size);
-    circle(-150, -75, cursor_size);
 
 }
 
@@ -180,14 +168,14 @@ void Visualizer::run()
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         input();
-        static double current_c_x, current_c_y;
-        glfwGetCursorPos(window, &current_c_x, &current_c_y);
 
         //Gen batch trough the frustrum
+        //FRUSTRUM 
+        if (debugmode) { rectangle(cam_pos.x, cam_pos.y, w_w * 2 / 3, w_h * 2 / 3); }
         for (int i = 0; i < boxes.size(); i++) {
             
             if (check_frustrum_render(boxes[i])) {
-                
+                debug_box(boxes[i]);
                 batch.insert(batch.end(), boxes[i].model.begin(), boxes[i].model.end());
             }  
         }
@@ -205,13 +193,59 @@ void Visualizer::run()
 
         //Collision test
         glfwGetCursorPos(window, &c_x, &c_y);
+        static glm::vec3 cur_pos;
         for (unsigned int i = 0; i < boxes.size();i++) {
             if (boxes[i].check_collision((c_x - w_w/2) + cam_pos.x, (w_h/2 - c_y) + cam_pos.y)
-                && (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS )) {
-                std::cout << "clicked" << std::endl;
+                && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ) {
+                
+                if (!boxes[i]._clicked) { 
+                    boxes[i]._clicked ^= 1; 
+                    std::cout << "clicked" << std::endl;
+                    //DELTA DE POSITION A CALCULER
+                    cur_pos = glm::vec3(c_x, c_y, 0);
+                }
+
             }
-            
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+                && boxes[i]._clicked) {
+                boxes[i]._clicked ^= 1;
+                std::cout << "released" << std::endl;
+            }
+            //DRAG BOX
+            if (boxes[i]._clicked) {
+                static glm::vec3 new_pos;
+                new_pos = glm::vec3(c_x, c_y, 0);
+                glm::vec3 delta = new_pos - cur_pos;
+                cur_pos = new_pos;
+
+                std::cout << delta.x << " : " << delta.y << std::endl;
+                boxes[i].pos += glm::vec3(delta.x, - delta.y, 0);
+                boxes[i].update();
+            }
+
         }
+
+
+        //TEST CURSOR DRAG
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
 
         //UPDATE MVP MATRIX
@@ -226,26 +260,12 @@ void Visualizer::run()
 
         draw(vertexbuffer, batch.data(), batch.size());
 
-        rectangle(0, 0, 300, 150);
 
         float cursor_size = 5;
+        //ORIGIN CURSOR
         cross(0, 0, cursor_size);
         circle(0, 0, cursor_size);
 
-        circle(150, 0, cursor_size);
-        circle(-150, 0, cursor_size);
-        circle(0, 75, cursor_size);
-        circle(0, -75, cursor_size);
-
-        circle(150, 75, cursor_size);
-        circle(150, -75, cursor_size);
-        circle(-150, 75, cursor_size);
-        circle(-150, -75, cursor_size);
-
-        
-
-        //FRUSTRUM
-        rectangle(cam_pos.x, cam_pos.y, w_w * 2/3, w_h * 2/3);
 
         glBindBuffer(GL_ARRAY_BUFFER, debug_vb);
         glBufferData(GL_ARRAY_BUFFER,
@@ -354,6 +374,26 @@ void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
     glDisableVertexAttribArray(1);
 }
 
+void Visualizer::debug_box(Box &b)
+{
+    float cursor_size = 5;
+    cross(b.pos.x, b.pos.y, cursor_size);
+    circle(b.pos.x, b.pos.y, cursor_size);
+
+
+    rectangle(b.pos.x, b.pos.y, b._w, b._h);
+
+    circle(b.pos.x - b._w / 2, b.pos.y, cursor_size);
+    circle(b.pos.x + b._w / 2, b.pos.y, cursor_size);
+    circle(b.pos.x, b.pos.y + b._h / 2, cursor_size);
+    circle(b.pos.x, b.pos.y - b._h / 2, cursor_size);
+
+    circle(b.pos.x + b._w / 2, b.pos.y + b._h / 2, cursor_size);
+    circle(b.pos.x + b._w / 2, b.pos.y - b._h / 2, cursor_size);
+    circle(b.pos.x - b._w / 2, b.pos.y + b._h / 2, cursor_size);
+    circle(b.pos.x - b._w / 2, b.pos.y - b._h / 2, cursor_size);
+}
+
 void Visualizer::circle(float x, float y, float radius)
 {
     float branch = 20.0f;
@@ -402,7 +442,6 @@ bool Visualizer::check_frustrum_render(Box &b)
     if ((dx < dxmax) && (dy < dymax)) {
         return true;
     }
-    std::cout << "false" << std::endl;
     return false;
 }
 

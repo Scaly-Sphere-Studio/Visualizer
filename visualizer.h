@@ -31,6 +31,7 @@ public:
 	bool render = true;
 	float _h = 150.0f, _w = 300.0f;
 	bool _selected = false;
+	bool _clicked = false;
 
 
 	glm::vec3 pos = glm::vec3(0, 0, 0);
@@ -76,6 +77,7 @@ private:
 	//DEBUG
 	GLuint debug_vb;
 	std::vector<Vertex> debug_batch;
+	void debug_box(Box& b);
 
 	//Differents shapes for the debugging process
 	void circle(float x, float y, float radius);
