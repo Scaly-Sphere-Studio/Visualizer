@@ -145,9 +145,9 @@ Visualizer::Visualizer()
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
 
-    clear_color = hex_to_rgb("#1D3958");
-    boxes.emplace_back(0.0f, 0.0f, "FFCFD2");
-    boxes.emplace_back(-100.0f, 150.0f, "00CFD2");
+    clear_color = hex_to_rgb("#100908");
+    boxes.emplace_back(100.0f, -150.0f, "1E1022");
+    boxes.emplace_back(-100.0f, 150.0f, "0E2556");
 
 
     
