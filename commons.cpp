@@ -1,5 +1,7 @@
 #include "commons.h"
 
+
+
 std::vector<std::string> split_str(std::string src, unsigned int split_len) {
 
     unsigned int nb_split = static_cast<unsigned int>(std::floor(src.size() / split_len));
@@ -26,7 +28,7 @@ glm::vec3 hex_to_rgb(std::string hex) {
 
     //Check if the hex correspond to a color
     if (hex.size() != 6) {
-        std::cout << "Hex value is invalid" << std::endl;
+        SSS::log_err("Hex value is invalid");
         return glm::vec3{ 1.0f };
     }
 
@@ -36,7 +38,20 @@ glm::vec3 hex_to_rgb(std::string hex) {
     float g = static_cast<float>(std::stoi(colors[1], NULL, 16)) / 255.0f;
     float b = static_cast<float>(std::stoi(colors[2], NULL, 16)) / 255.0f;
 
-    std::cout << r << g << b << std::endl;
-
     return glm::vec3(r, g, b);
 };
+
+
+
+std::string rgb_to_hex(glm::vec3 rgb, bool head) {
+    int r, g, b;
+
+    r = std::floor(rgb.r * 255.0f);
+    g = std::floor(rgb.g * 255.0f);
+    b = std::floor(rgb.b * 255.0f);
+
+    char hexColor[8];
+    std::snprintf(hexColor, sizeof hexColor, "#%02x%02x%02x", r, g, b);
+      
+    return SSS::toString(hexColor);
+}

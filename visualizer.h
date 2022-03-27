@@ -15,6 +15,14 @@ struct Vertex {
 	glm::vec3 _col;
 };
 
+struct testBox {
+	testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
+	~testBox();
+	glm::vec3 pos;
+	glm::vec2 size;
+	glm::vec4 color;
+};
+
 class Box
 {
 public:
@@ -60,7 +68,7 @@ private:
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
 	std::vector<Vertex> batch;
-	
+	void setup();
 
 	GLFWwindow* window;
 	GLuint vertexbuffer;
@@ -88,5 +96,12 @@ private:
 
 	//Check if the box is on the screen
 	bool check_frustrum_render(Box &b);
-	
+
+
+	//Instancing
+	GLuint instance_vertex_buffer;
+	GLuint particles_data;
+	std::vector<testBox> tb;
+
+
 };
