@@ -54,5 +54,7 @@
   <ItemGroup>
     <None Include="triangle.frag" />
     <None Include="triangle.vert" />
+    <None Include="instance.frag" />
+    <None Include="instance.vert" />
   </ItemGroup>
 </Project>

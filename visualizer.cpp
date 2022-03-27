@@ -427,7 +427,7 @@ void Visualizer::setup()
     glGenBuffers(1, &vertexbuffer);
     glGenBuffers(1, &debug_vb);
 
-    GLuint programID = LoadShaders("triangle.vert", "triangle.frag");
+    GLuint programID = LoadShaders("instance.vert", "instance.frag");
     glUseProgram(programID);
 
     //CAMERA SETUP AND CANVAS

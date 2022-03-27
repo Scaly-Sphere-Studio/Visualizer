@@ -158,6 +158,8 @@
     <ClInclude Include="visualizer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="instance.frag" />
+    <None Include="instance.vert" />
     <None Include="triangle.frag" />
     <None Include="triangle.vert" />
   </ItemGroup>
