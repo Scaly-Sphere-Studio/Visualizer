@@ -33,7 +33,6 @@ public:
 	void log();
 	void set_selected_col(std::string hex);
 	void set_col(std::string hex);
-	void update();
 
 	bool check_collision(double x, double y);
 
@@ -61,7 +60,7 @@ public:
 
 private:
 
-	void draw(GLuint buffer, void* data, size_t size);
+	void draw();
 	void input();
 	void debug_show(GLuint buffer, void* data, size_t size);
 
@@ -99,7 +98,7 @@ private:
 
 
 	//Instancing
-	GLuint instance_vertex_buffer;
+	GLuint billboard_vertex_buffer;
 	GLuint particles_data;
 	std::vector<testBox> tb;
 

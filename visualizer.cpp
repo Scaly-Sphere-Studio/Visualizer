@@ -42,17 +42,6 @@ void Box::set_col(std::string hex)
 	base_color = hex_to_rgb(hex);
 }
 
-void Box::update()
-{
-    model.clear();
-    model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0f, base_color);
-    model.emplace_back(pos.x - _w / 2.0f, pos.y - _h / 2.0f, 0.0f, base_color);
-    model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
-
-    model.emplace_back(pos.x + _w / 2.0f, pos.y - _h / 2.0f, 0.0, base_color);
-    model.emplace_back(pos.x + _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
-    model.emplace_back(pos.x - _w / 2.0f, pos.y + _h / 2.0f, 0.0, base_color);
-}
 
 bool Box::check_collision(double x, double y)
 {
@@ -86,7 +75,6 @@ bool Box::check_collision(double x, double y)
 void Box::create_box()
 {
     set_selected_col("C32530");
-    update();
 }
 
 Vertex::Vertex(float x, float y, float z, glm::vec3 col)
@@ -104,14 +92,10 @@ Visualizer::Visualizer()
 
     tb.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(15, 675), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     tb.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(850, 15), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-
     tb.emplace_back(glm::vec3(-250.0f, 0.0f, 0.0f), glm::vec2(15, 590), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    tb.emplace_back(glm::vec3( 150.0f, 0.0f, 0.0f), glm::vec2(15, 590), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    
+    tb.emplace_back(glm::vec3(150.0f, 0.0f, 0.0f), glm::vec2(15, 590), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     tb.emplace_back(glm::vec3(-125.0f, -145.0f, 0.0f), glm::vec2(15, 295), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     tb.emplace_back(glm::vec3( 300.0f, 145.0f, 0.0f), glm::vec2(15, 295), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    
     tb.emplace_back(glm::vec3( 240.0f, -230.0f, 0.0f), glm::vec2(180, 15), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
 
@@ -134,19 +118,6 @@ Visualizer::~Visualizer()
 
 void Visualizer::run()
 {
-    GLuint billboard_vertex_buffer;
-    glGenBuffers(1, &billboard_vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-    
-    GLuint particles_data;
-    glGenBuffers(1, &particles_data);
-    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * tb.size(), tb.data(), GL_STATIC_DRAW);
-
-
-
-    std::cout << tb.size() << std::endl;
     glClearColor(clear_color.r, clear_color.g, clear_color.b, 0);
 
     // Main loop
@@ -235,101 +206,74 @@ void Visualizer::run()
         //debug_batch.clear();
 
 
+        draw();
 
-
-
-
-        //Render
-        //// 1st attribute buffer : vertices
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-        glVertexAttribPointer(
-            0,             
-            3, GL_FLOAT, GL_FALSE,      
-            sizeof(float)*3, (void*)0       
-        );
-
-        //Position
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-        glVertexAttribPointer(
-            1,             
-            3, GL_FLOAT, GL_FALSE,      
-            sizeof(testBox), (void*)0
-        );
-        
-        //Size separate by width and height
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-        glVertexAttribPointer(
-            2,             
-            2, GL_FLOAT, GL_FALSE,      
-            sizeof(testBox), (void*)(sizeof(glm::vec3))
-        );
-        
-        //Color
-        glEnableVertexAttribArray(3);
-        glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-        glVertexAttribPointer(
-            3,             
-            4, GL_FLOAT, GL_FALSE,      
-            sizeof(testBox), (void*)(sizeof(glm::vec3)+ sizeof(glm::vec2))
-        );
-
-        glVertexAttribDivisor(0, 0);
-        glVertexAttribDivisor(1, 1);
-        glVertexAttribDivisor(2, 1);
-        glVertexAttribDivisor(3, 1);
-        
-        
-        // Draw the triangle !
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, tb.size());
-
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(2);
 
         //debug_show(debug_vb, debug_batch.data(), debug_batch.size());
         glfwSwapBuffers(window);
     }
 }
 
-void Visualizer::draw(GLuint buffer, void* data, size_t size)
+void Visualizer::draw()
 {
+    //UPDATES THE BUFFER
+    glGenBuffers(1, &billboard_vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &particles_data);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * tb.size(), tb.data(), GL_STATIC_DRAW);
 
     //Render
     //// 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
     glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        sizeof(Vertex),                  // stride
-        (void*)0            // array buffer offset
+        0,
+        3, GL_FLOAT, GL_FALSE,
+        sizeof(float) * 3, (void*)0
     );
 
-    //// 2nd attribute buffer : colors
+    //Position
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
     glVertexAttribPointer(
-        1,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        sizeof(Vertex),                  // stride
-        (void*)(3 * sizeof(float))           // array buffer offset
+        1,
+        3, GL_FLOAT, GL_FALSE,
+        sizeof(testBox), (void*)0
     );
+
+    //Size separate by width and height
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+    glVertexAttribPointer(
+        2,
+        2, GL_FLOAT, GL_FALSE,
+        sizeof(testBox), (void*)(sizeof(glm::vec3))
+    );
+
+    //Color
+    glEnableVertexAttribArray(3);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+    glVertexAttribPointer(
+        3,
+        4, GL_FLOAT, GL_FALSE,
+        sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
+    );
+
+    glVertexAttribDivisor(0, 0);
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+
 
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, size); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, tb.size());
+
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-
-
-
+    glDisableVertexAttribArray(2);
 }
 
 void Visualizer::input()
@@ -364,24 +308,19 @@ void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        sizeof(Vertex),                  // stride
-        (void*)0            // array buffer offset
+        0,               
+        3, GL_FLOAT, GL_FALSE,          
+        sizeof(Vertex), (void*)0           
     );
 
     //// 2nd attribute buffer : colors
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glVertexAttribPointer(
-        1,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        sizeof(Vertex),                  // stride
-        (void*)(3 * sizeof(float))           // array buffer offset
+        1,                  
+        3, GL_FLOAT, GL_FALSE,           
+        sizeof(Vertex),     
+        (void*)(3 * sizeof(float))   
     );
 
     // Draw the triangle !
@@ -392,7 +331,6 @@ void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
 
 void Visualizer::setup()
 {
-    /* Initialize the library */
     if (!glfwInit()) {
         std::cout << "couldn't init glfw" << std::endl;
     }
@@ -433,9 +371,9 @@ void Visualizer::setup()
     //CAMERA SETUP AND CANVAS
     projection = glm::ortho(-static_cast<float>(w_w) / 2, static_cast<float>(w_w) / 2, -static_cast<float>(w_h) / 2, static_cast<float>(w_h) / 2, 0.0f, 100.0f);
     view = glm::lookAt(
-        cam_pos, // Camera is at (4,3,3), in World Space
-        glm::vec3(cam_pos.x, cam_pos.y, 0), // and looks at the origin
-        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+        cam_pos,
+        glm::vec3(cam_pos.x, cam_pos.y, 0), 
+        glm::vec3(0, 1, 0)  
     );
 
 
@@ -443,9 +381,6 @@ void Visualizer::setup()
     MatrixID = glGetUniformLocation(programID, "MVP");
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
-
-    glGenBuffers(1, &instance_vertex_buffer);
-    glGenBuffers(1, &particles_data);
 
 }
 
