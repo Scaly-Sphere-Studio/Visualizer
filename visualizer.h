@@ -29,24 +29,36 @@ public:
 	Box(float width, float height, std::string hex = "000000");
 	~Box();
 
-	std::vector<Vertex> model;
-	void log();
 	void set_selected_col(std::string hex);
 	void set_col(std::string hex);
 
+
 	bool check_collision(double x, double y);
 
-	bool render = true;
+	
 	float _h = 150.0f, _w = 300.0f;
+
+
+	//STATES 
+	bool _render = true;
 	bool _selected = false;
 	bool _clicked = false;
 
+
+	//Box rendering
+	std::vector<testBox> model;
 
 	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::vec3 base_color = glm::vec3(0, 0, 0);
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	void create_box();
+
+
+	// DATA
+	std::string text;
+	std::string id;
+	std::vector<uint16_t> tags;
 
 };
 
@@ -66,7 +78,7 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
-	std::vector<Vertex> batch;
+	std::vector<testBox> batch;
 	void setup();
 
 	GLFWwindow* window;
@@ -88,7 +100,7 @@ private:
 	void debug_box(Box& b);
 
 	//Differents shapes for the debugging process
-	void circle(float x, float y, float radius);
+	void circle(float x, float y, float z, float radius);
 	void square(float x, float y, float radius);
 	void cross(float x, float y, float radius, float angle = 0);
 	void rectangle(float x, float y, float width, float height);
@@ -97,10 +109,14 @@ private:
 	bool check_frustrum_render(Box &b);
 
 
+	//Shaders
+	GLuint programID;
+	GLuint debugID;
+
 	//Instancing
 	GLuint billboard_vertex_buffer;
 	GLuint particles_data;
-	std::vector<testBox> tb;
+	/*std::vector<testBox> tb;*/
 
 
 };
