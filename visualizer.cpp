@@ -13,16 +13,16 @@ static const GLfloat g_vertex_buffer_data[] = {
 Box::Box(float width, float height, std::string hex)
 {
 
-    pos = glm::vec3(width, height, 0);
+    pos = glm::vec3(width - _w / 2, height + _h / 2, 0.0);
 	base_color = hex_to_rgb(hex);
 
 
-    glm::vec3 newpos = glm::vec3(pos.x - _w /2 , pos.y + _h /2, 0.0);
+    glm::vec3 newpos = glm::vec3(width - _w /2 , height + _h /2, 0.0);
     //Brightning the color
     glm::vec3 factor = (glm::vec3(1) - base_color) * glm::vec3(0.2);
 
-    model.emplace_back(newpos, glm::vec2(_w -2, _h / 3), glm::vec4(base_color + factor, 0.9));
-    model.emplace_back(newpos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
+    model.emplace_back(pos, glm::vec2(_w -2, _h / 3), glm::vec4(base_color + factor, 0.9));
+    model.emplace_back(pos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
 }
 
 Box::~Box()
@@ -69,6 +69,13 @@ void Box::create_box()
     set_selected_col("C32530");
 }
 
+void Box::update()
+{
+    for (size_t i = 0; i < model.size(); i++) {
+        model[i].pos = pos;
+    }
+}
+
 Vertex::Vertex(float x, float y, float z, glm::vec3 col)
 {
 	_x = x;
@@ -81,12 +88,6 @@ Vertex::Vertex(float x, float y, float z, glm::vec3 col)
 Visualizer::Visualizer()
 {
     setup();
-
-    //tb.emplace_back(glm::vec3(1.0f, -1.0f, 0.3f), glm::vec2(148, 28), glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    //tb.emplace_back(glm::vec3(0.0f, 0.0f, 0.3f), glm::vec2(150, 150), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    
-
-
 
     boxes.emplace_back(100.0f, -150.0f, "1E1022");
     boxes.emplace_back(-100.0f, 150.0f, "0E2556");
@@ -156,38 +157,38 @@ void Visualizer::run()
         //    batch.data(),
         //    GL_STATIC_DRAW);
 
-        ////Collision test
-        //glfwGetCursorPos(window, &c_x, &c_y);
-        //static glm::vec3 cur_pos;
-        //for (unsigned int i = 0; i < boxes.size();i++) {
-        //    if (boxes[i].check_collision((c_x - w_w/2) + cam_pos.x, (w_h/2 - c_y) + cam_pos.y)
-        //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ) {
-        //        
-        //        if (!boxes[i]._clicked) { 
-        //            boxes[i]._clicked ^= 1; 
-        //            /*std::cout << "clicked" << std::endl;*/
-        //            //DELTA DE POSITION A CALCULER
-        //            cur_pos = glm::vec3(c_x, c_y, 0);
-        //        }
+        //Collision test
+        glfwGetCursorPos(window, &c_x, &c_y);
+        static glm::vec3 cur_pos;
+        for (unsigned int i = 0; i < boxes.size();i++) {
+            if (boxes[i].check_collision((c_x - w_w/2) + cam_pos.x, (w_h/2 - c_y) + cam_pos.y)
+                && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ) {
+                
+                if (!boxes[i]._clicked) { 
+                    boxes[i]._clicked ^= 1; 
+                    /*std::cout << "clicked" << std::endl;*/
+                    //DELTA DE POSITION A CALCULER
+                    cur_pos = glm::vec3(c_x, c_y, 0);
+                }
 
-        //    }
-        //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-        //        && boxes[i]._clicked) {
-        //        boxes[i]._clicked ^= 1;
-        //        /*std::cout << "released" << std::endl;*/
-        //    }
-        //    //DRAG BOX
-        //    if (boxes[i]._clicked) {
-        //        static glm::vec3 new_pos;
-        //        new_pos = glm::vec3(c_x, c_y, 0);
-        //        glm::vec3 delta = new_pos - cur_pos;
-        //        cur_pos = new_pos;
+            }
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+                && boxes[i]._clicked) {
+                boxes[i]._clicked ^= 1;
+                /*std::cout << "released" << std::endl;*/
+            }
+            //DRAG BOX
+            if (boxes[i]._clicked) {
+                static glm::vec3 new_pos;
+                new_pos = glm::vec3(c_x, c_y, 0);
+                glm::vec3 delta = new_pos - cur_pos;
+                cur_pos = new_pos;
 
-        //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-        //        boxes[i].pos += glm::vec3(delta.x, - delta.y, 0);
-        //        boxes[i].update();
-        //    }
-        //}
+                /*std::cout << delta.x << " : " << delta.y << std::endl;*/
+                boxes[i].pos += glm::vec3(delta.x, - delta.y, 0);
+                boxes[i].update();
+            }
+        }
 
 
         if (batch.size() > 0) {
@@ -399,21 +400,24 @@ void Visualizer::setup()
 void Visualizer::debug_box(Box &b)
 {
     float cursor_size = 5;
-    cross(b.pos.x,  b.pos.y, 0, cursor_size);
-    circle(b.pos.x, b.pos.y, 0, cursor_size);
+    //center
+    cross(b.pos.x + b._w/2 , b.pos.y - b._h /2,     0.8, cursor_size);
+    circle(b.pos.x + b._w / 2, b.pos.y - b._h / 2,  0.8, cursor_size);
 
-
+    //cage
     rectangle(b.pos.x, b.pos.y, b._w, b._h);
 
-    circle(b.pos.x - b._w / 2, b.pos.y, 0, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y, 0, cursor_size);
-    circle(b.pos.x, b.pos.y + b._h / 2, 0, cursor_size);
-    circle(b.pos.x, b.pos.y - b._h / 2, 0, cursor_size);
+    //corner
+    circle(b.pos.x, b.pos.y,                0.8, cursor_size);
+    circle(b.pos.x, b.pos.y - b._h,         0.8, cursor_size);
+    circle(b.pos.x + b._w, b.pos.y ,        0.8, cursor_size);
+    circle(b.pos.x + b._w, b.pos.y - b._h,  0.8, cursor_size);
 
-    circle(b.pos.x + b._w / 2, b.pos.y + b._h / 2, 0, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y - b._h / 2, 0, cursor_size);
-    circle(b.pos.x - b._w / 2, b.pos.y + b._h / 2, 0, cursor_size);
-    circle(b.pos.x - b._w / 2, b.pos.y - b._h / 2, 0, cursor_size);
+    //mid
+    circle(b.pos.x + b._w / 2, b.pos.y, 0.8, cursor_size);
+    circle(b.pos.x + b._w / 2, b.pos.y - b._h,             0.8, cursor_size);
+    circle(b.pos.x, b.pos.y - b._h / 2,  0.8, cursor_size);
+    circle(b.pos.x + b._w, b.pos.y - b._h / 2,  0.8, cursor_size);
 }
 
 void Visualizer::circle(float x, float y, float z, float radius)
@@ -439,14 +443,17 @@ void Visualizer::square(float x, float y, float radius)
 
 void Visualizer::rectangle(float x, float y, float width, float height)
 {
-    debug_batch.emplace_back(x + width / 2.0f, y - height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x + width / 2.0f, y + height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x + width / 2.0f, y + height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x - width / 2.0f, y + height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x - width / 2.0f, y + height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x - width / 2.0f, y - height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x - width / 2.0f, y - height / 2.0f, 0.8f, debug_color);
-    debug_batch.emplace_back(x + width / 2.0f, y - height / 2.0f, 0.8f, debug_color);
+    debug_batch.emplace_back(x + width, y - height, 0.8f, debug_color);
+    debug_batch.emplace_back(x + width, y, 0.8f, debug_color);
+
+    debug_batch.emplace_back(x + width, y , 0.8f, debug_color);
+    debug_batch.emplace_back(x, y, 0.8f, debug_color);
+
+    debug_batch.emplace_back(x , y, 0.8f, debug_color);
+    debug_batch.emplace_back(x , y - height, 0.8f, debug_color);
+
+    debug_batch.emplace_back(x , y - height, 0.8f, debug_color);
+    debug_batch.emplace_back(x + width, y - height, 0.8f, debug_color);
 }
 
 bool Visualizer::check_frustrum_render(Box &b)

@@ -53,6 +53,7 @@ public:
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	void create_box();
+	void update();
 
 
 	// DATA
