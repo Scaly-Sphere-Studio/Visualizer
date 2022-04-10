@@ -160,6 +160,8 @@
   <ItemGroup>
     <None Include="instance.frag" />
     <None Include="instance.vert" />
+    <None Include="line.frag" />
+    <None Include="line.vert" />
     <None Include="triangle.frag" />
     <None Include="triangle.vert" />
   </ItemGroup>

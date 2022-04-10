@@ -55,3 +55,14 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
       
     return SSS::toString(hexColor);
 }
+
+float rand_float()
+{
+    return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX + 1);
+}
+
+std::string rand_color()
+{
+    return rgb_to_hex(glm::vec3(rand_float(), rand_float(), rand_float()));
+}
+

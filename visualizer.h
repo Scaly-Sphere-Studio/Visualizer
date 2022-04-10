@@ -5,12 +5,15 @@
 #include "shader.hpp"
 #include "visualizer.h"
 #include <cmath>
- 
+#include <random>
+#include <time.h>
 
+#include <SSS/Line/line.h>
 
+std::shared_ptr<Polyline> bezier(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d);
 
-struct Vertex {
-	Vertex(float x, float y, float z, glm::vec3 col);
+struct debug_Vertex {
+	debug_Vertex(float x, float y, float z, glm::vec3 col);
 	float _x, _y, _z;
 	glm::vec3 _col;
 };
@@ -61,6 +64,9 @@ public:
 	std::string id;
 	std::vector<uint16_t> tags;
 
+	static std::vector<testBox> box_batch;
+	static GLuint box_shader;
+
 };
 
 
@@ -79,7 +85,6 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
-	std::vector<testBox> batch;
 	void setup();
 
 	GLFWwindow* window;
@@ -89,15 +94,18 @@ private:
 	glm::mat4 view;
 	glm::mat4 mvp;
 
+
+	GLuint VertexArrayID;
+
 	GLuint MatrixID;
 
-	int w_h = 700;
-	int w_w = 900;
+	float w_h = 700;
+	float w_w = 900;
 	glm::vec3 cam_pos{ 0,0,3 };
 
 	//DEBUG
 	GLuint debug_vb;
-	std::vector<Vertex> debug_batch;
+	std::vector<debug_Vertex> debug_batch;
 	void debug_box(Box& b);
 
 	//Differents shapes for the debugging process
@@ -113,11 +121,12 @@ private:
 	//Shaders
 	GLuint programID;
 	GLuint debugID;
+	GLuint line_shader_ID;
 
 	//Instancing
 	GLuint billboard_vertex_buffer;
 	GLuint particles_data;
-	/*std::vector<testBox> tb;*/
+
 
 
 };
