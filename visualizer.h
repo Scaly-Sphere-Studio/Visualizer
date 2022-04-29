@@ -10,7 +10,8 @@
 
 #include <SSS/Line/line.h>
 
-std::shared_ptr<Polyline> bezier(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d);
+
+std::shared_ptr<Polyline> bezier(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d);
 
 struct debug_Vertex {
 	debug_Vertex(float x, float y, float z, glm::vec3 col);
@@ -99,8 +100,8 @@ private:
 
 	GLuint MatrixID;
 
-	float w_h = 700;
-	float w_w = 900;
+	float w_h = 720;
+	float w_w = 1280;
 	glm::vec3 cam_pos{ 0,0,3 };
 
 	//DEBUG

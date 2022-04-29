@@ -101,7 +101,8 @@ Visualizer::Visualizer()
     boxes.emplace_back(100.0f, -150.0f, "1E1022");
     boxes.emplace_back(-100.0f, 150.0f, "0E2556");
 
-    clear_color = hex_to_rgb("#14213D");
+    //clear_color = hex_to_rgb("#14213D");
+    clear_color = hex_to_rgb("#252422");
 
 
     
@@ -127,27 +128,20 @@ void Visualizer::run()
 
     glGenBuffers(1, &particles_data);
 
+
     glEnable(GL_BLEND);
+    glDepthFunc(GL_ALWAYS);
+    //glDisable(GL_DEPTH_TEST);
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    glm::vec4 black = glm::vec4(0, 0, 0, 1);
-    glm::vec4 white = glm::vec4(1, 1, 1, 1);
-    glm::vec4 blue = glm::vec4(0, 0.8, 1, 1);
-
-    std::vector<Vertex>path;
-    path.emplace_back(glm::vec2(-400.0f, 250.0f), black);
-    path.emplace_back(glm::vec2(-400.0f, -250.0f), blue);
-    path.emplace_back(glm::vec2(400.0f, 250.0f), blue);
-    path.emplace_back(glm::vec2(400.0f, -250.0f), white);
-    
 
 
-    std::shared_ptr<Polyline> line1 = bezier(
-        glm::vec2(-400.0f, 250.0f), glm::vec2(-400.0f, -1000.0f),
-        glm::vec2(400.0f, 1000.0f), glm::vec2(400.0f, -250.0f));
-    std::shared_ptr<Polyline> line2 = Polyline::create(path, 55.0f, white);
+
     glClearColor(clear_color.r, clear_color.g, clear_color.b, 0);
+   
+
 
 
     // Main loop
@@ -156,8 +150,8 @@ void Visualizer::run()
         glfwGetCursorPos(window, &c_x, &c_y);
         input();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
+
 
 
 
@@ -218,6 +212,10 @@ void Visualizer::run()
         //}
         
 
+
+
+
+
         {
             glUseProgram(line_shader_ID);
             MatrixID = glGetUniformLocation(line_shader_ID, "u_MVP");
@@ -245,6 +243,7 @@ void Visualizer::run()
 
 
 
+
         //DEBUG
         {
             
@@ -266,6 +265,7 @@ void Visualizer::run()
 
 
         glfwSwapBuffers(window);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         debug_batch.clear();
         Box::box_batch.clear();
@@ -411,7 +411,7 @@ void Visualizer::setup()
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetWindowPos(window, 600, 100);
+    glfwSetWindowPos(window, 300, 100);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -546,21 +546,30 @@ testBox::~testBox()
 {
 }
 
-std::shared_ptr<Polyline> bezier(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d)
+std::shared_ptr<Polyline> bezier(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d)
 {
-    glm::vec4 color = glm::vec4(1, 1, 1, 1);
+    glm::vec4 color = glm::vec4(0, 0, 0, 1);
+
+    Gradient<float> thick;
+    thick.push(std::make_pair(0.0f, 150));
+    //thick.push(std::make_pair(1.0f, 20));
+    Gradient<glm::vec4> col;
+    col.push(std::make_pair(0.0f, glm::vec4(0.1, 0.5, 0.2, 1.0)));
+    col.push(std::make_pair(1.0f, glm::vec4(1.0, 1.0, 0.3, 1.0)));
+    //col.push(std::make_pair(1.0f, glm::vec4(0, 1, 1, 1)));
+
     std::vector<Vertex>path;
 
-    uint32_t imax = 50;
+    uint32_t imax = 100;
     for (uint32_t i = 0; i < imax+1; i++) {
 
-        float t = static_cast<float>(i) / static_cast<float>(imax);
-        glm::vec2 pos = 
-        glm::vec2( std::pow((1 - t), 3) ) * a +
-        glm::vec2( 3 * std::pow((1.0 - t), 2) * t ) * b +
-        glm::vec2( 3 * (1.0 - t) * std::pow(t, 2)) * c +
-        glm::vec2( std::pow(t,3) ) * d;
+        float t = smoothstep(0.0f , 1.0f, static_cast<float>(i) / static_cast<float>(imax));
+        glm::vec3 pos = 
+            glm::vec3( std::pow((1 - t), 3)) * a +
+            glm::vec3( 3 * std::pow((1.0 - t), 2) * t ) * b +
+            glm::vec3( 3 * (1.0 - t) * std::pow(t, 2)) * c +
+            glm::vec3( std::pow(t,3) ) * d;
         path.emplace_back(pos, color);
     }
-    return Polyline::create(path, 25.0f, color);
+    return Polyline::Line(path, thick, col, JointType::MITER, TermType::ROUND);
 }
