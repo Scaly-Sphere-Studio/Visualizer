@@ -7,6 +7,6 @@ out vec4 Color;
 
 void main(){
   //Render the colors
-  //Color = v_col;
-  Color = vec4(0.2,0.8,0.3,1);
+  Color = v_col;
+
 }

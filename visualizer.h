@@ -10,7 +10,6 @@
 
 #include <SSS/Line/line.h>
 
-std::shared_ptr<Polyline> bezier(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d);
 
 struct debug_Vertex {
 	debug_Vertex(float x, float y, float z, glm::vec3 col);
@@ -20,7 +19,6 @@ struct debug_Vertex {
 
 struct testBox {
 	testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
-	~testBox();
 	glm::vec3 pos;
 	glm::vec2 size;
 	glm::vec4 color;
@@ -44,7 +42,7 @@ public:
 
 	//STATES 
 	bool _render = true;
-	bool _selected = false;
+	bool _hovered = false;
 	bool _clicked = false;
 
 
@@ -66,6 +64,8 @@ public:
 
 	static std::vector<testBox> box_batch;
 	static GLuint box_shader;
+
+	std::vector<std::weak_ptr<Box>> link_to;
 
 };
 

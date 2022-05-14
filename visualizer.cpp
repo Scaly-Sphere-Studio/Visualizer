@@ -26,8 +26,11 @@ Box::Box(float width, float height, std::string hex)
     //Brightning the color
     glm::vec3 factor = (glm::vec3(1) - base_color) * glm::vec3(0.2);
 
-    model.emplace_back(pos, glm::vec2(_w -2, _h / 3), glm::vec4(base_color + factor, 0.9));
+
+    
     model.emplace_back(pos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
+    model.emplace_back(pos, glm::vec2(_w - 2, _h / 3), glm::vec4(base_color + factor, 1.1));
+    
 
    
 }
@@ -53,18 +56,18 @@ bool Box::check_collision(double x, double y)
 {
     //Check if a point is hovering the box
     //Point to Box Collision test
-    if( (x > pos.x && x < static_cast<double>(pos.x) + static_cast<double>(_w)) &&
-        (y < pos.y && y > static_cast<double>(pos.y) + static_cast<double>(_h)) )  {
-        
-        if (!_selected) {
+    if( ((x > pos.x) && (x < static_cast<double>(pos.x) + static_cast<double>(_w))) && 
+        ((y < pos.y) && (y > static_cast<double>(pos.y) - static_cast<double>(_h))) )  {
+
+        if (!_hovered) {
             //switch selected state
-            _selected ^= 1;
+            _hovered ^= 1;
         }
         return true;
     }
 
-    if (_selected) {
-        _selected ^= 1;
+    if (_hovered) {
+        _hovered ^= 1;
     }
 
     return false;
@@ -95,17 +98,12 @@ Visualizer::Visualizer()
 {
     //TODO RANDSEED 
     std::srand(std::time(nullptr));
-
     setup();
 
-    boxes.emplace_back(100.0f, -150.0f, "1E1022");
+    boxes.emplace_back(0.0f, 0.0f, "1E1022");
     boxes.emplace_back(-100.0f, 150.0f, "0E2556");
 
     clear_color = hex_to_rgb("#14213D");
-
-
-    
-
 }
 
 Visualizer::~Visualizer()
@@ -136,19 +134,17 @@ void Visualizer::run()
     glm::vec4 blue = glm::vec4(0, 0.8, 1, 1);
 
     std::vector<Vertex>path;
-    path.emplace_back(glm::vec2(-400.0f, 250.0f), black);
-    path.emplace_back(glm::vec2(-400.0f, -250.0f), blue);
-    path.emplace_back(glm::vec2(400.0f, 250.0f), blue);
-    path.emplace_back(glm::vec2(400.0f, -250.0f), white);
-    
+    path.emplace_back(glm::vec3(-400.0f, 250.0f, 1.0f), black);
+    path.emplace_back(glm::vec3(-400.0f, -250.0f, 1.0f), blue);
+    path.emplace_back(glm::vec3(400.0f, 250.0f, 1.0f), blue);
+    path.emplace_back(glm::vec3(400.0f, -250.0f, 1.0f), white);
 
 
-    std::shared_ptr<Polyline> line1 = bezier(
-        glm::vec2(-400.0f, 250.0f), glm::vec2(-400.0f, -1000.0f),
-        glm::vec2(400.0f, 1000.0f), glm::vec2(400.0f, -250.0f));
-    std::shared_ptr<Polyline> line2 = Polyline::create(path, 55.0f, white);
-    glClearColor(clear_color.r, clear_color.g, clear_color.b, 0);
+    auto line = Polyline::Line(path, 10, blue);
 
+    glDisable(GL_DEPTH_TEST);
+
+    glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -156,7 +152,7 @@ void Visualizer::run()
         glfwGetCursorPos(window, &c_x, &c_y);
         input();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
         
 
 
@@ -166,12 +162,12 @@ void Visualizer::run()
         if (debugmode) { rectangle(cam_pos.x- w_w/2 + 1, cam_pos.y + w_h / 2, w_w-1, w_h-1); }
         
         for (int i = 0; i < boxes.size(); i++) {
-            
-            if (check_frustrum_render(boxes[i])) {
-                debug_box(boxes[i]);
-        
-                Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
-            }  
+            Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+            debug_box(boxes[i]);
+            //if (check_frustrum_render(boxes[i])) {
+            //    debug_box(boxes[i]);
+            //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+            //}
         }
         
         //TEST CURSOR DRAG
@@ -186,36 +182,40 @@ void Visualizer::run()
         
         //Collision test
         
-        //static glm::vec3 cur_pos;
-        //for (unsigned int i = 0; i < boxes.size();i++) {
-        //    if (boxes[i].check_collision((c_x - w_w/2) + cam_pos.x, (w_h/2 - c_y) + cam_pos.y)
-        //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ) {
-        //        
-        //        if (!boxes[i]._clicked) { 
-        //            boxes[i]._clicked ^= 1; 
-        //            /*std::cout << "clicked" << std::endl;*/
-        //            //DELTA DE POSITION A CALCULER
-        //            cur_pos = glm::vec3(c_x, c_y, 0);
-        //        }
-        //
-        //    }
-        //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-        //        && boxes[i]._clicked) {
-        //        boxes[i]._clicked ^= 1;
-        //        /*std::cout << "released" << std::endl;*/
-        //    }
-        //    //DRAG BOX
-        //    if (boxes[i]._clicked) {
-        //        static glm::vec3 new_pos;
-        //        new_pos = glm::vec3(c_x, c_y, 0);
-        //        glm::vec3 delta = new_pos - cur_pos;
-        //        cur_pos = new_pos;
-        //
-        //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-        //        boxes[i].pos += glm::vec3(delta.x, - delta.y, 0);
-        //        boxes[i].update();
-        //    }
-        //}
+        static glm::vec3 cur_pos;
+        for (unsigned int i = 0; i < boxes.size();i++) {
+            if (boxes[i].check_collision((c_x -  w_w / 2.0) + cam_pos.x, (w_h/2.0 - c_y) + cam_pos.y)
+                && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ) {
+                
+
+                std::cout << "clicked" << std::endl;
+                if (!boxes[i]._clicked) { 
+                    boxes[i]._clicked ^= 1; 
+                    std::cout << "clicked" << std::endl;
+                    //DELTA DE POSITION A CALCULER
+                    cur_pos = glm::vec3(c_x, c_y, 0);
+                }
+        
+            }
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+                && boxes[i]._clicked) {
+                boxes[i]._clicked ^= 1;
+                /*std::cout << "released" << std::endl;*/
+            }
+            //DRAG BOX
+            if (boxes[i]._clicked) {
+                static glm::vec3 new_pos;
+                new_pos = glm::vec3(c_x, c_y, 0);
+                glm::vec3 delta = new_pos - cur_pos;
+                cur_pos = new_pos;
+        
+                /*std::cout << delta.x << " : " << delta.y << std::endl;*/
+                boxes[i].pos += glm::vec3(delta.x, - delta.y, 0);
+                boxes[i].update();
+            }
+        }
+
+        std::cout << (w_h / 2.0 - c_y) + cam_pos.y << std::endl;
         
 
         {
@@ -542,25 +542,4 @@ testBox::testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
     pos(_pos), size(s), color(_col)
 {
 }
-testBox::~testBox()
-{
-}
 
-std::shared_ptr<Polyline> bezier(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d)
-{
-    glm::vec4 color = glm::vec4(1, 1, 1, 1);
-    std::vector<Vertex>path;
-
-    uint32_t imax = 50;
-    for (uint32_t i = 0; i < imax+1; i++) {
-
-        float t = static_cast<float>(i) / static_cast<float>(imax);
-        glm::vec2 pos = 
-        glm::vec2( std::pow((1 - t), 3) ) * a +
-        glm::vec2( 3 * std::pow((1.0 - t), 2) * t ) * b +
-        glm::vec2( 3 * (1.0 - t) * std::pow(t, 2)) * c +
-        glm::vec2( std::pow(t,3) ) * d;
-        path.emplace_back(pos, color);
-    }
-    return Polyline::create(path, 25.0f, color);
-}
