@@ -85,6 +85,7 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
+	std::unordered_map<std::string, Box> box_map;
 	void setup();
 
 	GLFWwindow* window;
@@ -116,7 +117,8 @@ private:
 
 	//Check if the box is on the screen
 	bool check_frustrum_render(Box &b);
-
+	void frustrum_test();
+	void drag_boxes();
 
 	//Shaders
 	GLuint programID;
