@@ -98,24 +98,18 @@ Visualizer::Visualizer()
     //TODO RANDSEED 
     std::srand(std::time(nullptr));
     setup();
-
-    boxes.emplace_back(0.0f, 0.0f, "1E1022");
-    boxes.emplace_back(-100.0f, 150.0f, "0E2556");
-
-
+    
+    box_map.insert(std::make_pair(rand_color(), Box( 0.0f, 0.0f, "1E1022")));
+    box_map.insert(std::make_pair(rand_color(), Box(-100.0f, 150.0f, "0E2556")));
 
     clear_color = hex_to_rgb("#14213D");
-    rgb_to_hsl(clear_color);
-
-    glm::vec3 blue{0,0,1};
-    rgb_to_hsl(blue);
 }
 
 Visualizer::~Visualizer()
 {
 
     debug_batch.clear();
-    boxes.clear();
+    /*boxes.clear();*/
     Box::box_batch.clear();
 }
 
@@ -174,7 +168,69 @@ void Visualizer::run()
         mvp = projection * view;
         
         //Collision test
-        drag_boxes();
+        //drag_boxes();
+
+        static glm::vec3 cur_pos;
+
+        for (auto it = box_map.begin(); it != box_map.end(); it++ ) {
+            if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
+                && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+
+
+                std::cout << "clicked" << std::endl;
+                if (!it->second._clicked) {
+                    it->second._clicked ^= 1;
+                    std::cout << "clicked" << std::endl;
+                    //DELTA DE POSITION A CALCULER
+                    cur_pos = glm::vec3(c_x, c_y, 0);
+                }
+            }
+
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+                && it->second._clicked) {
+                it->second._clicked ^= 1;
+                std::cout << "released" << std::endl;
+            }
+            //DRAG BOX
+            if (it->second._clicked) {
+                static glm::vec3 new_pos;
+                new_pos = glm::vec3(c_x, c_y, 0);
+                glm::vec3 delta = new_pos - cur_pos;
+                cur_pos = new_pos;
+                /*std::cout << delta.x << " : " << delta.y << std::endl;*/
+                it->second.pos += glm::vec3(delta.x, -delta.y, 0);
+                it->second.update();
+            }
+        }
+
+        
+        //for (unsigned int i = 0; i < boxes.size(); i++) {
+        //    if (boxes[i].check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
+        //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        //        std::cout << "clicked" << std::endl;
+        //        if (!boxes[i]._clicked) {
+        //            boxes[i]._clicked ^= 1;
+        //            std::cout << "clicked" << std::endl;
+        //            //DELTA DE POSITION A CALCULER
+        //            cur_pos = glm::vec3(c_x, c_y, 0);
+        //        }
+        //    }
+        //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+        //        && boxes[i]._clicked) {
+        //        boxes[i]._clicked ^= 1;
+        //        /*std::cout << "released" << std::endl;*/
+        //    }
+        //    //DRAG BOX
+        //    if (boxes[i]._clicked) {
+        //        static glm::vec3 new_pos;
+        //        new_pos = glm::vec3(c_x, c_y, 0);
+        //        glm::vec3 delta = new_pos - cur_pos;
+        //        cur_pos = new_pos;
+        //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
+        //        boxes[i].pos += glm::vec3(delta.x, -delta.y, 0);
+        //        boxes[i].update();
+        //    }
+        //}
 
         
 
@@ -193,6 +249,7 @@ void Visualizer::run()
 
             if (Box::box_batch.size() > 0) {
                 glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+                //glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
             }
 
@@ -314,7 +371,7 @@ void Visualizer::input()
 
     //TEST AJOUT
     if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
-        boxes.emplace_back((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y,rand_color());
+        /*boxes.emplace_back((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y,rand_color());*/
     }
     if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
@@ -476,9 +533,18 @@ void Visualizer::frustrum_test()
 {
     if (debugmode) { rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1); }
 
-    for (int i = 0; i < boxes.size(); i++) {
-        Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
-        debug_box(boxes[i]);
+    //for (int i = 0; i < boxes.size(); i++) {
+    //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+    //    debug_box(boxes[i]);
+    //    //if (check_frustrum_render(boxes[i])) {
+    //    //    debug_box(boxes[i]);
+    //    //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
+    //    //}
+    //}
+
+    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+        Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
+        debug_box(it->second);
         //if (check_frustrum_render(boxes[i])) {
         //    debug_box(boxes[i]);
         //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
@@ -488,38 +554,40 @@ void Visualizer::frustrum_test()
 
 void Visualizer::drag_boxes()
 {
-    static glm::vec3 cur_pos;
-    for (unsigned int i = 0; i < boxes.size(); i++) {
-        if (boxes[i].check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
-            && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    //static glm::vec3 cur_pos;
+    //for (unsigned int i = 0; i < boxes.size(); i++) {
+    //    if (boxes[i].check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
+    //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 
 
-            std::cout << "clicked" << std::endl;
-            if (!boxes[i]._clicked) {
-                boxes[i]._clicked ^= 1;
-                std::cout << "clicked" << std::endl;
-                //DELTA DE POSITION A CALCULER
-                cur_pos = glm::vec3(c_x, c_y, 0);
-            }
+    //        std::cout << "clicked" << std::endl;
+    //        if (!boxes[i]._clicked) {
+    //            boxes[i]._clicked ^= 1;
+    //            std::cout << "clicked" << std::endl;
+    //            //DELTA DE POSITION A CALCULER
+    //            cur_pos = glm::vec3(c_x, c_y, 0);
+    //        }
 
-        }
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-            && boxes[i]._clicked) {
-            boxes[i]._clicked ^= 1;
-            /*std::cout << "released" << std::endl;*/
-        }
-        //DRAG BOX
-        if (boxes[i]._clicked) {
-            static glm::vec3 new_pos;
-            new_pos = glm::vec3(c_x, c_y, 0);
-            glm::vec3 delta = new_pos - cur_pos;
-            cur_pos = new_pos;
+    //    }
+    //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+    //        && boxes[i]._clicked) {
+    //        boxes[i]._clicked ^= 1;
+    //        /*std::cout << "released" << std::endl;*/
+    //    }
 
-            /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-            boxes[i].pos += glm::vec3(delta.x, -delta.y, 0);
-            boxes[i].update();
-        }
-    }
+
+    //    //DRAG BOX
+    //    if (boxes[i]._clicked) {
+    //        static glm::vec3 new_pos;
+    //        new_pos = glm::vec3(c_x, c_y, 0);
+    //        glm::vec3 delta = new_pos - cur_pos;
+    //        cur_pos = new_pos;
+
+    //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
+    //        boxes[i].pos += glm::vec3(delta.x, -delta.y, 0);
+    //        boxes[i].update();
+    //    }
+    //}
 }
 
 void Visualizer::cross(float x, float y, float radius, float angle)

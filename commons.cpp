@@ -58,31 +58,50 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
 
 glm::vec3 hsl_to_rgb(glm::vec3 hsl)
 {
-    //int res = std::floor(hsl.x / 20);
-    //switch (res) {
-    //case 1 : 
-    //}
-    ////TODO
-    return hsl;
+
+    const float C = hsl.y * (1 - abs(2*hsl.z - 1));
+    const float X = C * (1 - abs(fmod(hsl.x / 60.0, 2.0) - 1));
+    const float m = hsl.z - C / 2.0 ;
+
+    int res = std::floor(hsl.x / 60.0);
+    glm::vec3 rgb = { 0,0,0 };
+    switch (res) {
+    case 0: rgb = { C + m, X + m, m };
+          break;
+    case 1: rgb = { X + m ,C + m, m };
+          break;
+    case 2: rgb = { m, C + m, X + m };
+          break;
+    case 3: rgb = { m, X + m, C + m };
+          break;
+    case 4: rgb = { X + m, m, C + m };
+          break;
+    case 5: rgb = { C + m, m, X + m };
+          break;
+    }
+
+    //rgb += m;
+    return rgb;
 }
 
 glm::vec3 rgb_to_hsl(glm::vec3 rgb)
 {
-    float h, s, l, cmax, cmin, delta;
-    
-    cmax = std::max({ rgb.r, rgb.b, rgb.g });
-    cmin = std::min({ rgb.r, rgb.b, rgb.g });
+    const float cmax = std::max({ rgb.r, rgb.b, rgb.g });
+    const float cmin = std::min({ rgb.r, rgb.b, rgb.g });
+    const float delta = cmax - cmin;
 
-    delta = cmax - cmin;
+    float h = 0.0f, s, l;
 
     //LIGHTNESS
-    l = (0.5 * cmax + cmin);
+    l = (cmax + cmin)/2.0f;
+
+    //SATURATION
+    s = delta / (1 - std::abs(2 * l - 1));
 
     //HUE 
     if (delta == 0) {
         return { 0,0,l };
     }
-
 
     if (cmax == rgb.r) {
         h = 60 * std::fmod(((rgb.g - rgb.b) / delta), 6.0);
@@ -93,15 +112,14 @@ glm::vec3 rgb_to_hsl(glm::vec3 rgb)
     } 
 
     if (cmax == rgb.b) {
-        h = 60 * (((rgb.r - rgb.g) / delta) + 2.0);
+        h = 60 * (((rgb.r - rgb.g) / delta) + 4.0);
     }
 
-    //SATURATION
-    s = 1 / (1 - std::abs(2 * l - 1));
-
-
-    std::cout << "{" << h << ", " << s << ", " << l << "}" << std::endl;
     return glm::vec3{ h, s, l };
+}
+
+std::string rand_string() {
+    return std::to_string(std::rand());
 }
 
 float rand_float()

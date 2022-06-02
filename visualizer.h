@@ -8,6 +8,7 @@
 #include <random>
 #include <time.h>
 
+
 #include <SSS/Line/line.h>
 
 
@@ -85,7 +86,7 @@ private:
 	void debug_show(GLuint buffer, void* data, size_t size);
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
-	std::vector<Box> boxes;
+	/*std::vector<Box> boxes;*/
 	std::unordered_map<std::string, Box> box_map;
 	
 	
