@@ -22,6 +22,9 @@ std::vector<std::string> split_str(std::string src, unsigned int split_len);
 glm::vec3 hex_to_rgb(std::string hex);
 //Retrieve the hex value from its composants
 std::string rgb_to_hex(glm::vec3 rgb, bool head = 1);
+glm::vec3 hsl_to_rgb(glm::vec3 hsl);
+glm::vec3 rgb_to_hsl(glm::vec3 rgb);
+
 
 float rand_float();
 std::string rand_color();

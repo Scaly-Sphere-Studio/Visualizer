@@ -65,7 +65,8 @@ public:
 	static std::vector<testBox> box_batch;
 	static GLuint box_shader;
 
-	std::vector<std::weak_ptr<Box>> link_to;
+	std::vector<std::string> link_to;
+	std::vector<std::string> link_from;
 
 };
 
@@ -86,6 +87,11 @@ private:
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::vector<Box> boxes;
 	std::unordered_map<std::string, Box> box_map;
+	
+	
+	
+	
+	
 	void setup();
 
 	GLFWwindow* window;

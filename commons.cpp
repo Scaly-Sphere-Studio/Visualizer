@@ -56,6 +56,54 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
     return SSS::toString(hexColor);
 }
 
+glm::vec3 hsl_to_rgb(glm::vec3 hsl)
+{
+    //int res = std::floor(hsl.x / 20);
+    //switch (res) {
+    //case 1 : 
+    //}
+    ////TODO
+    return hsl;
+}
+
+glm::vec3 rgb_to_hsl(glm::vec3 rgb)
+{
+    float h, s, l, cmax, cmin, delta;
+    
+    cmax = std::max({ rgb.r, rgb.b, rgb.g });
+    cmin = std::min({ rgb.r, rgb.b, rgb.g });
+
+    delta = cmax - cmin;
+
+    //LIGHTNESS
+    l = (0.5 * cmax + cmin);
+
+    //HUE 
+    if (delta == 0) {
+        return { 0,0,l };
+    }
+
+
+    if (cmax == rgb.r) {
+        h = 60 * std::fmod(((rgb.g - rgb.b) / delta), 6.0);
+    }
+
+    if (cmax == rgb.g) {
+        h = 60 * (((rgb.b - rgb.r) / delta) + 2.0);
+    } 
+
+    if (cmax == rgb.b) {
+        h = 60 * (((rgb.r - rgb.g) / delta) + 2.0);
+    }
+
+    //SATURATION
+    s = 1 / (1 - std::abs(2 * l - 1));
+
+
+    std::cout << "{" << h << ", " << s << ", " << l << "}" << std::endl;
+    return glm::vec3{ h, s, l };
+}
+
 float rand_float()
 {
     return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX + 1);

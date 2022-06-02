@@ -3,8 +3,6 @@
 std::vector<testBox>Box::box_batch{};
 GLuint Box::box_shader = 0;
 
-
-
 bool debugmode = true;
 glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
 
@@ -104,7 +102,13 @@ Visualizer::Visualizer()
     boxes.emplace_back(0.0f, 0.0f, "1E1022");
     boxes.emplace_back(-100.0f, 150.0f, "0E2556");
 
+
+
     clear_color = hex_to_rgb("#14213D");
+    rgb_to_hsl(clear_color);
+
+    glm::vec3 blue{0,0,1};
+    rgb_to_hsl(blue);
 }
 
 Visualizer::~Visualizer()
@@ -359,7 +363,7 @@ void Visualizer::setup()
     window = glfwCreateWindow(w_w, w_h, "VISUALISEUR", NULL, NULL);
     if (!window)
     {
-        __LOG_ERR("GLFW couldn't create the window context");
+
     }
 
     glfwMakeContextCurrent(window);
