@@ -27,7 +27,7 @@ Box::Box(float width, float height, std::string hex)
 
     
     model.emplace_back(pos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
-    model.emplace_back(pos, glm::vec2(_w - 2, _h / 3), glm::vec4(base_color + factor, 1.1));
+    model.emplace_back(pos, glm::vec2(_w - 2, _h / 3), glm::vec4(base_color + factor, 1.0f));
     
 
    
@@ -152,7 +152,7 @@ void Visualizer::run()
         input();
 
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
 
         //Gen batch trough the frustrum
         //FRUSTRUM 
@@ -166,71 +166,91 @@ void Visualizer::run()
             glm::vec3(0, 1, 0)
         );
         mvp = projection * view;
-        
+
         //Collision test
         //drag_boxes();
 
         static glm::vec3 cur_pos;
+        static std::string ID = "";
+        static std::string last_selected_ID = box_map.begin()->first;
 
-        for (auto it = box_map.begin(); it != box_map.end(); it++ ) {
-            if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
-                && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        //CHECK THE MAP FOR A COLLISION WITH A BOX 
+        if (ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            for (auto it = box_map.begin(); it != box_map.end(); it++) {
+                if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
+                {
+                    std::string on_top_box_ID = it->first;
 
+                    //Priority test for the box that is already on top for the collision test
+                    if (ID.empty()) {
+                        ID = on_top_box_ID;
+                    }
 
-                std::cout << "clicked" << std::endl;
-                if (!it->second._clicked) {
-                    it->second._clicked ^= 1;
-                    std::cout << "clicked" << std::endl;
-                    //DELTA DE POSITION A CALCULER
-                    cur_pos = glm::vec3(c_x, c_y, 0);
+                    if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
+                        //Check if the current Box is on top of the already other selected box
+                        ID = on_top_box_ID;
+                    }
+
                 }
             }
+            std::cout << ID << std::endl;
 
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-                && it->second._clicked) {
-                it->second._clicked ^= 1;
-                std::cout << "released" << std::endl;
+
+            if (!last_selected_ID.empty() && (last_selected_ID != ID)) {
+                //Reset the Z offset for priority 
+                box_map.at(last_selected_ID).pos.z = 0;
+                box_map.at(last_selected_ID).update();
             }
-            //DRAG BOX
-            if (it->second._clicked) {
-                static glm::vec3 new_pos;
-                new_pos = glm::vec3(c_x, c_y, 0);
-                glm::vec3 delta = new_pos - cur_pos;
-                cur_pos = new_pos;
-                /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-                it->second.pos += glm::vec3(delta.x, -delta.y, 0);
-                it->second.update();
+
+            if (!ID.empty()) {
+                box_map.at(ID)._clicked = true;
+                box_map.at(ID).pos.z = 1;
+                box_map.at(ID).update();
+                std::cout << "[" << ID << "] : " << box_map.at(ID).pos.z << " [CLICKED]" << std::endl;
+                
             }
+            //DELTA DE POSITION A CALCULER
+            cur_pos = glm::vec3(c_x, c_y, 0);
+            //update the front selected box
+
+            for (auto it = box_map.begin(); it != box_map.end(); it++) {
+                std::cout << "[" << it->first << "]" << " z:" << it->second.pos.z << std::endl;
+            }
+
+
+
+            last_selected_ID = ID;
+            std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
         }
 
         
-        //for (unsigned int i = 0; i < boxes.size(); i++) {
-        //    if (boxes[i].check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
-        //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        //        std::cout << "clicked" << std::endl;
-        //        if (!boxes[i]._clicked) {
-        //            boxes[i]._clicked ^= 1;
-        //            std::cout << "clicked" << std::endl;
-        //            //DELTA DE POSITION A CALCULER
-        //            cur_pos = glm::vec3(c_x, c_y, 0);
-        //        }
-        //    }
-        //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-        //        && boxes[i]._clicked) {
-        //        boxes[i]._clicked ^= 1;
-        //        /*std::cout << "released" << std::endl;*/
-        //    }
-        //    //DRAG BOX
-        //    if (boxes[i]._clicked) {
-        //        static glm::vec3 new_pos;
-        //        new_pos = glm::vec3(c_x, c_y, 0);
-        //        glm::vec3 delta = new_pos - cur_pos;
-        //        cur_pos = new_pos;
-        //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-        //        boxes[i].pos += glm::vec3(delta.x, -delta.y, 0);
-        //        boxes[i].update();
-        //    }
-        //}
+
+        if (!ID.empty()) {
+            //DRAG BOX
+
+            
+            
+
+            if (box_map.at(ID)._clicked) {
+                glm::vec3 new_pos = { c_x, c_y, 0 };
+                glm::vec3 delta = new_pos - cur_pos;
+
+                box_map.at(ID).pos += glm::vec3(delta.x, -delta.y, 0);
+                box_map.at(ID).update();
+
+                cur_pos = new_pos;
+            }
+
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+                && box_map.at(ID)._clicked) {
+                box_map.at(ID)._clicked = false;
+
+                std::cout << "[" << ID << "] : " << box_map.at(ID).pos.z << " [RELEASED]"<< std::endl;
+                
+                ID = "";
+            }
+        }
+        
 
         
 
@@ -247,10 +267,15 @@ void Visualizer::run()
             glBindVertexArray(VertexArrayID);
             glUseProgram(Box::box_shader);
 
+            //for (auto it = box_map.begin(); it != box_map.end(); it++) {
+            //    std::cout << it->second.pos.z;
+            //}
+            //std::cout << std::endl;
+
+
             if (Box::box_batch.size() > 0) {
                 glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-                //glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);            
             }
 
             
@@ -287,6 +312,8 @@ void Visualizer::run()
 
 }
 
+
+
 void Visualizer::draw()
 {
 
@@ -305,43 +332,45 @@ void Visualizer::draw()
 
     glBindBuffer(GL_ARRAY_BUFFER, particles_data);
 
-    //Position
-    glEnableVertexAttribArray(third);
-    glVertexAttribPointer(
-        third,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)0
-    );
+
 
     //Size separate by width and height
-    glEnableVertexAttribArray(first);
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(
-        first,
+        1,
         2, GL_FLOAT, GL_FALSE,
         sizeof(testBox), (void*)(sizeof(glm::vec3))
     );
 
     //Color
-    glEnableVertexAttribArray(second);
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(
-        second,
+        2,
         4, GL_FLOAT, GL_FALSE,
         sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
     );
 
+    //Position
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(
+        3,
+        3, GL_FLOAT, GL_FALSE,
+        sizeof(testBox), (void*)0
+    );
+
     glVertexAttribDivisor(0     , 0);
-    glVertexAttribDivisor(first , 1);
-    glVertexAttribDivisor(second, 1);
-    glVertexAttribDivisor(third , 1);
+    glVertexAttribDivisor(1 , 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3 , 1);
 
 
     // Draw the triangle !
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, Box::box_batch.size());
 
     glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(first);
-    glDisableVertexAttribArray(second);
-    glDisableVertexAttribArray(third);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
 
 }
 
@@ -424,7 +453,7 @@ void Visualizer::setup()
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetWindowPos(window, 600, 100);
+    glfwSetWindowPos(window, 200, 100);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -455,7 +484,7 @@ void Visualizer::setup()
     projection = glm::ortho(-static_cast<float>(w_w) / 2, static_cast<float>(w_w) / 2, -static_cast<float>(w_h) / 2, static_cast<float>(w_h) / 2, 0.0f, 100.0f);
 }
 
-void Visualizer::debug_box(Box &b)
+void Visualizer::debug_box(const Box &b)
 {
     float cursor_size = 5;
     //center
@@ -554,40 +583,7 @@ void Visualizer::frustrum_test()
 
 void Visualizer::drag_boxes()
 {
-    //static glm::vec3 cur_pos;
-    //for (unsigned int i = 0; i < boxes.size(); i++) {
-    //    if (boxes[i].check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y)
-    //        && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-
-
-    //        std::cout << "clicked" << std::endl;
-    //        if (!boxes[i]._clicked) {
-    //            boxes[i]._clicked ^= 1;
-    //            std::cout << "clicked" << std::endl;
-    //            //DELTA DE POSITION A CALCULER
-    //            cur_pos = glm::vec3(c_x, c_y, 0);
-    //        }
-
-    //    }
-    //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-    //        && boxes[i]._clicked) {
-    //        boxes[i]._clicked ^= 1;
-    //        /*std::cout << "released" << std::endl;*/
-    //    }
-
-
-    //    //DRAG BOX
-    //    if (boxes[i]._clicked) {
-    //        static glm::vec3 new_pos;
-    //        new_pos = glm::vec3(c_x, c_y, 0);
-    //        glm::vec3 delta = new_pos - cur_pos;
-    //        cur_pos = new_pos;
-
-    //        /*std::cout << delta.x << " : " << delta.y << std::endl;*/
-    //        boxes[i].pos += glm::vec3(delta.x, -delta.y, 0);
-    //        boxes[i].update();
-    //    }
-    //}
+//TODO 
 }
 
 void Visualizer::cross(float x, float y, float radius, float angle)

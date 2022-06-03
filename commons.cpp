@@ -1,7 +1,5 @@
 #include "commons.h"
 
-
-
 std::vector<std::string> split_str(std::string src, unsigned int split_len) {
 
     unsigned int nb_split = static_cast<unsigned int>(std::floor(src.size() / split_len));
@@ -58,30 +56,22 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
 
 glm::vec3 hsl_to_rgb(glm::vec3 hsl)
 {
-
     const float C = hsl.y * (1 - abs(2*hsl.z - 1));
     const float X = C * (1 - abs(fmod(hsl.x / 60.0, 2.0) - 1));
     const float m = hsl.z - C / 2.0 ;
+    
+    const unsigned int res = std::floor(hsl.x / 60.0);
 
-    int res = std::floor(hsl.x / 60.0);
-    glm::vec3 rgb = { 0,0,0 };
     switch (res) {
-    case 0: rgb = { C + m, X + m, m };
-          break;
-    case 1: rgb = { X + m ,C + m, m };
-          break;
-    case 2: rgb = { m, C + m, X + m };
-          break;
-    case 3: rgb = { m, X + m, C + m };
-          break;
-    case 4: rgb = { X + m, m, C + m };
-          break;
-    case 5: rgb = { C + m, m, X + m };
-          break;
+        case 0: return { C + m, X + m, m };
+        case 1: return { X + m ,C + m, m };
+        case 2: return { m, C + m, X + m };
+        case 3: return { m, X + m, C + m };
+        case 4: return { X + m, m, C + m };
+        case 5: return { C + m, m, X + m };
     }
 
-    //rgb += m;
-    return rgb;
+    return { 0,0,0 };
 }
 
 glm::vec3 rgb_to_hsl(glm::vec3 rgb)

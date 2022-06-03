@@ -11,6 +11,8 @@
 
 #include <SSS/Line/line.h>
 
+#include <map>
+
 
 struct debug_Vertex {
 	debug_Vertex(float x, float y, float z, glm::vec3 col);
@@ -80,20 +82,19 @@ public:
 	void run();
 
 private:
-
+	
+	void setup();
 	void draw();
 	void input();
 	void debug_show(GLuint buffer, void* data, size_t size);
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	/*std::vector<Box> boxes;*/
-	std::unordered_map<std::string, Box> box_map;
+	std::map<std::string, Box> box_map;
 	
 	
 	
 	
-	
-	void setup();
 
 	GLFWwindow* window;
 	GLuint vertexbuffer;
@@ -107,14 +108,14 @@ private:
 
 	GLuint MatrixID;
 
-	float w_h = 700;
-	float w_w = 900;
+	float w_h = 810;
+	float w_w = 1440;
 	glm::vec3 cam_pos{ 0,0,3 };
 
 	//DEBUG
 	GLuint debug_vb;
 	std::vector<debug_Vertex> debug_batch;
-	void debug_box(Box& b);
+	void debug_box(const Box& b);
 
 	//Differents shapes for the debugging process
 	void circle(float x, float y, float z, float radius);
@@ -139,3 +140,9 @@ private:
 
 
 };
+
+
+static bool sort_box(testBox &a, testBox &b) {
+
+	return a.pos.z < b.pos.z;
+}
