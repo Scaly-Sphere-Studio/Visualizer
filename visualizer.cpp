@@ -1,9 +1,5 @@
 #include "visualizer.h"
 
-
-
-
-
 static const GLfloat g_vertex_buffer_data[] = {
  0.0f, -1.0f, 0.0f,
  1.0f, -1.0f, 0.0f,
@@ -22,12 +18,21 @@ Visualizer::Visualizer()
     std::string i1 = rand_color();
     std::string i2 = rand_color();
     
-    box_map.insert(std::make_pair(i1, Box( 400.0f, 0.0f, "1E1022")));
-    box_map.insert(std::make_pair(i2, Box(-450.0f, 75.0f, "0E2556")));
+    Box b1 = Box(400.0f, 0.0f, "1E1022");
+    Box b2 = Box(-450.0f, 75.0f, "0E2556");
+
+    b1.id = i1;
+    //b1.link_from.emplace_back(i2);
+    //b1.link_to.emplace_back(i2);
+    b2.id = i2;
+
+    box_map.insert(std::make_pair(i1, b1));
+    box_map.insert(std::make_pair(i2, b2));
 
     link_box(box_map.at(i1), box_map.at(i2));
+    link_box(box_map.at(i2), box_map.at(i1));
 
-    clear_color = hex_to_rgb("#14213D");
+    clear_color = hex_to_rgb("#4d5f83");
 }
 
 Visualizer::~Visualizer()
@@ -54,24 +59,7 @@ void Visualizer::run()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
-    glm::vec4 black = glm::vec4(0, 0, 0, 1);
-    glm::vec4 white = glm::vec4(1, 1, 1, 1);
-    glm::vec4 blue = glm::vec4(0, 0.8, 1, 1);
-
-
-    
-    //std::vector<Vertex>path;
-    //path.emplace_back(glm::vec3(-400.0f, 250.0f, 1.0f), black);
-    //path.emplace_back(glm::vec3(-400.0f, -250.0f, 1.0f), blue);
-    //path.emplace_back(glm::vec3(400.0f, 250.0f, 1.0f), blue);
-    //path.emplace_back(glm::vec3(400.0f, -250.0f, 1.0f), white);
-
-
-    //auto line = Polyline::Line(path, 10, blue);
-
     glDisable(GL_DEPTH_TEST);
-
     glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
 
     // Main loop
@@ -79,7 +67,8 @@ void Visualizer::run()
         glfwPollEvents();
         glfwGetCursorPos(window, &c_x, &c_y);
         input();
-
+        
+        
         glClear(GL_COLOR_BUFFER_BIT);
 
 
@@ -97,92 +86,8 @@ void Visualizer::run()
         mvp = projection * view;
 
         //Collision test
-        //drag_boxes();
+        drag_boxes();
 
-        static glm::vec3 cur_pos;
-        static std::string ID = "";
-        static std::string last_selected_ID = box_map.begin()->first;
-
-        //CHECK THE MAP FOR A COLLISION WITH A BOX 
-        if (ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            for (auto it = box_map.begin(); it != box_map.end(); it++) {
-                if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
-                {
-                    std::string on_top_box_ID = it->first;
-
-                    //Priority test for the box that is already on top for the collision test
-                    if (ID.empty()) {
-                        ID = on_top_box_ID;
-                    }
-
-                    if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
-                        //Check if the current Box is on top of the already other selected box
-                        ID = on_top_box_ID;
-                    }
-
-                }
-            }
-            std::cout << ID << std::endl;
-
-
-            if (!last_selected_ID.empty() && (last_selected_ID != ID)) {
-                //Reset the Z offset for priority 
-                box_map.at(last_selected_ID).pos.z = 0;
-                box_map.at(last_selected_ID).update();
-            }
-
-            if (!ID.empty()) {
-                box_map.at(ID)._clicked = true;
-                box_map.at(ID).pos.z = 1;
-                box_map.at(ID).update();
-                std::cout << "[" << ID << "] : " << box_map.at(ID).pos.z << " [CLICKED]" << std::endl;
-                
-            }
-            //DELTA DE POSITION A CALCULER
-            cur_pos = glm::vec3(c_x, c_y, 0);
-            //update the front selected box
-
-            for (auto it = box_map.begin(); it != box_map.end(); it++) {
-                std::cout << "[" << it->first << "]" << " z:" << it->second.pos.z << std::endl;
-            }
-
-
-
-            last_selected_ID = ID;
-            
-        }
-
-        //Sort every frame for now, until I have a real frustrum calling that sort before selecting
-        std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
-        
-
-        if (!ID.empty()) {
-            //DRAG BOX
-            if (box_map.at(ID)._clicked) {
-                glm::vec3 new_pos = { c_x, c_y, 0 };
-                glm::vec3 delta = new_pos - cur_pos;
-
-                box_map.at(ID).pos += glm::vec3(delta.x, -delta.y, 0);
-                box_map.at(ID).update();
-
-                cur_pos = new_pos;
-            }
-
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-                && box_map.at(ID)._clicked) {
-                box_map.at(ID)._clicked = false;
-
-                std::cout << "[" << ID << "] : " << box_map.at(ID).pos.z << " [RELEASED]"<< std::endl;
-                
-                ID = "";
-            }
-        }
-        
-
-
-
-
-        
 
         //LINE RENDERER
         {
@@ -228,10 +133,13 @@ void Visualizer::run()
             debug.debug_show(debug.debug_vb, debug.debug_batch.data(), debug.debug_batch.size());
         }
 
-        glfwSwapBuffers(window);
 
+
+
+
+        glfwSwapBuffers(window);
         debug.debug_batch.clear();
-        Box::box_batch.clear(); 
+        Box::box_batch.clear();
     }
 
 }
@@ -280,21 +188,21 @@ void Visualizer::draw()
         3,
         3, GL_FLOAT, GL_FALSE,
         sizeof(testBox), (void*)0
-    );
+);
 
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribDivisor(1, 1);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
+glVertexAttribDivisor(0, 0);
+glVertexAttribDivisor(1, 1);
+glVertexAttribDivisor(2, 1);
+glVertexAttribDivisor(3, 1);
 
 
-    // Draw the triangle !
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, Box::box_batch.size());
+// Draw the triangle !
+glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, Box::box_batch.size());
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
+glDisableVertexAttribArray(0);
+glDisableVertexAttribArray(1);
+glDisableVertexAttribArray(2);
+glDisableVertexAttribArray(3);
 
 }
 
@@ -326,6 +234,11 @@ void Visualizer::input()
     if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
         /*boxes.emplace_back((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y,rand_color());*/
     }
+
+    //TEST SUPPRESSION
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
+        pop_box(last_selected_ID);
+    }
     if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
@@ -336,11 +249,63 @@ void Visualizer::input()
 
 
 
-void Visualizer::link_box(const Box& a, const Box& b)
+void Visualizer::link_box(Box& a, Box& b)
 {
-    auto seg = Polyline::Segment(a.pos, b.pos, rand_float()*100, glm::vec4(hex_to_rgb(rand_color()), 1.0f));
-    arrow_map.insert(std::make_pair(rand_color(), seg));
 
+    //Create a bezier curve to link the two boxes
+    Gradient<glm::vec4> Col_grdt;
+    Col_grdt.push(std::make_pair(0.0, glm::vec4(a.base_color, 1.0)));
+    Col_grdt.push(std::make_pair(1.0, glm::vec4(b.base_color, 1.0)));
+
+    Gradient<float> Thk_grdt;
+    Thk_grdt.push(std::make_pair(0.0, rand_float() * 100));
+    Thk_grdt.push(std::make_pair(1.0, rand_float() * 100));
+
+    auto seg = Polyline::Bezier(
+        a.center(), a.center() + glm::vec3(0, 1000, 0),
+        b.center() + glm::vec3(0, -1000, 0), b.center(),
+        Thk_grdt, Col_grdt,
+        JointType::BEVEL, TermType::SQUARE
+    );
+
+    //Add the dst box to the 'link to' list of the src box
+    //And add the src box to the 'link from' list of the dst box
+    a.link_to.emplace_back(b.id);
+    b.link_from.emplace_back(a.id);
+
+    //The arrow ID is the cat of the two boxes ID as it keeps the order
+    arrow_map.insert(std::make_pair(a.id + b.id, seg));
+
+}
+
+void Visualizer::push_box(Box src)
+{
+}
+
+void Visualizer::push_box(std::string boxID)
+{
+}
+
+void Visualizer::pop_box(std::string ID)
+{
+    if (!last_selected_ID.empty() ){
+        //Clear the connected arrows
+        for (size_t i = 0; i < box_map.at(ID).link_from.size(); i++) {
+            arrow_map.erase(box_map.at(ID).link_from[i] + ID);
+            std::cout << box_map.at(ID).link_from[i] + ID << std::endl;
+        }
+        //Clear all the arrows connected to other boxes
+        for (size_t i = 0; i < box_map.at(ID).link_to.size(); i++) {
+            arrow_map.erase(ID + box_map.at(ID).link_to[i]);
+            std::cout << box_map.at(ID).link_to[i] + ID << std::endl;
+        }
+
+        //Clear the box from the map
+        box_map.erase(last_selected_ID);
+    }
+   
+    //Erase the selection
+    last_selected_ID = "";
 }
 
 void Visualizer::setup()
@@ -429,7 +394,70 @@ void Visualizer::frustrum_test()
 
 void Visualizer::drag_boxes()
 {
-//TODO 
+    static glm::vec3 cur_pos;
+    static std::string ID = "";
+
+    //CHECK THE MAP FOR A COLLISION WITH A BOX 
+    if (ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        for (auto it = box_map.begin(); it != box_map.end(); it++) {
+            if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
+            {
+                std::string on_top_box_ID = it->first;
+
+                //Priority test for the box that is already on top for the collision test
+                if (ID.empty()) {
+                    ID = on_top_box_ID;
+                }
+
+                if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
+                    //Check if the current Box is on top of the already other selected box
+                    ID = on_top_box_ID;
+                }
+
+            }
+        }
+
+        if (!last_selected_ID.empty() && (last_selected_ID != ID)) {
+            //Reset the Z offset for priority 
+            box_map.at(last_selected_ID).pos.z = 0;
+            box_map.at(last_selected_ID).update();
+        }
+
+        if (!ID.empty()) {
+            box_map.at(ID)._clicked = true;
+            box_map.at(ID).pos.z = 1;
+            box_map.at(ID).update();
+        }
+        //DELTA DE POSITION A CALCULER
+        cur_pos = glm::vec3(c_x, c_y, 0);
+        //update the front selected box
+        last_selected_ID = ID;
+
+    }
+
+    //Sort every frame for now, until I have a real frustrum calling that sort before selecting
+    std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
+
+
+    if (!ID.empty()) {
+        //DRAG BOX
+        if (box_map.at(ID)._clicked) {
+            glm::vec3 new_pos = { c_x, c_y, 0 };
+            glm::vec3 delta = new_pos - cur_pos;
+
+            box_map.at(ID).pos += glm::vec3(delta.x, -delta.y, 0);
+            box_map.at(ID).update();
+
+            cur_pos = new_pos;
+        }
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+            && box_map.at(ID)._clicked) {
+            box_map.at(ID)._clicked = false;
+
+            ID = "";
+        }
+    }
 }
 
 

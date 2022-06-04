@@ -52,6 +52,7 @@ public:
 
 	void create_box();
 	void update();
+
 	glm::vec3 center();
 
 	// DATA

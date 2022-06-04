@@ -34,9 +34,14 @@ private:
 	std::unordered_map<std::string, Box> box_map;
 	std::unordered_map<std::string, std::shared_ptr<Polyline>> arrow_map;
 	
-	void link_box(const Box& a, const Box& b);
+	void link_box(Box& a, Box& b);
+	void push_box(Box src);
+	void push_box(std::string boxID);
+	void pop_box(std::string ID);
 	
 	
+	std::string last_selected_ID = "";
+	int e_count = 0;
 
 	GLFWwindow* window;
 	GLuint vertexbuffer;
@@ -74,5 +79,3 @@ private:
 
 	Debugger debug;
 };
-
-

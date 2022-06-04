@@ -78,7 +78,8 @@ void Box::update()
 
 glm::vec3 Box::center()
 {
-    return glm::vec3();
+
+    return pos + glm::vec3(_w/2.0, -_h/2.0, 0);
 }
 
 testBox::testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
