@@ -34,9 +34,12 @@ private:
 	std::unordered_map<std::string, Box> box_map;
 	std::unordered_map<std::string, std::shared_ptr<Polyline>> arrow_map;
 	
+
+	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
 	void link_box(Box& a, Box& b);
-	void push_box(Box src);
+
 	void push_box(std::string boxID);
+	//Remove the selected box
 	void pop_box(std::string ID);
 	
 	

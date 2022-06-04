@@ -89,6 +89,8 @@ void Visualizer::run()
         drag_boxes();
 
 
+
+
         //LINE RENDERER
         {
             glUseProgram(line_shader_ID);
@@ -208,6 +210,8 @@ glDisableVertexAttribArray(3);
 
 void Visualizer::input()
 {
+
+    //INPUT CAMERA
     float speed = 10.0f;
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
@@ -230,20 +234,24 @@ void Visualizer::input()
         glfwSetWindowShouldClose(window, true);
     }
 
+
+    //INPUTS BOX
     //TEST AJOUT
     if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
-        /*boxes.emplace_back((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y,rand_color());*/
+        push_box(rand_color());
     }
 
     //TEST SUPPRESSION
     if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
         pop_box(last_selected_ID);
     }
+
+
+
+    //INPUT WINDOW
     if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-
-
 
 }
 
@@ -278,26 +286,31 @@ void Visualizer::link_box(Box& a, Box& b)
 
 }
 
-void Visualizer::push_box(Box src)
-{
-}
 
 void Visualizer::push_box(std::string boxID)
 {
+    box_map.insert(std::make_pair(boxID, Box((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, rand_color())));
 }
 
 void Visualizer::pop_box(std::string ID)
 {
     if (!last_selected_ID.empty() ){
-        //Clear the connected arrows
-        for (size_t i = 0; i < box_map.at(ID).link_from.size(); i++) {
-            arrow_map.erase(box_map.at(ID).link_from[i] + ID);
-            std::cout << box_map.at(ID).link_from[i] + ID << std::endl;
+        //Clear the connected arrows and remove the ID from the ID lists 
+
+        //Erase the arrows connected to the box
+        //Erase the ID from their 'Link to' list
+        for (std::string f_ID : box_map.at(ID).link_from) {
+            arrow_map.erase(f_ID + ID);
+            box_map.at(f_ID).link_to.remove(ID);
         }
+
         //Clear all the arrows connected to other boxes
-        for (size_t i = 0; i < box_map.at(ID).link_to.size(); i++) {
-            arrow_map.erase(ID + box_map.at(ID).link_to[i]);
-            std::cout << box_map.at(ID).link_to[i] + ID << std::endl;
+
+        //Erase the arrows that connect to other boxes
+        //Erase the ID from their 'link from' list
+        for (std::string l_ID : box_map.at(ID).link_to) {
+            arrow_map.erase(ID + l_ID);
+            box_map.at(l_ID).link_from.remove(ID);
         }
 
         //Clear the box from the map
@@ -332,7 +345,6 @@ void Visualizer::setup()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Enable depth test
-    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     //GL TRIANGLE

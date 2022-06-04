@@ -12,6 +12,7 @@
 #include <SSS/Line/line.h>
 
 #include <unordered_map>
+#include <list>
 
 
 struct testBox {
@@ -51,8 +52,11 @@ public:
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	void create_box();
+	//Update the positions of all the subboxes 
 	void update();
 
+
+	//Return the coordinates of the center of the box
 	glm::vec3 center();
 
 	// DATA
@@ -63,8 +67,10 @@ public:
 	static std::vector<testBox> box_batch;
 	static GLuint box_shader;
 
-	std::vector<std::string> link_to;
-	std::vector<std::string> link_from;
+
+
+	std::list<std::string> link_to;
+	std::list<std::string> link_from;
 
 };
 
