@@ -1,10 +1,8 @@
 #include "visualizer.h"
 
-std::vector<testBox>Box::box_batch{};
-GLuint Box::box_shader = 0;
 
-bool debugmode = true;
-glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
+
+
 
 static const GLfloat g_vertex_buffer_data[] = {
  0.0f, -1.0f, 0.0f,
@@ -13,94 +11,21 @@ static const GLfloat g_vertex_buffer_data[] = {
  1.0f, 0.0f, 0.0f,
 };
 
-Box::Box(float width, float height, std::string hex)
-{
 
-    pos = glm::vec3(width - _w / 2, height + _h / 2, 0.0);
-	base_color = hex_to_rgb(hex);
-
-
-    glm::vec3 newpos = glm::vec3(width - _w /2 , height + _h /2, 3.9);
-    //Brightning the color
-    glm::vec3 factor = (glm::vec3(1) - base_color) * glm::vec3(0.2);
-
-
-    
-    model.emplace_back(pos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
-    model.emplace_back(pos, glm::vec2(_w - 2, _h / 3), glm::vec4(base_color + factor, 1.0f));
-    
-
-   
-}
-
-Box::~Box()
-{
-
-}
-
-
-void Box::set_selected_col(std::string hex)
-{
-	selected_color = hex_to_rgb(hex);
-}
-
-void Box::set_col(std::string hex)
-{
-	base_color = hex_to_rgb(hex);
-}
-
-
-bool Box::check_collision(double x, double y)
-{
-    //Check if a point is hovering the box
-    //Point to Box Collision test
-    if( ((x > pos.x) && (x < static_cast<double>(pos.x) + static_cast<double>(_w))) && 
-        ((y < pos.y) && (y > static_cast<double>(pos.y) - static_cast<double>(_h))) )  {
-
-        if (!_hovered) {
-            //switch selected state
-            _hovered ^= 1;
-        }
-        return true;
-    }
-
-    if (_hovered) {
-
-        _hovered ^= 1;
-    }
-
-    return false;
-}
-
-void Box::create_box()
-{
-    set_selected_col("C32530");
-}
-
-void Box::update()
-{
-    for (size_t i = 0; i < model.size(); i++) {
-        model[i].pos = pos;
-    }
-}
-
-debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
-{
-	_x = x;
-	_y = y;
-	_z = z;
-
-	_col = col;
-}
 
 Visualizer::Visualizer()
 {
     //TODO RANDSEED 
     std::srand(std::time(nullptr));
     setup();
+
+    std::string i1 = rand_color();
+    std::string i2 = rand_color();
     
-    box_map.insert(std::make_pair(rand_color(), Box( 0.0f, 0.0f, "1E1022")));
-    box_map.insert(std::make_pair(rand_color(), Box(-100.0f, 150.0f, "0E2556")));
+    box_map.insert(std::make_pair(i1, Box( 400.0f, 0.0f, "1E1022")));
+    box_map.insert(std::make_pair(i2, Box(-450.0f, 75.0f, "0E2556")));
+
+    link_box(box_map.at(i1), box_map.at(i2));
 
     clear_color = hex_to_rgb("#14213D");
 }
@@ -108,9 +33,11 @@ Visualizer::Visualizer()
 Visualizer::~Visualizer()
 {
 
-    debug_batch.clear();
+    
     /*boxes.clear();*/
     Box::box_batch.clear();
+    arrow_map.clear();
+    box_map.clear();
 }
 
 void Visualizer::run()
@@ -132,14 +59,16 @@ void Visualizer::run()
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     glm::vec4 blue = glm::vec4(0, 0.8, 1, 1);
 
-    std::vector<Vertex>path;
-    path.emplace_back(glm::vec3(-400.0f, 250.0f, 1.0f), black);
-    path.emplace_back(glm::vec3(-400.0f, -250.0f, 1.0f), blue);
-    path.emplace_back(glm::vec3(400.0f, 250.0f, 1.0f), blue);
-    path.emplace_back(glm::vec3(400.0f, -250.0f, 1.0f), white);
+
+    
+    //std::vector<Vertex>path;
+    //path.emplace_back(glm::vec3(-400.0f, 250.0f, 1.0f), black);
+    //path.emplace_back(glm::vec3(-400.0f, -250.0f, 1.0f), blue);
+    //path.emplace_back(glm::vec3(400.0f, 250.0f, 1.0f), blue);
+    //path.emplace_back(glm::vec3(400.0f, -250.0f, 1.0f), white);
 
 
-    auto line = Polyline::Line(path, 10, blue);
+    //auto line = Polyline::Line(path, 10, blue);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -220,17 +149,15 @@ void Visualizer::run()
 
 
             last_selected_ID = ID;
-            std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
+            
         }
 
+        //Sort every frame for now, until I have a real frustrum calling that sort before selecting
+        std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
         
 
         if (!ID.empty()) {
             //DRAG BOX
-
-            
-            
-
             if (box_map.at(ID)._clicked) {
                 glm::vec3 new_pos = { c_x, c_y, 0 };
                 glm::vec3 delta = new_pos - cur_pos;
@@ -252,6 +179,9 @@ void Visualizer::run()
         }
         
 
+
+
+
         
 
         //LINE RENDERER
@@ -266,47 +196,41 @@ void Visualizer::run()
         {
             glBindVertexArray(VertexArrayID);
             glUseProgram(Box::box_shader);
-
-            //for (auto it = box_map.begin(); it != box_map.end(); it++) {
-            //    std::cout << it->second.pos.z;
-            //}
-            //std::cout << std::endl;
-
-
             if (Box::box_batch.size() > 0) {
                 glBindBuffer(GL_ARRAY_BUFFER, particles_data);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);            
             }
-
             
             MatrixID = glGetUniformLocation(Box::box_shader, "u_MVP");
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
             
             draw();
-
         }
 
         //DEBUG RENDERER
         {
-            
+            if (debug.debugmode) { debug.rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1); }
+            for (auto it = box_map.begin(); it != box_map.end(); it++) {
+                debug.debug_box(it->second);
+            }
             float cursor_size = 5;
             //ORIGIN CURSOR
-            cross(0, 0, 0, cursor_size);
-            circle(0, 0, 0, cursor_size);
-            glBindBuffer(GL_ARRAY_BUFFER, debug_vb);
+            debug.cross(0, 0, 0, cursor_size);
+            debug.circle(0, 0, 0, cursor_size);
+            glBindBuffer(GL_ARRAY_BUFFER, debug.debug_vb);
             glBufferData(GL_ARRAY_BUFFER,
-                debug_batch.size() * sizeof(debug_Vertex),
-                debug_batch.data(),
+                debug.debug_batch.size() * sizeof(debug_Vertex),
+                debug.debug_batch.data(),
                 GL_STATIC_DRAW);
-            glUseProgram(debugID);
-            MatrixID = glGetUniformLocation(debugID, "u_MVP");
+            glUseProgram(debug.debugID);
+            MatrixID = glGetUniformLocation(debug.debugID, "u_MVP");
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-            debug_show(debug_vb, debug_batch.data(), debug_batch.size());
+            debug.debug_show(debug.debug_vb, debug.debug_batch.data(), debug.debug_batch.size());
         }
 
         glfwSwapBuffers(window);
 
-        debug_batch.clear();
+        debug.debug_batch.clear();
         Box::box_batch.clear(); 
     }
 
@@ -358,10 +282,10 @@ void Visualizer::draw()
         sizeof(testBox), (void*)0
     );
 
-    glVertexAttribDivisor(0     , 0);
-    glVertexAttribDivisor(1 , 1);
+    glVertexAttribDivisor(0, 0);
+    glVertexAttribDivisor(1, 1);
     glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3 , 1);
+    glVertexAttribDivisor(3, 1);
 
 
     // Draw the triangle !
@@ -410,34 +334,13 @@ void Visualizer::input()
 
 }
 
-void Visualizer::debug_show(GLuint buffer, void* data, size_t size)
+
+
+void Visualizer::link_box(const Box& a, const Box& b)
 {
+    auto seg = Polyline::Segment(a.pos, b.pos, rand_float()*100, glm::vec4(hex_to_rgb(rand_color()), 1.0f));
+    arrow_map.insert(std::make_pair(rand_color(), seg));
 
-    //Render
-    //// 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glVertexAttribPointer(
-        0,               
-        3, GL_FLOAT, GL_FALSE,          
-        sizeof(debug_Vertex),
-        (void*)0           
-    );
-
-    //// 2nd attribute buffer : colors
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glVertexAttribPointer(
-        1,                  
-        3, GL_FLOAT, GL_FALSE,           
-        sizeof(debug_Vertex),
-        (void*)(3 * sizeof(float))   
-    );
-
-    // Draw the triangle !
-    glDrawArrays(GL_LINES, 0, size); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
 }
 
 void Visualizer::setup()
@@ -474,74 +377,17 @@ void Visualizer::setup()
     glBindVertexArray(VertexArrayID);
 
     glGenBuffers(1, &vertexbuffer);
-    glGenBuffers(1, &debug_vb);
+    glGenBuffers(1, &debug.debug_vb);
 
     Box::box_shader = LoadShaders("instance.vert", "instance.frag");
-    debugID = LoadShaders("triangle.vert", "triangle.frag");
     line_shader_ID = LoadShaders("line.vert", "line.frag");
+    debug.debugID = LoadShaders("triangle.vert", "triangle.frag");
     
     //CAMERA SETUP AND CANVAS
     projection = glm::ortho(-static_cast<float>(w_w) / 2, static_cast<float>(w_w) / 2, -static_cast<float>(w_h) / 2, static_cast<float>(w_h) / 2, 0.0f, 100.0f);
 }
 
-void Visualizer::debug_box(const Box &b)
-{
-    float cursor_size = 5;
-    //center
-    cross(b.pos.x + b._w/2 , b.pos.y - b._h /2,     0.8, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y - b._h / 2,  0.8, cursor_size);
 
-    //cage
-    rectangle(b.pos.x, b.pos.y, b._w, b._h);
-
-    //corner
-    circle(b.pos.x, b.pos.y,                0.8, cursor_size);
-    circle(b.pos.x, b.pos.y - b._h,         0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y ,        0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y - b._h,  0.8, cursor_size);
-
-    //mid
-    circle(b.pos.x + b._w / 2, b.pos.y, 0.8, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y - b._h,             0.8, cursor_size);
-    circle(b.pos.x, b.pos.y - b._h / 2,  0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y - b._h / 2,  0.8, cursor_size);
-}
-
-void Visualizer::circle(float x, float y, float z, float radius)
-{
-    float branch = 20.0f;
-    for (unsigned int i = 0; i < static_cast<unsigned int>(branch); i++) {
-
-        debug_batch.emplace_back(
-            x + radius * glm::cos(2.0f * i * glm::pi<float>() / branch),
-            y + radius * glm::sin(2.0f * i * glm::pi<float>() / branch),
-            z, debug_color);
-        debug_batch.emplace_back(
-            x + radius * glm::cos(2.0f * ((i+1) % static_cast<int>(branch)) * glm::pi<float>() / branch),
-            y + radius * glm::sin(2.0f * ((i+1) % static_cast<int>(branch)) * glm::pi<float>() / branch),
-            z, debug_color);
-    }
-}
-
-void Visualizer::square(float x, float y, float radius)
-{
-    rectangle(x, y, radius, radius);
-}
-
-void Visualizer::rectangle(float x, float y, float width, float height)
-{
-    debug_batch.emplace_back(x + width, y - height, 0.8f, debug_color);
-    debug_batch.emplace_back(x + width, y, 0.8f, debug_color);
-
-    debug_batch.emplace_back(x + width, y , 0.8f, debug_color);
-    debug_batch.emplace_back(x, y, 0.8f, debug_color);
-
-    debug_batch.emplace_back(x , y, 0.8f, debug_color);
-    debug_batch.emplace_back(x , y - height, 0.8f, debug_color);
-
-    debug_batch.emplace_back(x , y - height, 0.8f, debug_color);
-    debug_batch.emplace_back(x + width, y - height, 0.8f, debug_color);
-}
 
 bool Visualizer::check_frustrum_render(Box &b)
 {
@@ -558,9 +404,10 @@ bool Visualizer::check_frustrum_render(Box &b)
     return false;
 }
 
+
 void Visualizer::frustrum_test()
 {
-    if (debugmode) { rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1); }
+    
 
     //for (int i = 0; i < boxes.size(); i++) {
     //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
@@ -573,7 +420,6 @@ void Visualizer::frustrum_test()
 
     for (auto it = box_map.begin(); it != box_map.end(); it++) {
         Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
-        debug_box(it->second);
         //if (check_frustrum_render(boxes[i])) {
         //    debug_box(boxes[i]);
         //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
@@ -586,30 +432,4 @@ void Visualizer::drag_boxes()
 //TODO 
 }
 
-void Visualizer::cross(float x, float y, float radius, float angle)
-{
-    debug_batch.emplace_back(
-        x + radius * glm::cos(glm::radians(angle)),
-        y + radius * glm::sin(glm::radians(angle)),
-        0.0f, debug_color);
-    debug_batch.emplace_back(
-        x + radius * glm::cos(glm::pi<float>() + glm::radians(angle)),
-        y + radius * glm::sin(glm::pi<float>() + glm::radians(angle)),
-        0.0f, debug_color);
-
-    debug_batch.emplace_back(
-        x + radius * glm::cos(0.5 * glm::pi<float>() + glm::radians(angle)),
-        y + radius * glm::sin(0.5 * glm::pi<float>() + glm::radians(angle)),
-        0.0f, debug_color);
-    debug_batch.emplace_back(
-        x + radius * glm::cos(1.5 * glm::pi<float>() + glm::radians(angle)),
-        y + radius * glm::sin(1.5 * glm::pi<float>() + glm::radians(angle)),
-        0.0f, debug_color);
-
-}
-
-testBox::testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
-    pos(_pos), size(s), color(_col)
-{
-}
 
