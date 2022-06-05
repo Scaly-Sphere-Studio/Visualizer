@@ -37,7 +37,7 @@ private:
 
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
 	void link_box(Box& a, Box& b);
-
+	//Add a new box
 	void push_box(std::string boxID);
 	//Remove the selected box
 	void pop_box(std::string ID);

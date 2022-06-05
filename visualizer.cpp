@@ -38,8 +38,6 @@ Visualizer::Visualizer()
 Visualizer::~Visualizer()
 {
 
-    
-    /*boxes.clear();*/
     Box::box_batch.clear();
     arrow_map.clear();
     box_map.clear();
