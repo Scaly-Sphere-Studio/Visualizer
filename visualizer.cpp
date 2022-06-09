@@ -15,8 +15,6 @@ Visualizer::Visualizer()
     std::srand(std::time(nullptr));
     setup();
 
-    std::string i1 = rand_color();
-    std::string i2 = rand_color();
     
     Box b1 = Box(400.0f, 0.0f, "1E1022");
     Box b2 = Box(-450.0f, 75.0f, "0E2556");
@@ -85,7 +83,10 @@ void Visualizer::run()
 
         //Collision test
         drag_boxes();
+        line_drag_link();
 
+        //Sort every frame for now, until I have a real frustrum calling that sort before selecting
+        std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
 
 
@@ -264,15 +265,20 @@ void Visualizer::link_box(Box& a, Box& b)
     Col_grdt.push(std::make_pair(1.0, glm::vec4(b.base_color, 1.0)));
 
     Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.0, rand_float() * 100));
-    Thk_grdt.push(std::make_pair(1.0, rand_float() * 100));
+    Thk_grdt.push(std::make_pair(0.0, 25));
+    Thk_grdt.push(std::make_pair(1.0, 25));
 
     auto seg = Polyline::Bezier(
-        a.center(), a.center() + glm::vec3(0, 1000, 0),
-        b.center() + glm::vec3(0, -1000, 0), b.center(),
+        a.center(), a.center() - glm::vec3(0, 1000, 0),
+        b.center() + glm::vec3(0, 1000, 0), b.center(),
         Thk_grdt, Col_grdt,
         JointType::BEVEL, TermType::SQUARE
     );
+
+    if (arrow_map.count(a.id + b.id)) {
+        arrow_map.at(a.id + b.id) = seg;
+        return;
+    }
 
     //Add the dst box to the 'link to' list of the src box
     //And add the src box to the 'link from' list of the dst box
@@ -284,10 +290,56 @@ void Visualizer::link_box(Box& a, Box& b)
 
 }
 
+void Visualizer::link_box(Box& a)
+{
+    for (std::string lt : a.link_to) {
+        link_box(a, box_map.at(lt));
+    }
+    for (std::string lf : a.link_from) {
+        link_box(box_map.at(lf), a);
+    }
+}
+
+void Visualizer::link_box_to_cursor(Box& b)
+{
+    glm::vec3 c_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+
+    //Create a bezier curve to link the two boxes
+    Gradient<glm::vec4> Col_grdt;
+    Col_grdt.push(std::make_pair(0.0, glm::vec4(b.base_color, 1.0)));
+    Col_grdt.push(std::make_pair(1.0, glm::vec4(0, 0, 0, 1.0)));
+
+    Gradient<float> Thk_grdt;
+    Thk_grdt.push(std::make_pair(0.0, 25));
+    Thk_grdt.push(std::make_pair(1.0, 25));
+
+    auto seg = Polyline::Bezier(
+        b.center(), b.center() - glm::vec3(0, 800, 0),
+        c_pos + glm::vec3(0, 0, 0), c_pos,
+        Thk_grdt, Col_grdt,
+        JointType::BEVEL, TermType::SQUARE
+    );
+
+    if (arrow_map.count(first_link_ID)) {
+        arrow_map.at(b.id) = seg;
+        return;
+    }
+
+
+    //The arrow ID is the cat of the two boxes ID as it keeps the order
+    arrow_map.insert(std::make_pair(b.id, seg));
+
+}
+
 
 void Visualizer::push_box(std::string boxID)
 {
-    box_map.insert(std::make_pair(boxID, Box((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, rand_color())));
+    box_map.insert(std::make_pair(boxID, Box((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, boxID)));
+    box_map.at(boxID).id = boxID;
+    
+    link_box(box_map.at(boxID), box_map.at(i1));
+    link_box(box_map.at(i2), box_map.at(boxID));
+
 }
 
 void Visualizer::pop_box(std::string ID)
@@ -317,6 +369,7 @@ void Visualizer::pop_box(std::string ID)
    
     //Erase the selection
     last_selected_ID = "";
+    current_selected_ID = "";
 }
 
 void Visualizer::setup()
@@ -405,69 +458,116 @@ void Visualizer::frustrum_test()
 void Visualizer::drag_boxes()
 {
     static glm::vec3 cur_pos;
-    static std::string ID = "";
-
+    
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
-    if (ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        for (auto it = box_map.begin(); it != box_map.end(); it++) {
-            if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
-            {
-                std::string on_top_box_ID = it->first;
+    if (current_selected_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 
-                //Priority test for the box that is already on top for the collision test
-                if (ID.empty()) {
-                    ID = on_top_box_ID;
-                }
+        //Retrieve the ID of the current selected box
+        clicked_box_ID(current_selected_ID);
 
-                if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
-                    //Check if the current Box is on top of the already other selected box
-                    ID = on_top_box_ID;
-                }
-
-            }
-        }
-
-        if (!last_selected_ID.empty() && (last_selected_ID != ID)) {
+        if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
             //Reset the Z offset for priority 
-            box_map.at(last_selected_ID).pos.z = 0;
+            box_map.at(last_selected_ID).pos.z = rand_float();
             box_map.at(last_selected_ID).update();
         }
 
-        if (!ID.empty()) {
-            box_map.at(ID)._clicked = true;
-            box_map.at(ID).pos.z = 1;
-            box_map.at(ID).update();
+        if (!current_selected_ID.empty()) {
+            box_map.at(current_selected_ID)._clicked = true;
+            box_map.at(current_selected_ID).pos.z = 2;
+            box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
         cur_pos = glm::vec3(c_x, c_y, 0);
         //update the front selected box
-        last_selected_ID = ID;
+        last_selected_ID = current_selected_ID;
 
     }
 
-    //Sort every frame for now, until I have a real frustrum calling that sort before selecting
-    std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
-
-
-    if (!ID.empty()) {
+    if (!current_selected_ID.empty()) {
         //DRAG BOX
-        if (box_map.at(ID)._clicked) {
+        if (box_map.at(current_selected_ID)._clicked) {
             glm::vec3 new_pos = { c_x, c_y, 0 };
             glm::vec3 delta = new_pos - cur_pos;
 
-            box_map.at(ID).pos += glm::vec3(delta.x, -delta.y, 0);
-            box_map.at(ID).update();
+            box_map.at(current_selected_ID).pos += glm::vec3(delta.x, -delta.y, 0);
+            box_map.at(current_selected_ID).update();
+
+            link_box(box_map.at(current_selected_ID));
+
 
             cur_pos = new_pos;
         }
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-            && box_map.at(ID)._clicked) {
-            box_map.at(ID)._clicked = false;
+            && box_map.at(current_selected_ID)._clicked) {
+            box_map.at(current_selected_ID)._clicked = false;
 
-            ID = "";
+            current_selected_ID = "";
         }
     }
+}
+
+void Visualizer::line_drag_link()
+{
+
+    static glm::vec3 cur_pos;
+    //CHECK THE MAP FOR A COLLISION WITH A BOX 
+    if (first_link_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        clicked_box_ID(first_link_ID);
+    }
+
+    if (!first_link_ID.empty()) {     
+        link_box_to_cursor(box_map.at(first_link_ID));
+        
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+            if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
+
+                //First look out if the link between boxes already exists
+                auto it = box_map.at(first_link_ID).link_to.begin();
+                std::find(box_map.at(first_link_ID).link_to.begin(), box_map.at(first_link_ID).link_to.end(), second_link_ID);
+                
+                if (it != box_map.at(first_link_ID).link_to.end()) {
+                    //If it already exists delete it
+                    //Erase the arrows connected to the box
+                    //Erase the ID from their 'Link to' and 'Link from' list
+                    arrow_map.erase(first_link_ID + second_link_ID);
+                    box_map.at(first_link_ID).link_to.remove(second_link_ID);
+                    box_map.at(second_link_ID).link_from.remove(first_link_ID);
+                }
+                else {
+                   //If it doesn't, create the link between the two boxes
+                    link_box(box_map.at(first_link_ID), box_map.at(second_link_ID));
+                }
+            }
+
+            arrow_map.erase(first_link_ID);
+            first_link_ID = "";
+            second_link_ID = "";
+            return;
+        }
+    }
+}
+
+std::string Visualizer::clicked_box_ID(std::string& ID)
+{
+    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+        if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
+        {
+            std::string on_top_box_ID = it->first;
+
+            //Priority test for the box that is already on top for the collision test
+            if (ID.empty()) {
+                ID = on_top_box_ID;
+            }
+
+            if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
+                //Check if the current Box is on top of the already other selected box
+                ID = on_top_box_ID;
+            }
+
+        }
+    }
+    return ID;
 }
 
 
