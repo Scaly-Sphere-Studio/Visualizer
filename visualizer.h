@@ -7,6 +7,7 @@
 #include <cmath>
 #include <random>
 #include <time.h>
+#include <math.h>
 
 #include "Box.h"
 
@@ -14,6 +15,11 @@
 
 #include <unordered_map>
 
+enum struct V_STATES {
+	DEFAULT = 0,
+	CUTLINE = 1,
+	MULTI_SELECT = 2
+};
 
 class Visualizer {
 public:
@@ -27,6 +33,7 @@ private:
 	void draw();
 	void input();
 	
+	V_STATES _states = V_STATES::DEFAULT;
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::unordered_map<std::string, Box> box_map;
@@ -37,8 +44,12 @@ private:
 	void link_box(Box& a, Box& b);
 	//Update all the arrow linked to this box
 	void link_box(Box& a);
+	//Create a link from the box to the position of the cursor
 	void link_box_to_cursor(Box& a);
-	//Add a new box
+	//Remove the link between two selected box
+	void pop_link(Box& a, Box& b);
+
+	//Add a new box at the current cursor position
 	void push_box(std::string boxID);
 	//Remove the selected box
 	void pop_box(std::string ID);
@@ -67,7 +78,7 @@ private:
 	float w_w = 1440;
 	glm::vec3 cam_pos{ 0,0,3 };
 
-	
+	std::vector<std::pair<std::string, std::string>> test_cutline;
 
 
 	//Check if the box is on the screen
@@ -96,4 +107,8 @@ private:
 	glm::mat4 mvp;
 
 	Debugger debug;
+
+	bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm::vec3 b_c, glm::vec3 b_d, glm::vec3 s_a, glm::vec3 s_b);
+	std::array<float, 3> CubicRoots(float a, float b, float c, float d);
+	std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3);
 };

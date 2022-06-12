@@ -28,3 +28,5 @@ glm::vec3 rgb_to_hsl(glm::vec3 rgb);
 
 float rand_float();
 std::string rand_color();
+
+
