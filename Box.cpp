@@ -4,24 +4,19 @@ std::vector<testBox>Box::box_batch{};
 GLuint Box::box_shader = 0;
 
 
-Box::Box(float width, float height, std::string hex)
+Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
 {
+    _size = s;
+    //Center the box around the cursor
+    _pos = pos + glm::vec3{ -_size.x / 2.0f , _size.y / 2.0f, rand_float() };
+    _color = hex_to_rgb(hex);
 
-    pos = glm::vec3(width - _w / 2, height + _h / 2, 0.0);
-    base_color = hex_to_rgb(hex);
-
-
-    glm::vec3 newpos = glm::vec3(width - _w / 2, height + _h / 2, 3.9);
     //Brightning the color
-    glm::vec3 factor = (glm::vec3(1) - base_color) * glm::vec3(0.2);
+    glm::vec4 factor = (glm::vec4(1) - _color) * glm::vec4(0.2);
 
-
-
-    model.emplace_back(pos, glm::vec2(_w, _h), glm::vec4(base_color, 1.0f));
-    model.emplace_back(pos, glm::vec2(_w - 2, _h / 3), glm::vec4(base_color + factor, 1.0f));
-
-
-
+    //Create the model
+    model.emplace_back(_pos, _size, glm::vec4(_color));
+    model.emplace_back(_pos, glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
 }
 
 Box::~Box()
@@ -38,7 +33,7 @@ void Box::set_selected_col(std::string hex)
 
 void Box::set_col(std::string hex)
 {
-    base_color = hex_to_rgb(hex);
+    _color = hex_to_rgb(hex);
 }
 
 
@@ -46,8 +41,8 @@ bool Box::check_collision(double x, double y)
 {
     //Check if a point is hovering the box
     //Point to Box Collision test
-    if (((x > pos.x) && (x < static_cast<double>(pos.x) + static_cast<double>(_w))) &&
-        ((y < pos.y) && (y > static_cast<double>(pos.y) - static_cast<double>(_h)))) {
+    if (((x > _pos.x) && (x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
+        ((y < _pos.y) && (y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
 
         if (!_hovered) {
             //switch selected state
@@ -72,17 +67,24 @@ void Box::create_box()
 void Box::update()
 {
     for (size_t i = 0; i < model.size(); i++) {
-        model[i].pos = pos;
+        model[i]._pos = _pos;
     }
 }
 
 glm::vec3 Box::center()
 {
 
-    return pos + glm::vec3(_w/2.0, -_h/2.0, 0);
+    return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
+}
+
+testBox::testBox()
+{
+    _pos = glm::vec3{ 0 };
+    _size = glm::vec2{ 0 };
+    _color = glm::vec4{ 0 };
 }
 
 testBox::testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
-    pos(_pos), size(s), color(_col)
+    _pos(_pos), _size(s), _color(_col)
 {
 }

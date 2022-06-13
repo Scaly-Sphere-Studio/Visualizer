@@ -16,16 +16,17 @@
 
 
 struct testBox {
+	testBox();
 	testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
-	glm::vec3 pos;
-	glm::vec2 size;
-	glm::vec4 color;
+	glm::vec3 _pos;
+	glm::vec2 _size;
+	glm::vec4 _color;
 };
 
 
-class Box {
+class Box : public testBox{
 public:
-	Box(float width, float height, std::string hex = "000000");
+	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
 	~Box();
 
 	void set_selected_col(std::string hex);
@@ -33,9 +34,6 @@ public:
 
 
 	bool check_collision(double x, double y);
-
-
-	float _h = 150.0f, _w = 300.0f;
 
 
 	//STATES 
@@ -47,8 +45,7 @@ public:
 	//Box rendering
 	std::vector<testBox> model;
 
-	glm::vec3 pos = glm::vec3(0, 0, 0);
-	glm::vec3 base_color = glm::vec3(0, 0, 0);
+
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	void create_box();
@@ -75,7 +72,17 @@ public:
 };
 
 
+class Selection_square : testBox {
+public:
+
+	//Box rendering
+	testBox model;
+
+	static std::vector<testBox> box_batch;
+};
+
+
 static bool sort_box(testBox& a, testBox& b) {
 
-	return a.pos.z < b.pos.z;
+	return a._pos.z < b._pos.z;
 }

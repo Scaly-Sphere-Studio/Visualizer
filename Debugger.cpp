@@ -28,23 +28,23 @@ void Debugger::debug_box(const Box& b)
 {
     float cursor_size = 5;
     //center
-    cross(b.pos.x + b._w / 2, b.pos.y - b._h / 2, 0.8, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y - b._h / 2, 0.8, cursor_size);
+    cross(b._pos.x + b._size.x / 2, b._pos.y - b._size.y / 2, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x / 2, b._pos.y - b._size.y / 2, 0.8, cursor_size);
 
     //cage
-    rectangle(b.pos.x, b.pos.y, b._w, b._h);
+    rectangle(b._pos.x, b._pos.y, b._size.x, b._size.y);
 
     //corner
-    circle(b.pos.x, b.pos.y, 0.8, cursor_size);
-    circle(b.pos.x, b.pos.y - b._h, 0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y, 0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y - b._h, 0.8, cursor_size);
+    circle(b._pos.x, b._pos.y, 0.8, cursor_size);
+    circle(b._pos.x, b._pos.y - b._size.y, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y - b._size.y, 0.8, cursor_size);
 
     //mid
-    circle(b.pos.x + b._w / 2, b.pos.y, 0.8, cursor_size);
-    circle(b.pos.x + b._w / 2, b.pos.y - b._h, 0.8, cursor_size);
-    circle(b.pos.x, b.pos.y - b._h / 2, 0.8, cursor_size);
-    circle(b.pos.x + b._w, b.pos.y - b._h / 2, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x / 2, b._pos.y, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x / 2, b._pos.y - b._size.y, 0.8, cursor_size);
+    circle(b._pos.x, b._pos.y - b._size.y / 2, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y - b._size.y / 2, 0.8, cursor_size);
 }
 
 void Debugger::circle(float x, float y, float z, float radius)

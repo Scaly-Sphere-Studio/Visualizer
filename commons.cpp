@@ -17,7 +17,7 @@ std::vector<std::string> split_str(std::string src, unsigned int split_len) {
 };
 
 
-glm::vec3 hex_to_rgb(std::string hex) {
+glm::vec4 hex_to_rgb(std::string hex) {
 
     //Delete the first # char if there is one
     if (hex.at(0) == '#') {
@@ -27,7 +27,7 @@ glm::vec3 hex_to_rgb(std::string hex) {
     //Check if the hex correspond to a color
     if (hex.size() != 6) {
         SSS::log_err("Hex value is invalid");
-        return glm::vec3{ 1.0f };
+        return glm::vec4{ 1.0f };
     }
 
     std::vector<std::string> colors = split_str(hex, 2);
@@ -36,7 +36,7 @@ glm::vec3 hex_to_rgb(std::string hex) {
     float g = static_cast<float>(std::stoi(colors[1], NULL, 16)) / 255.0f;
     float b = static_cast<float>(std::stoi(colors[2], NULL, 16)) / 255.0f;
 
-    return glm::vec3(r, g, b);
+    return glm::vec4(r, g, b, 1.0);
 };
 
 
@@ -54,7 +54,7 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
     return SSS::toString(hexColor);
 }
 
-glm::vec3 hsl_to_rgb(glm::vec3 hsl)
+glm::vec4 hsl_to_rgb(glm::vec3 hsl)
 {
     const float C = hsl.y * (1 - abs(2*hsl.z - 1));
     const float X = C * (1 - abs(fmod(hsl.x / 60.0, 2.0) - 1));
@@ -63,18 +63,18 @@ glm::vec3 hsl_to_rgb(glm::vec3 hsl)
     const unsigned int res = std::floor(hsl.x / 60.0);
 
     switch (res) {
-        case 0: return { C + m, X + m, m };
-        case 1: return { X + m ,C + m, m };
-        case 2: return { m, C + m, X + m };
-        case 3: return { m, X + m, C + m };
-        case 4: return { X + m, m, C + m };
-        case 5: return { C + m, m, X + m };
+        case 0: return { C + m, X + m, m, 1.0 };
+        case 1: return { X + m ,C + m, m, 1.0 };
+        case 2: return { m, C + m, X + m, 1.0 };
+        case 3: return { m, X + m, C + m, 1.0 };
+        case 4: return { X + m, m, C + m, 1.0 };
+        case 5: return { C + m, m, X + m, 1.0 };
     }
 
-    return { 0,0,0 };
+    return { 0,0,0,0 };
 }
 
-glm::vec3 rgb_to_hsl(glm::vec3 rgb)
+glm::vec4 rgb_to_hsl(glm::vec3 rgb)
 {
     const float cmax = std::max({ rgb.r, rgb.b, rgb.g });
     const float cmin = std::min({ rgb.r, rgb.b, rgb.g });
@@ -90,7 +90,7 @@ glm::vec3 rgb_to_hsl(glm::vec3 rgb)
 
     //HUE 
     if (delta == 0) {
-        return { 0,0,l };
+        return { 0,0,l, 1.0 };
     }
 
     if (cmax == rgb.r) {
@@ -105,7 +105,7 @@ glm::vec3 rgb_to_hsl(glm::vec3 rgb)
         h = 60 * (((rgb.r - rgb.g) / delta) + 4.0);
     }
 
-    return glm::vec3{ h, s, l };
+    return glm::vec4{ h, s, l, 1.0 };
 }
 
 std::string rand_string() {

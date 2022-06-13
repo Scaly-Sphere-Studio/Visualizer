@@ -16,8 +16,8 @@ Visualizer::Visualizer()
     setup();
 
     
-    Box b1 = Box(0.0f, 400.0f, "1E1022");
-    Box b2 = Box(700.0f, 0.0f, "0E2556");
+    Box b1 = Box(glm::vec3(0.0f, 400.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
+    Box b2 = Box(glm::vec3(700.0f, 0.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
 
     b1.id = i1;
     b2.id = i2;
@@ -82,6 +82,7 @@ void Visualizer::run()
         //Collision test
         drag_boxes();
         line_drag_link();
+        //multi_select_drag();
 
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
@@ -260,8 +261,8 @@ void Visualizer::link_box(Box& a, Box& b)
     glm::vec3 offset{ 0,400,0 };
     //Create a bezier curve to link the two boxes
     Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.0, glm::vec4(a.base_color, 1.0)));
-    Col_grdt.push(std::make_pair(1.0, glm::vec4(b.base_color, 1.0)));
+    Col_grdt.push(std::make_pair(0.0, glm::vec4(a._color)));
+    Col_grdt.push(std::make_pair(1.0, glm::vec4(b._color)));
 
     Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.0, 25));
@@ -305,7 +306,7 @@ void Visualizer::link_box_to_cursor(Box& b)
 
     //Create a bezier curve to link the two boxes
     Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.0, glm::vec4(b.base_color, 1.0)));
+    Col_grdt.push(std::make_pair(0.0, glm::vec4(b._color)));
     Col_grdt.push(std::make_pair(1.0, glm::vec4(0, 0, 0, 1.0)));
 
     Gradient<float> Thk_grdt;
@@ -341,7 +342,8 @@ void Visualizer::pop_link(Box& a, Box& b)
 
 void Visualizer::push_box(std::string boxID)
 {
-    box_map.insert(std::make_pair(boxID, Box((c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, boxID)));
+    glm::vec3 position = glm::vec3{ (c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, 0.0f };
+    box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
     box_map.at(boxID).id = boxID;
 }
 
@@ -371,8 +373,8 @@ void Visualizer::pop_box(std::string ID)
     }
    
     //Erase the selection
-    last_selected_ID = "";
-    current_selected_ID = "";
+    last_selected_ID.clear();
+    current_selected_ID.clear();
 }
 
 void Visualizer::setup()
@@ -423,10 +425,10 @@ void Visualizer::setup()
 bool Visualizer::check_frustrum_render(Box &b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    float dx = glm::abs(cam_pos.x - b.pos.x);
-    float dxmax = (b._w + w_w) * 0.5;    
-    float dy = glm::abs(cam_pos.y - b.pos.y);
-    float dymax = (b._h + w_h) * 0.5;
+    float dx = glm::abs(cam_pos.x - b._pos.x);
+    float dxmax = (b._size.x + w_w) * 0.5;    
+    float dy = glm::abs(cam_pos.y - b._pos.y);
+    float dymax = (b._size.y + w_h) * 0.5;
 
 
     if ((dx < dxmax) && (dy < dymax)) {
@@ -440,7 +442,7 @@ void Visualizer::frustrum_test()
 {
     
 
-    //for (int i = 0; i < boxes.size(); i++) {
+    //for (int i = 0; i < boxes._size(); i++) {
     //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
     //    debug_box(boxes[i]);
     //    //if (check_frustrum_render(boxes[i])) {
@@ -470,13 +472,13 @@ void Visualizer::drag_boxes()
 
         if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
             //Reset the Z offset for priority 
-            box_map.at(last_selected_ID).pos.z = rand_float();
+            box_map.at(last_selected_ID)._pos.z = rand_float();
             box_map.at(last_selected_ID).update();
         }
 
         if (!current_selected_ID.empty()) {
             box_map.at(current_selected_ID)._clicked = true;
-            box_map.at(current_selected_ID).pos.z = 2;
+            box_map.at(current_selected_ID)._pos.z = 2;
             box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
@@ -488,24 +490,25 @@ void Visualizer::drag_boxes()
 
     if (!current_selected_ID.empty()) {
         //DRAG BOX
+        static glm::vec3 delta;
         if (box_map.at(current_selected_ID)._clicked) {
             glm::vec3 new_pos = { c_x, c_y, 0 };
-            glm::vec3 delta = new_pos - cur_pos;
-
-            box_map.at(current_selected_ID).pos += glm::vec3(delta.x, -delta.y, 0);
-            box_map.at(current_selected_ID).update();
-
-            link_box(box_map.at(current_selected_ID));
-
-
-            cur_pos = new_pos;
+            delta = new_pos - cur_pos;
+            //Update only if the box has moved
+            if (new_pos != cur_pos) {
+                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, -delta.y, 0 };
+                box_map.at(current_selected_ID).update();
+                link_box(box_map.at(current_selected_ID));
+            }
+            
+            cur_pos = new_pos; //update the position
         }
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
             && box_map.at(current_selected_ID)._clicked) {
+            
             box_map.at(current_selected_ID)._clicked = false;
-
-            current_selected_ID = "";
+            current_selected_ID.clear();
         }
     }
 }
@@ -542,7 +545,7 @@ void Visualizer::line_drag_link()
     //}
 
     if (_states == V_STATES::CUTLINE) {
-        glm::vec3 second_cursor_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+        glm::vec3 second_cursor_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 5.0 } + cam_pos;
 
 
         arrow_map.at("CUTLINE") = Polyline::Segment(first_cursor_pos, second_cursor_pos);
@@ -550,28 +553,27 @@ void Visualizer::line_drag_link()
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
+            static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
             for (auto it = box_map.begin(); it != box_map.end(); it++) {
                 Box *b1 = &it->second;
-                glm::vec3 offset{ 0, 400, 0 };
-
+                glm::vec3 offset{ 0, 400, 0 }; //TODO
 
                 for (std::string s : b1->link_to) {
                     Box *b2 = &box_map.at(s);
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         first_cursor_pos, second_cursor_pos)) {
-                        test_cutline.emplace_back(std::make_pair(b1->id, b2->id));
-                    }
-                    
+                        cut_lines_selection.emplace_back(std::make_pair(b1->id, b2->id));
+                    }  
                 }
-
             }
 
-            for (size_t i = 0; i < test_cutline.size(); i++) {
-                pop_link(box_map.at(test_cutline[i].first), box_map.at(test_cutline[i].second));
+            for (size_t i = 0; i < cut_lines_selection.size(); i++) {
+                pop_link(box_map.at(cut_lines_selection[i].first), box_map.at(cut_lines_selection[i].second));
             }
-            test_cutline.clear();
+
+            cut_lines_selection.clear();
 
             _states = V_STATES::DEFAULT;
         }
@@ -606,13 +608,66 @@ void Visualizer::line_drag_link()
                 }
 
                 arrow_map.erase(first_link_ID);
-                first_link_ID = "";
-                second_link_ID = "";
+                first_link_ID.clear();
+                second_link_ID.clear();
                 return;
             }
         }
     }
 
+}
+
+void Visualizer::multi_select_drag()
+{
+    static glm::vec3 cur_pos;
+
+    //CHECK THE MAP FOR A COLLISION WITH A BOX 
+    if (current_selected_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+
+        //Retrieve the ID of the current selected box
+        clicked_box_ID(current_selected_ID);
+
+        if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
+            //Reset the Z offset for priority 
+            box_map.at(last_selected_ID)._pos.z = rand_float();
+            box_map.at(last_selected_ID).update();
+        }
+
+        if (!current_selected_ID.empty()) {
+            box_map.at(current_selected_ID)._clicked = true;
+            box_map.at(current_selected_ID)._pos.z = 2;
+            box_map.at(current_selected_ID).update();
+        }
+        //DELTA DE POSITION A CALCULER
+        cur_pos = glm::vec3(c_x, c_y, 0);
+        //update the front selected box
+        last_selected_ID = current_selected_ID;
+
+    }
+
+    if (!current_selected_ID.empty()) {
+        //DRAG BOX
+        static glm::vec3 delta;
+        if (box_map.at(current_selected_ID)._clicked) {
+            glm::vec3 new_pos = { c_x, c_y, 0 };
+            delta = new_pos - cur_pos;
+            //Update only if the box has moved
+            if (new_pos != cur_pos) {
+                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, -delta.y, 0 };
+                box_map.at(current_selected_ID).update();
+                link_box(box_map.at(current_selected_ID));
+            }
+
+            cur_pos = new_pos; //update the position
+        }
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+            && box_map.at(current_selected_ID)._clicked) {
+
+            box_map.at(current_selected_ID)._clicked = false;
+            current_selected_ID.clear();
+        }
+    }
 }
 
 std::string Visualizer::clicked_box_ID(std::string& ID)
@@ -627,7 +682,7 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
                 ID = on_top_box_ID;
             }
 
-            if (!ID.empty() && (box_map.at(ID).pos.z < box_map.at(on_top_box_ID).pos.z)) {
+            if (!ID.empty() && (box_map.at(ID)._pos.z < box_map.at(on_top_box_ID)._pos.z)) {
                 //Check if the current Box is on top of the already other selected box
                 ID = on_top_box_ID;
             }
