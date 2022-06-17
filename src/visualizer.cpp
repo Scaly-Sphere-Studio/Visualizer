@@ -588,8 +588,7 @@ void Visualizer::line_drag_link()
                 if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
 
                     //First look out if the link between boxes already exists
-                    auto it = box_map.at(first_link_ID).link_to.begin();
-                    std::find(box_map.at(first_link_ID).link_to.begin(), box_map.at(first_link_ID).link_to.end(), second_link_ID);
+                    auto it = std::find(box_map.at(first_link_ID).link_to.begin(), box_map.at(first_link_ID).link_to.end(), second_link_ID);
 
                     if (it != box_map.at(first_link_ID).link_to.end()) {
                         //If it already exists delete it
