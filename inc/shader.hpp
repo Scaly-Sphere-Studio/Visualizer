@@ -1,4 +1,5 @@
 #pragma once
+
 #include <SSS/GL.hpp>
 
 GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path);

@@ -1,10 +1,6 @@
 #pragma once
-#define _USE_MATH_DEFINES
 
-#include <iostream>
-#include <math.h>
-#include <glm/glm.hpp>
-#include <algorithm>
+#include "_includes.hpp"
 
 //Return the sign of the number as 
 // 1 for positives

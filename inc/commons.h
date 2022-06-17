@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <SSS/GL.hpp>
+#include "_includes.hpp"
 
 // Converts a value to a hex string by outputing it to a string stream
 template <typename T>

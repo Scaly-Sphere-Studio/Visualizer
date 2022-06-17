@@ -1,19 +1,6 @@
 #pragma once
 
-#pragma once
-#include <SSS/GL.hpp>
-#include <vector>
-#include "commons.h"
-#include "shader.hpp"
-#include <cmath>
-#include <random>
-#include <time.h>
-
 #include "Box.h"
-
-#include <SSS/Line/line.h>
-
-#include <unordered_map>
 
 struct debug_Vertex {
 	debug_Vertex(float x, float y, float z, glm::vec3 col);

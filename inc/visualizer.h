@@ -1,19 +1,7 @@
 #pragma once
-#include <SSS/GL.hpp>
-#include <vector>
-#include "commons.h"
-#include "shader.hpp"
-#include "Debugger.h"
-#include <cmath>
-#include <random>
-#include <time.h>
-#include <math.h>
 
 #include "Box.h"
-
-#include <SSS/Line/line.h>
-
-#include <unordered_map>
+#include "Debugger.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,

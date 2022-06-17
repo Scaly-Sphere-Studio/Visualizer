@@ -166,6 +166,7 @@
     <ClInclude Include="inc\math.h" />
     <ClInclude Include="inc\shader.hpp" />
     <ClInclude Include="inc\visualizer.h" />
+    <ClInclude Include="inc\_includes.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\instance.frag" />
