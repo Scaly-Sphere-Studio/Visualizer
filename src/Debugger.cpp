@@ -26,25 +26,25 @@ Debugger::~Debugger()
 
 void Debugger::debug_box(const Box& b)
 {
-    float cursor_size = 5;
+    float cursor_size = 5.f;
     //center
-    cross(b._pos.x + b._size.x / 2, b._pos.y - b._size.y / 2, 0.8, cursor_size);
-    circle(b._pos.x + b._size.x / 2, b._pos.y - b._size.y / 2, 0.8, cursor_size);
+    cross(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
+    circle(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
 
     //cage
     rectangle(b._pos.x, b._pos.y, b._size.x, b._size.y);
 
     //corner
-    circle(b._pos.x, b._pos.y, 0.8, cursor_size);
-    circle(b._pos.x, b._pos.y - b._size.y, 0.8, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y, 0.8, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y - b._size.y, 0.8, cursor_size);
+    circle(b._pos.x, b._pos.y, 0.8f, cursor_size);
+    circle(b._pos.x, b._pos.y - b._size.y, 0.8f, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y, 0.8f, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y - b._size.y, 0.8f, cursor_size);
 
     //mid
-    circle(b._pos.x + b._size.x / 2, b._pos.y, 0.8, cursor_size);
-    circle(b._pos.x + b._size.x / 2, b._pos.y - b._size.y, 0.8, cursor_size);
-    circle(b._pos.x, b._pos.y - b._size.y / 2, 0.8, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y - b._size.y / 2, 0.8, cursor_size);
+    circle(b._pos.x + b._size.x / 2.f, b._pos.y, 0.8f, cursor_size);
+    circle(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y, 0.8f, cursor_size);
+    circle(b._pos.x, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
+    circle(b._pos.x + b._size.x, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
 }
 
 void Debugger::circle(float x, float y, float z, float radius)
@@ -96,12 +96,12 @@ void Debugger::cross(float x, float y, float radius, float angle)
         0.0f, debug_color);
 
     debug_batch.emplace_back(
-        x + radius * glm::cos(0.5 * glm::pi<float>() + glm::radians(angle)),
-        y + radius * glm::sin(0.5 * glm::pi<float>() + glm::radians(angle)),
+        x + radius * glm::cos(0.5f * glm::pi<float>() + glm::radians(angle)),
+        y + radius * glm::sin(0.5f * glm::pi<float>() + glm::radians(angle)),
         0.0f, debug_color);
     debug_batch.emplace_back(
-        x + radius * glm::cos(1.5 * glm::pi<float>() + glm::radians(angle)),
-        y + radius * glm::sin(1.5 * glm::pi<float>() + glm::radians(angle)),
+        x + radius * glm::cos(1.5f * glm::pi<float>() + glm::radians(angle)),
+        y + radius * glm::sin(1.5f * glm::pi<float>() + glm::radians(angle)),
         0.0f, debug_color);
 
 }
@@ -131,7 +131,7 @@ void Debugger::debug_show(GLuint buffer, void* data, size_t size)
     );
 
     // Draw the triangle !
-    glDrawArrays(GL_LINES, 0, size); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(size)); // Starting from vertex 0; 3 vertices total -> 1 triangle
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }

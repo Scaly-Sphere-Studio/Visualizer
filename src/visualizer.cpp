@@ -10,7 +10,7 @@ static const GLfloat g_vertex_buffer_data[] = {
 Visualizer::Visualizer()
 {
     //TODO RANDSEED 
-    std::srand(std::time(nullptr));
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     setup();
 
     
@@ -192,21 +192,22 @@ void Visualizer::draw()
         3,
         3, GL_FLOAT, GL_FALSE,
         sizeof(testBox), (void*)0
-);
+    );
 
-glVertexAttribDivisor(0, 0);
-glVertexAttribDivisor(1, 1);
-glVertexAttribDivisor(2, 1);
-glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(0, 0);
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
 
 
-// Draw the triangle !
-glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, Box::box_batch.size());
+    // Draw the triangle !
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4,
+        static_cast<GLsizei>(Box::box_batch.size()));
 
-glDisableVertexAttribArray(0);
-glDisableVertexAttribArray(1);
-glDisableVertexAttribArray(2);
-glDisableVertexAttribArray(3);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
 
 }
 
@@ -254,15 +255,15 @@ void Visualizer::input()
 void Visualizer::link_box(Box& a, Box& b)
 {
 
-    glm::vec3 offset{ 0,400,0 };
+    glm::vec3 offset{ 0.f, 400.f, 0.f };
     //Create a bezier curve to link the two boxes
     Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.0, glm::vec4(a._color)));
-    Col_grdt.push(std::make_pair(1.0, glm::vec4(b._color)));
+    Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
+    Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
 
     Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.0, 25));
-    Thk_grdt.push(std::make_pair(1.0, 25));
+    Thk_grdt.push(std::make_pair(0.f, 25.f));
+    Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = Polyline::Bezier(
         a.center(), a.center() - offset,
@@ -302,12 +303,12 @@ void Visualizer::link_box_to_cursor(Box& b)
 
     //Create a bezier curve to link the two boxes
     Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.0, glm::vec4(b._color)));
-    Col_grdt.push(std::make_pair(1.0, glm::vec4(0, 0, 0, 1.0)));
+    Col_grdt.push(std::make_pair(0.f, glm::vec4(b._color)));
+    Col_grdt.push(std::make_pair(1.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
 
     Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.0, 25));
-    Thk_grdt.push(std::make_pair(1.0, 25));
+    Thk_grdt.push(std::make_pair(0.f, 25.f));
+    Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = Polyline::Bezier(
         b.center(), b.center() - glm::vec3(0, 800, 0),
@@ -376,24 +377,17 @@ void Visualizer::pop_box(std::string ID)
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
     Ptr const& visu = get();
-    visu->w_w = w;
-    visu->w_h = h;
-    visu->projection = glm::ortho(
-        -static_cast<float>(w) / 2.f,
-        static_cast<float>(w) / 2.f,
-        -static_cast<float>(h) / 2.f,
-        static_cast<float>(h) / 2.f,
-        0.0f,
-        100.0f
-    );
+    visu->w_w = static_cast<float>(w);
+    visu->w_h = static_cast<float>(h);
+    visu->_updateProj();
 }
 
 void Visualizer::setup()
 {
     SSS::GL::Window::CreateArgs args;
     args.title = "VISUALIZER";
-    args.w = w_w;
-    args.h = w_h;
+    args.w = static_cast<int>(w_w);
+    args.h = static_cast<int>(w_h);
     window = SSS::GL::Window::create(args);
     if (!window) {
         SSS::throw_exc("Couldn't create a window");
@@ -417,14 +411,7 @@ void Visualizer::setup()
     debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
     
     //CAMERA SETUP AND CANVAS
-    projection = glm::ortho(
-        -static_cast<float>(w_w) / 2.f,
-        static_cast<float>(w_w) / 2.f,
-        -static_cast<float>(w_h) / 2.f,
-        static_cast<float>(w_h) / 2.f,
-        0.0f,
-        100.0f
-    );
+    _updateProj();
 }
 
 
@@ -432,10 +419,10 @@ void Visualizer::setup()
 bool Visualizer::check_frustrum_render(Box &b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    float dx = glm::abs(cam_pos.x - b._pos.x);
-    float dxmax = (b._size.x + w_w) * 0.5;    
-    float dy = glm::abs(cam_pos.y - b._pos.y);
-    float dymax = (b._size.y + w_h) * 0.5;
+    float const dx = glm::abs(cam_pos.x - b._pos.x);
+    float const dxmax = (b._size.x + w_w) * 0.5f;    
+    float const dy = glm::abs(cam_pos.y - b._pos.y);
+    float const dymax = (b._size.y + w_h) * 0.5f;
 
 
     if ((dx < dxmax) && (dy < dymax)) {
@@ -706,11 +693,11 @@ std::array<float, 3> Visualizer::CubicRoots(float a, float b, float c, float d)
 
     float Im;
 
-    float Q = (3.0 * B - std::pow(A, 2)) / 9.0;
-    float R = (9.0 * A * B - 27.0 * C - 2.0 * std::pow(A, 3.0)) / 54.0;
-    float D = std::pow(Q, 3.0f) + std::pow(R, 2.0f);    // polynomial discriminant
+    float Q = (3.f * B - std::pow(A, 2.f)) / 9.f;
+    float R = (9.f * A * B - 27.f * C - 2.f * std::pow(A, 3.f)) / 54.f;
+    float D = std::pow(Q, 3.f) + std::pow(R, 2.f);    // polynomial discriminant
 
-    std::array<float,3> t;
+    std::array<float, 3U> t;
 
     if (D >= 0)                                 // complex or duplicate roots POI
     {
@@ -724,18 +711,18 @@ std::array<float, 3> Visualizer::CubicRoots(float a, float b, float c, float d)
 
         //discard complex roots//
         if (Im != 0) {
-            t[1] = -1;
-            t[2] = -1;
+            t[1] = -1.f;
+            t[2] = -1.f;
         }
 
     }
     else                                          // distinct real roots
     {
-        float th = std::acos(R / std::sqrt(-std::pow(Q, 3)));
+        float th = std::acos(R / std::sqrt(-std::pow(Q, 3.f)));
 
         t[0] = 2.0f * std::sqrt(-Q) * std::cos(th / 3.0f) - A / 3.0f;
-        t[1] = 2.0f * std::sqrt(-Q) * std::cos((th + 2.0f * M_PI) / 3.0f) - A / 3.0f;
-        t[2] = 2.0f * std::sqrt(-Q) * std::cos((th + 4.0f * M_PI) / 3.0f) - A / 3.0f;
+        t[1] = 2.0f * std::sqrt(-Q) * std::cos((th + 2.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
+        t[2] = 2.0f * std::sqrt(-Q) * std::cos((th + 4.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
         Im = 0.0f;
     }
 
@@ -748,6 +735,11 @@ std::array<float, 3> Visualizer::CubicRoots(float a, float b, float c, float d)
 
 
     return t;
+}
+
+void Visualizer::_updateProj()
+{
+    projection = glm::ortho(-w_w / 2.f, w_w / 2.f, -w_h / 2.f, w_h / 2.f, 0.0f, 100.0f);
 }
 
 //px and py are the coordinates of the start, first tangent, second tangent, end in that order. length = 4

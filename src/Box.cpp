@@ -12,7 +12,7 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
     _color = hex_to_rgb(hex);
 
     //Brightning the color
-    glm::vec4 factor = (glm::vec4(1) - _color) * glm::vec4(0.2);
+    glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
 
     //Create the model
     model.emplace_back(_pos, _size, glm::vec4(_color));

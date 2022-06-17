@@ -44,9 +44,9 @@ glm::vec4 hex_to_rgb(std::string hex) {
 std::string rgb_to_hex(glm::vec3 rgb, bool head) {
     int r, g, b;
 
-    r = std::floor(rgb.r * 255.0f);
-    g = std::floor(rgb.g * 255.0f);
-    b = std::floor(rgb.b * 255.0f);
+    r = static_cast<int>(std::floor(rgb.r * 255.0f));
+    g = static_cast<int>(std::floor(rgb.g * 255.0f));
+    b = static_cast<int>(std::floor(rgb.b * 255.0f));
 
     char hexColor[8];
     std::snprintf(hexColor, sizeof hexColor, "#%02x%02x%02x", r, g, b);
@@ -56,22 +56,22 @@ std::string rgb_to_hex(glm::vec3 rgb, bool head) {
 
 glm::vec4 hsl_to_rgb(glm::vec3 hsl)
 {
-    const float C = hsl.y * (1 - abs(2*hsl.z - 1));
-    const float X = C * (1 - abs(fmod(hsl.x / 60.0, 2.0) - 1));
-    const float m = hsl.z - C / 2.0 ;
+    const float C = hsl.y * (1.f - std::abs(2.f * hsl.z - 1.f));
+    const float X = C * (1.f - std::abs(std::fmod(hsl.x / 60.0f, 2.0f) - 1.f));
+    const float m = hsl.z - C / 2.0f ;
     
-    const unsigned int res = std::floor(hsl.x / 60.0);
+    const unsigned int res = static_cast<int>(std::floor(hsl.x / 60.0f));
 
     switch (res) {
-        case 0: return { C + m, X + m, m, 1.0 };
-        case 1: return { X + m ,C + m, m, 1.0 };
-        case 2: return { m, C + m, X + m, 1.0 };
-        case 3: return { m, X + m, C + m, 1.0 };
-        case 4: return { X + m, m, C + m, 1.0 };
-        case 5: return { C + m, m, X + m, 1.0 };
+        case 0: return { C + m, X + m, m, 1.f };
+        case 1: return { X + m ,C + m, m, 1.f };
+        case 2: return { m, C + m, X + m, 1.f };
+        case 3: return { m, X + m, C + m, 1.f };
+        case 4: return { X + m, m, C + m, 1.f };
+        case 5: return { C + m, m, X + m, 1.f };
     }
 
-    return { 0,0,0,0 };
+    return { 0.f, 0.f, 0.f, 0.f };
 }
 
 glm::vec4 rgb_to_hsl(glm::vec3 rgb)
@@ -83,29 +83,29 @@ glm::vec4 rgb_to_hsl(glm::vec3 rgb)
     float h = 0.0f, s, l;
 
     //LIGHTNESS
-    l = (cmax + cmin)/2.0f;
+    l = (cmax + cmin) / 2.0f;
 
     //SATURATION
-    s = delta / (1 - std::abs(2 * l - 1));
+    s = delta / (1.f - std::abs(2.f * l - 1.f));
 
     //HUE 
-    if (delta == 0) {
-        return { 0,0,l, 1.0 };
+    if (delta == 0.f) {
+        return { 0.f , 0.f , l, 1.f };
     }
 
     if (cmax == rgb.r) {
-        h = 60 * std::fmod(((rgb.g - rgb.b) / delta), 6.0);
+        h = 60.f * std::fmod(((rgb.g - rgb.b) / delta), 6.f);
     }
 
     if (cmax == rgb.g) {
-        h = 60 * (((rgb.b - rgb.r) / delta) + 2.0);
+        h = 60.f * (((rgb.b - rgb.r) / delta) + 2.f);
     } 
 
     if (cmax == rgb.b) {
-        h = 60 * (((rgb.r - rgb.g) / delta) + 4.0);
+        h = 60.f * (((rgb.r - rgb.g) / delta) + 4.f);
     }
 
-    return glm::vec4{ h, s, l, 1.0 };
+    return glm::vec4{ h, s, l, 1.0f };
 }
 
 std::string rand_string() {
@@ -114,7 +114,7 @@ std::string rand_string() {
 
 float rand_float()
 {
-    return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX + 1);
+    return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX + 1.f);
 }
 
 std::string rand_color()

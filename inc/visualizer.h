@@ -21,13 +21,14 @@ public:
 private:
 	static void resize_callback(GLFWwindow* win, int w, int h);
 
+
 	void setup();
 	void draw();
 	void input();
 	
 	V_STATES _states = V_STATES::DEFAULT;
-	float w_h = 810;
-	float w_w = 1440;
+	float w_h{ 810.f };
+	float w_w{ 1440.f };
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::unordered_map<std::string, Box> box_map;
 	std::unordered_map<std::string, std::shared_ptr<Polyline>> arrow_map;
@@ -84,6 +85,8 @@ private:
 	SSS::GL::Window::Shared window;
 	GLuint vertexbuffer;
 	double c_x = 0.0, c_y = 0.0;
+
+	void _updateProj();
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 mvp;
