@@ -10,13 +10,17 @@ enum struct V_STATES {
 };
 
 class Visualizer {
-public:
 	Visualizer();
+public:
+	using Ptr = std::unique_ptr<Visualizer>;
+	static Ptr const& get();
 	~Visualizer();
 
 	void run();
 
 private:
+	static void resize_callback(GLFWwindow* win, int w, int h);
+
 	void setup();
 	void draw();
 	void input();
@@ -77,7 +81,7 @@ private:
 	GLuint billboard_vertex_buffer;
 	GLuint particles_data;
 
-	GLFWwindow* window;
+	SSS::GL::Window::Shared window;
 	GLuint vertexbuffer;
 	double c_x = 0.0, c_y = 0.0;
 	glm::mat4 projection;

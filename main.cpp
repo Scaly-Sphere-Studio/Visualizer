@@ -9,6 +9,6 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 int main(void)
 {
-	Visualizer v;
-	v.run();
+	Visualizer::Ptr const& v = Visualizer::get();
+	v->run();
 }

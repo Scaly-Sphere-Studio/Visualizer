@@ -29,6 +29,12 @@ Visualizer::Visualizer()
     clear_color = hex_to_rgb("#4d5f83");
 }
 
+Visualizer::Ptr const& Visualizer::get()
+{
+    static Ptr const singleton(new Visualizer());
+    return singleton;
+}
+
 Visualizer::~Visualizer()
 {
 
@@ -39,7 +45,7 @@ Visualizer::~Visualizer()
 
 void Visualizer::run()
 {
-    
+    SSS::GL::Context const context(window);
 
     //UPDATES THE BUFFER
     glGenBuffers(1, &billboard_vertex_buffer);
@@ -55,9 +61,9 @@ void Visualizer::run()
     glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
 
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        glfwGetCursorPos(window, &c_x, &c_y);
+    while (!window->shouldClose()) {
+        SSS::GL::pollEverything();
+        glfwGetCursorPos(window->getGLFWwindow(), &c_x, &c_y);
         input();
         
         
@@ -135,7 +141,7 @@ void Visualizer::run()
 
 
 
-        glfwSwapBuffers(window);
+        window->printFrame();
         debug.debug_batch.clear();
         Box::box_batch.clear();
     }
@@ -206,49 +212,41 @@ glDisableVertexAttribArray(3);
 
 void Visualizer::input()
 {
-
+    SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
     //INPUT CAMERA
     float speed = 10.0f;
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_DOWN]) {
         cam_pos -= glm::vec3(0.0f, speed, 0.0f);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_RIGHT]) {
         cam_pos += glm::vec3(speed, 0.0f, 0.0f);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_UP]) {
         cam_pos += glm::vec3(0.0f, speed, 0.0f);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_LEFT]) {
         cam_pos -= glm::vec3(speed, 0.0f, 0.0f);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
+    if (inputs[GLFW_KEY_KP_0]) {
+        glfwSetWindowShouldClose(window->getGLFWwindow(), true);
     }
 
 
     //INPUTS BOX
     //TEST AJOUT
-    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_KP_ADD]) {
         push_box(rand_color());
     }
 
     //TEST SUPPRESSION
-    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
+    if (inputs[GLFW_KEY_KP_SUBTRACT]) {
         pop_box(last_selected_ID);
     }
-
-
-
-    //INPUT WINDOW
-    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-
 }
 
 
@@ -375,34 +373,38 @@ void Visualizer::pop_box(std::string ID)
     current_selected_ID.clear();
 }
 
+void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
+{
+    Ptr const& visu = get();
+    visu->w_w = w;
+    visu->w_h = h;
+    visu->projection = glm::ortho(
+        -static_cast<float>(w) / 2.f,
+        static_cast<float>(w) / 2.f,
+        -static_cast<float>(h) / 2.f,
+        static_cast<float>(h) / 2.f,
+        0.0f,
+        100.0f
+    );
+}
+
 void Visualizer::setup()
 {
-    if (!glfwInit()) {
-        std::cout << "couldn't init glfw" << std::endl;
+    SSS::GL::Window::CreateArgs args;
+    args.title = "VISUALIZER";
+    args.w = w_w;
+    args.h = w_h;
+    window = SSS::GL::Window::create(args);
+    if (!window) {
+        SSS::throw_exc("Couldn't create a window");
     }
 
-    window = glfwCreateWindow(w_w, w_h, "VISUALISEUR", NULL, NULL);
-    if (!window)
-    {
+    SSS::GL::Context const context(window);
 
-    }
-
-    glfwMakeContextCurrent(window);
-    glfwSetWindowPos(window, 200, 100);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-    }
-
-    // Enable blending (transparency)
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Enable depth test
-    glDepthFunc(GL_LESS);
+    window->setVSYNC(true);
+    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
 
     //GL TRIANGLE
-
     VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
@@ -415,7 +417,14 @@ void Visualizer::setup()
     debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
     
     //CAMERA SETUP AND CANVAS
-    projection = glm::ortho(-static_cast<float>(w_w) / 2, static_cast<float>(w_w) / 2, -static_cast<float>(w_h) / 2, static_cast<float>(w_h) / 2, 0.0f, 100.0f);
+    projection = glm::ortho(
+        -static_cast<float>(w_w) / 2.f,
+        static_cast<float>(w_w) / 2.f,
+        -static_cast<float>(w_h) / 2.f,
+        static_cast<float>(w_h) / 2.f,
+        0.0f,
+        100.0f
+    );
 }
 
 
@@ -463,7 +472,7 @@ void Visualizer::drag_boxes()
     static glm::vec3 cur_pos;
     
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
-    if (current_selected_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    if (current_selected_ID.empty() && glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 
         //Retrieve the ID of the current selected box
         clicked_box_ID(current_selected_ID);
@@ -502,7 +511,7 @@ void Visualizer::drag_boxes()
             cur_pos = new_pos; //update the position
         }
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
             && box_map.at(current_selected_ID)._clicked) {
             
             box_map.at(current_selected_ID)._clicked = false;
@@ -517,7 +526,7 @@ void Visualizer::line_drag_link()
     static glm::vec3 first_cursor_pos;
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
     if (_states == V_STATES::DEFAULT) {
-        if (first_link_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        if (first_link_ID.empty() && glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
             clicked_box_ID(first_link_ID);
 
             //CUTLINE OPTION
@@ -549,7 +558,7 @@ void Visualizer::line_drag_link()
         arrow_map.at("CUTLINE") = Polyline::Segment(first_cursor_pos, second_cursor_pos);
 
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
             static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
@@ -584,7 +593,7 @@ void Visualizer::line_drag_link()
         if (!first_link_ID.empty()) {
             link_box_to_cursor(box_map.at(first_link_ID));
 
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+            if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
                 if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
 
                     //First look out if the link between boxes already exists
@@ -619,7 +628,7 @@ void Visualizer::multi_select_drag()
     static glm::vec3 cur_pos;
 
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
-    if (current_selected_ID.empty() && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    if (current_selected_ID.empty() && glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 
         //Retrieve the ID of the current selected box
         clicked_box_ID(current_selected_ID);
@@ -658,7 +667,7 @@ void Visualizer::multi_select_drag()
             cur_pos = new_pos; //update the position
         }
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
+        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
             && box_map.at(current_selected_ID)._clicked) {
 
             box_map.at(current_selected_ID)._clicked = false;
