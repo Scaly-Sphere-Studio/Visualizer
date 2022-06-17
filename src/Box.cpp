@@ -1,4 +1,4 @@
-#include "Box.h"
+#include "../inc/Box.h"
 
 std::vector<testBox>Box::box_batch{};
 GLuint Box::box_shader = 0;

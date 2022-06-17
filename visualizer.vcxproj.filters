@@ -13,68 +13,71 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Fichiers glsl">
+      <UniqueIdentifier>{e8629981-873c-4152-a201-60a69688d2be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="imgui_impl_glfw.cpp">
+    <ClCompile Include="src\shader.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="imgui_impl_opengl3.cpp">
+    <ClCompile Include="src\visualizer.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="shader.cpp">
+    <ClCompile Include="src\commons.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="visualizer.cpp">
+    <ClCompile Include="src\Box.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="commons.cpp">
+    <ClCompile Include="src\Debugger.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="Box.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Debugger.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="math.cpp">
+    <ClCompile Include="src\math.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="imgui_impl_glfw.h">
+    <ClInclude Include="inc\visualizer.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="imgui_impl_opengl3.h">
+    <ClInclude Include="inc\Box.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="shader.hpp">
-      <Filter>Fichiers sources</Filter>
-    </ClInclude>
-    <ClInclude Include="visualizer.h">
+    <ClInclude Include="inc\Debugger.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="commons.h">
-      <Filter>Fichiers sources</Filter>
-    </ClInclude>
-    <ClInclude Include="Box.h">
+    <ClInclude Include="inc\math.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="Debugger.h">
+    <ClInclude Include="inc\commons.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="math.h">
+    <ClInclude Include="inc\shader.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="triangle.frag" />
-    <None Include="triangle.vert" />
-    <None Include="instance.frag" />
-    <None Include="instance.vert" />
-    <None Include="line.frag" />
-    <None Include="line.vert" />
+    <None Include="glsl\instance.frag">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\instance.vert">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\line.frag">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\line.vert">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\triangle.frag">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\triangle.vert">
+      <Filter>Fichiers glsl</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -89,6 +89,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +106,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,6 +123,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +140,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,33 +151,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Box.cpp" />
-    <ClCompile Include="commons.cpp" />
-    <ClCompile Include="Debugger.cpp" />
-    <ClCompile Include="imgui_impl_glfw.cpp" />
-    <ClCompile Include="imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\Box.cpp" />
+    <ClCompile Include="src\commons.cpp" />
+    <ClCompile Include="src\Debugger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="math.cpp" />
-    <ClCompile Include="shader.cpp" />
-    <ClCompile Include="visualizer.cpp" />
+    <ClCompile Include="src\math.cpp" />
+    <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\visualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Box.h" />
-    <ClInclude Include="commons.h" />
-    <ClInclude Include="Debugger.h" />
-    <ClInclude Include="imgui_impl_glfw.h" />
-    <ClInclude Include="imgui_impl_opengl3.h" />
-    <ClInclude Include="math.h" />
-    <ClInclude Include="shader.hpp" />
-    <ClInclude Include="visualizer.h" />
+    <ClInclude Include="inc\Box.h" />
+    <ClInclude Include="inc\commons.h" />
+    <ClInclude Include="inc\Debugger.h" />
+    <ClInclude Include="inc\math.h" />
+    <ClInclude Include="inc\shader.hpp" />
+    <ClInclude Include="inc\visualizer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="instance.frag" />
-    <None Include="instance.vert" />
-    <None Include="line.frag" />
-    <None Include="line.vert" />
-    <None Include="triangle.frag" />
-    <None Include="triangle.vert" />
+    <None Include="glsl\instance.frag" />
+    <None Include="glsl\instance.vert" />
+    <None Include="glsl\line.frag" />
+    <None Include="glsl\line.vert" />
+    <None Include="glsl\triangle.frag" />
+    <None Include="glsl\triangle.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

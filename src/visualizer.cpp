@@ -1,4 +1,4 @@
-#include "visualizer.h"
+#include "../inc/visualizer.h"
 
 static const GLfloat g_vertex_buffer_data[] = {
  0.0f, -1.0f, 0.0f,
@@ -6,8 +6,6 @@ static const GLfloat g_vertex_buffer_data[] = {
  0.0f, 0.0f, 0.0f,
  1.0f, 0.0f, 0.0f,
 };
-
-
 
 Visualizer::Visualizer()
 {
@@ -412,9 +410,9 @@ void Visualizer::setup()
     glGenBuffers(1, &vertexbuffer);
     glGenBuffers(1, &debug.debug_vb);
 
-    Box::box_shader = LoadShaders("instance.vert", "instance.frag");
-    line_shader_ID = LoadShaders("line.vert", "line.frag");
-    debug.debugID = LoadShaders("triangle.vert", "triangle.frag");
+    Box::box_shader = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
+    line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
+    debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
     
     //CAMERA SETUP AND CANVAS
     projection = glm::ortho(-static_cast<float>(w_w) / 2, static_cast<float>(w_w) / 2, -static_cast<float>(w_h) / 2, static_cast<float>(w_h) / 2, 0.0f, 100.0f);

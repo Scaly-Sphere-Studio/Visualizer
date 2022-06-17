@@ -1,4 +1,4 @@
-#include "Debugger.h"
+#include "../inc/Debugger.h"
 
 
 glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
