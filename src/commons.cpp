@@ -1,4 +1,4 @@
-#include "../inc/commons.h"
+#include "commons.h"
 
 std::vector<std::string> split_str(std::string src, unsigned int split_len) {
 
