@@ -21,7 +21,7 @@ public:
 	void set_col(std::string hex);
 
 
-	bool check_collision(double x, double y);
+	bool check_collision(glm::vec3 const& c_pos);
 
 
 	//STATES 

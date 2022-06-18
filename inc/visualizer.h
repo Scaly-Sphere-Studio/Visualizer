@@ -56,8 +56,8 @@ private:
 	std::string first_link_ID = "";
 	std::string second_link_ID = "";
 
-
-
+	//Translate the screen cursor position from input to the world coordinates
+	glm::vec3 cursor_map_coordinates();
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
@@ -93,9 +93,4 @@ private:
 
 	/* [DEBUGGER] */
 	Debugger debug;
-
-	/* [MISC] */
-	bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm::vec3 b_c, glm::vec3 b_d, glm::vec3 s_a, glm::vec3 s_b);
-	std::array<float, 3> CubicRoots(float a, float b, float c, float d);
-	std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3);
 };

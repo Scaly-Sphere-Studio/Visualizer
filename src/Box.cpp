@@ -37,12 +37,12 @@ void Box::set_col(std::string hex)
 }
 
 
-bool Box::check_collision(double x, double y)
+bool Box::check_collision(glm::vec3 const& c_pos)
 {
     //Check if a point is hovering the box
     //Point to Box Collision test
-    if (((x > _pos.x) && (x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
-        ((y < _pos.y) && (y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
+    if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
+        ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
 
         if (!_hovered) {
             //switch selected state

@@ -7,6 +7,115 @@ static const GLfloat g_vertex_buffer_data[] = {
  1.0f, 0.0f, 0.0f,
 };
 
+/* [MISC] */
+static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
+{
+    std::array<float, 4> Z;
+    Z[0] = -P0 + 3.0f * P1 + -3.0f * P2 + P3;
+    Z[1] = 3.0f * P0 - 6.0f * P1 + 3.0f * P2;
+    Z[2] = -3.0f * P0 + 3.0f * P1;
+    Z[3] = P0;
+
+    return Z;
+}
+
+static std::array<float, 3> CubicRoots(float a, float b, float c, float d)
+{
+
+    float A = b / a;
+    float B = c / a;
+    float C = d / a;
+
+    float Im;
+
+    float Q = (3.f * B - std::pow(A, 2.f)) / 9.f;
+    float R = (9.f * A * B - 27.f * C - 2.f * std::pow(A, 3.f)) / 54.f;
+    float D = std::pow(Q, 3.f) + std::pow(R, 2.f);    // polynomial discriminant
+
+    std::array<float, 3U> t;
+
+    if (D >= 0)                                 // complex or duplicate roots POI
+    {
+        float S = signum(R + std::sqrt(D)) * std::pow(std::abs(R + std::sqrt(D)), (1.0f / 3.0f));
+        float T = signum(R - std::sqrt(D)) * std::pow(std::abs(R - std::sqrt(D)), (1.0f / 3.0f));
+
+        t[0] = -A / 3.0f + (S + T);                         // real root
+        t[1] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
+        t[2] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
+        Im = std::abs(std::sqrt(3.0f) * (S - T) / 2.0f);    // complex part of root pair   
+
+        //discard complex roots//
+        if (Im != 0) {
+            t[1] = -1.f;
+            t[2] = -1.f;
+        }
+
+    }
+    else                                          // distinct real roots
+    {
+        float th = std::acos(R / std::sqrt(-std::pow(Q, 3.f)));
+
+        t[0] = 2.0f * std::sqrt(-Q) * std::cos(th / 3.0f) - A / 3.0f;
+        t[1] = 2.0f * std::sqrt(-Q) * std::cos((th + 2.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
+        t[2] = 2.0f * std::sqrt(-Q) * std::cos((th + 4.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
+        Im = 0.0f;
+    }
+
+    /*discard out of spec roots*/
+    for (size_t i = 0; i < t.size(); i++) {
+        if (t[i] < 0 || t[i] > 1.0) {
+            t[i] = -1;
+        }
+    }
+
+
+    return t;
+}
+
+//px and py are the coordinates of the start, first tangent, second tangent, end in that order. length = 4
+//lx and ly are the start then end coordinates of the stright line. length = 2
+static bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm::vec3 b_c, glm::vec3 b_d,
+    glm::vec3 s_a, glm::vec3 s_b) {
+
+    glm::vec2 X;
+
+
+    float A = s_b.y - s_a.y;      //A=y2-y1
+    float B = s_a.x - s_b.x;      //B=x1-x2
+    float C = s_a.x * (s_a.y - s_b.y) + s_a.y * (s_b.x - s_a.x);  //C=x1*(y1-y2)+y1*(x2-x1)
+
+    std::array<float, 4> bx = BezierCoeffs(b_a.x, b_b.x, b_c.x, b_d.x);
+    std::array<float, 4> by = BezierCoeffs(b_a.y, b_b.y, b_c.y, b_d.y);
+
+    std::array<float, 4> P;
+    P[0] = A * bx[0] + B * by[0];       /*t^3*/
+    P[1] = A * bx[1] + B * by[1];       /*t^2*/
+    P[2] = A * bx[2] + B * by[2];       /*t*/
+    P[3] = A * bx[3] + B * by[3] + C;   /*1*/
+
+    std::array<float, 3> r = CubicRoots(P[0], P[1], P[2], P[3]);
+
+    /*verify the roots are in bounds of the linear segment*/
+    for (size_t i = 0; i < r.size(); i++) {
+        float t = r[i];
+
+        X[0] = bx[0] * t * t * t + bx[1] * t * t + bx[2] * t + bx[3];
+        X[1] = by[0] * t * t * t + by[1] * t * t + by[2] * t + by[3];
+
+        /*above is intersection point assuming infinitely long line segment,
+          make sure we are also in bounds of the line*/
+        float s;
+        if ((s_b.x - s_a.x) != 0) { s = (X[0] - s_a.x) / (s_b.x - s_a.x); }          /*if not vertical line*/
+        else { s = (X[1] - s_a.y) / (s_b.y - s_a.y); }
+
+        /*in bounds?*/
+        if (t > 0 && t < 1.0 && s > 0 && s < 1.0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Visualizer::Visualizer()
 {
     //TODO RANDSEED 
@@ -14,8 +123,8 @@ Visualizer::Visualizer()
     setup();
 
     
-    Box b1 = Box(glm::vec3(0.0f, 400.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
-    Box b2 = Box(glm::vec3(700.0f, 0.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
+    Box b1 = Box(glm::vec3(-400.0f, 75.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
+    Box b2 = Box(glm::vec3(400.0f, -80.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
 
     b1.id = i1;
     b2.id = i2;
@@ -152,7 +261,6 @@ void Visualizer::run()
 
 void Visualizer::draw()
 {
-
     //Render
     //// 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
@@ -164,11 +272,7 @@ void Visualizer::draw()
     );
 
     //Particles
-    int first = 1, second = 2, third = 3;
-
     glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-
-
 
     //Size separate by width and height
     glEnableVertexAttribArray(1);
@@ -299,7 +403,7 @@ void Visualizer::link_box(Box& a)
 
 void Visualizer::link_box_to_cursor(Box& b)
 {
-    glm::vec3 c_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+    glm::vec3 c_pos = cursor_map_coordinates();
 
     //Create a bezier curve to link the two boxes
     Gradient<glm::vec4> Col_grdt;
@@ -339,7 +443,7 @@ void Visualizer::pop_link(Box& a, Box& b)
 
 void Visualizer::push_box(std::string boxID)
 {
-    glm::vec3 position = glm::vec3{ (c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, 0.0f };
+    glm::vec3 position = cursor_map_coordinates();
     box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
     box_map.at(boxID).id = boxID;
 }
@@ -431,6 +535,9 @@ bool Visualizer::check_frustrum_render(Box &b)
     return false;
 }
 
+glm::vec3 Visualizer::cursor_map_coordinates() {
+    return glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+}
 
 void Visualizer::frustrum_test()
 {
@@ -476,7 +583,7 @@ void Visualizer::drag_boxes()
             box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
-        cur_pos = glm::vec3(c_x, c_y, 0);
+        cur_pos = cursor_map_coordinates();
         //update the front selected box
         last_selected_ID = current_selected_ID;
 
@@ -486,11 +593,11 @@ void Visualizer::drag_boxes()
         //DRAG BOX
         static glm::vec3 delta;
         if (box_map.at(current_selected_ID)._clicked) {
-            glm::vec3 new_pos = { c_x, c_y, 0 };
+            glm::vec3 new_pos = cursor_map_coordinates();
             delta = new_pos - cur_pos;
             //Update only if the box has moved
             if (new_pos != cur_pos) {
-                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, -delta.y, 0 };
+                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
                 box_map.at(current_selected_ID).update();
                 link_box(box_map.at(current_selected_ID));
             }
@@ -521,7 +628,7 @@ void Visualizer::line_drag_link()
                 _states = V_STATES::CUTLINE;
 
                 //Begin the cut line 
-                first_cursor_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+                first_cursor_pos = cursor_map_coordinates();
                 arrow_map.insert(std::make_pair("CUTLINE", Polyline::Segment(first_cursor_pos, first_cursor_pos)));
 
             }
@@ -539,7 +646,7 @@ void Visualizer::line_drag_link()
     //}
 
     if (_states == V_STATES::CUTLINE) {
-        glm::vec3 second_cursor_pos = glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 5.0 } + cam_pos;
+        glm::vec3 second_cursor_pos = cursor_map_coordinates();
 
 
         arrow_map.at("CUTLINE") = Polyline::Segment(first_cursor_pos, second_cursor_pos);
@@ -632,7 +739,7 @@ void Visualizer::multi_select_drag()
             box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
-        cur_pos = glm::vec3(c_x, c_y, 0);
+        cur_pos = cursor_map_coordinates();
         //update the front selected box
         last_selected_ID = current_selected_ID;
 
@@ -642,11 +749,11 @@ void Visualizer::multi_select_drag()
         //DRAG BOX
         static glm::vec3 delta;
         if (box_map.at(current_selected_ID)._clicked) {
-            glm::vec3 new_pos = { c_x, c_y, 0 };
+            glm::vec3 new_pos = cursor_map_coordinates();
             delta = new_pos - cur_pos;
             //Update only if the box has moved
             if (new_pos != cur_pos) {
-                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, -delta.y, 0 };
+                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
                 box_map.at(current_selected_ID).update();
                 link_box(box_map.at(current_selected_ID));
             }
@@ -666,7 +773,7 @@ void Visualizer::multi_select_drag()
 std::string Visualizer::clicked_box_ID(std::string& ID)
 {
     for (auto it = box_map.begin(); it != box_map.end(); it++) {
-        if (it->second.check_collision((c_x - w_w / 2.0) + cam_pos.x, (w_h / 2.0 - c_y) + cam_pos.y))
+        if (it->second.check_collision(cursor_map_coordinates()))
         {
             std::string on_top_box_ID = it->first;
 
@@ -684,115 +791,7 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
     return ID;
 }
 
-std::array<float, 3> Visualizer::CubicRoots(float a, float b, float c, float d)
-{
-
-    float A = b / a;
-    float B = c / a;
-    float C = d / a;
-
-    float Im;
-
-    float Q = (3.f * B - std::pow(A, 2.f)) / 9.f;
-    float R = (9.f * A * B - 27.f * C - 2.f * std::pow(A, 3.f)) / 54.f;
-    float D = std::pow(Q, 3.f) + std::pow(R, 2.f);    // polynomial discriminant
-
-    std::array<float, 3U> t;
-
-    if (D >= 0)                                 // complex or duplicate roots POI
-    {
-        float S = signum(R + std::sqrt(D)) * std::pow(std::abs(R + std::sqrt(D)), (1.0f / 3.0f));
-        float T = signum(R - std::sqrt(D)) * std::pow(std::abs(R - std::sqrt(D)), (1.0f / 3.0f));
-
-        t[0] = -A / 3.0f + (S + T);                         // real root
-        t[1] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
-        t[2] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
-        Im = std::abs(std::sqrt(3.0f) * (S - T) / 2.0f);    // complex part of root pair   
-
-        //discard complex roots//
-        if (Im != 0) {
-            t[1] = -1.f;
-            t[2] = -1.f;
-        }
-
-    }
-    else                                          // distinct real roots
-    {
-        float th = std::acos(R / std::sqrt(-std::pow(Q, 3.f)));
-
-        t[0] = 2.0f * std::sqrt(-Q) * std::cos(th / 3.0f) - A / 3.0f;
-        t[1] = 2.0f * std::sqrt(-Q) * std::cos((th + 2.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
-        t[2] = 2.0f * std::sqrt(-Q) * std::cos((th + 4.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
-        Im = 0.0f;
-    }
-
-    /*discard out of spec roots*/
-    for (size_t i = 0; i < t.size(); i++) {
-        if (t[i] < 0 || t[i] > 1.0) {
-            t[i] = -1;
-        }  
-    }
-
-
-    return t;
-}
-
 void Visualizer::_updateProj()
 {
     projection = glm::ortho(-w_w / 2.f, w_w / 2.f, -w_h / 2.f, w_h / 2.f, 0.0f, 100.0f);
-}
-
-//px and py are the coordinates of the start, first tangent, second tangent, end in that order. length = 4
-//lx and ly are the start then end coordinates of the stright line. length = 2
-bool Visualizer::cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm::vec3 b_c, glm::vec3 b_d,
-    glm::vec3 s_a, glm::vec3 s_b) {
-    
-    glm::vec2 X;
-
-    
-    float A = s_b.y - s_a.y;      //A=y2-y1
-    float B = s_a.x - s_b.x;      //B=x1-x2
-    float C = s_a.x * (s_a.y - s_b.y) + s_a.y * (s_b.x - s_a.x);  //C=x1*(y1-y2)+y1*(x2-x1)
-
-    std::array<float, 4> bx = BezierCoeffs(b_a.x, b_b.x, b_c.x, b_d.x);
-    std::array<float, 4> by = BezierCoeffs(b_a.y, b_b.y, b_c.y, b_d.y);
-
-    std::array<float, 4> P;
-    P[0] = A * bx[0] + B * by[0];       /*t^3*/
-    P[1] = A * bx[1] + B * by[1];       /*t^2*/
-    P[2] = A * bx[2] + B * by[2];       /*t*/
-    P[3] = A * bx[3] + B * by[3] + C;   /*1*/
-
-    std::array<float, 3> r = CubicRoots(P[0], P[1], P[2], P[3]);
-    
-    /*verify the roots are in bounds of the linear segment*/
-    for (size_t i = 0; i < r.size(); i++) {
-        float t = r[i];
-
-        X[0] = bx[0] * t * t * t + bx[1] * t * t + bx[2] * t + bx[3];
-        X[1] = by[0] * t * t * t + by[1] * t * t + by[2] * t + by[3];
-
-        /*above is intersection point assuming infinitely long line segment,
-          make sure we are also in bounds of the line*/
-        float s;
-        if ((s_b.x - s_a.x) != 0) { s = (X[0] - s_a.x) / (s_b.x - s_a.x); }          /*if not vertical line*/  
-        else{ s = (X[1] - s_a.y) / (s_b.y - s_a.y); }
-            
-        /*in bounds?*/
-        if (t > 0 && t < 1.0 && s > 0 && s < 1.0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-std::array<float, 4> Visualizer::BezierCoeffs(float P0, float P1, float P2, float P3)
-{
-    std::array<float, 4> Z;
-    Z[0] = -P0 + 3.0f * P1 + -3.0f * P2 + P3;
-    Z[1] = 3.0f * P0 - 6.0f * P1 + 3.0f * P2;
-    Z[2] = -3.0f * P0 + 3.0f * P1;
-    Z[3] = P0;
-
-    return Z;
 }
