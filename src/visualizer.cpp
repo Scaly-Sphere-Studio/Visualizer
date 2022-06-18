@@ -258,6 +258,59 @@ void Visualizer::run()
 }
 
 
+void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    //INPUTS BOX
+    if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
+        Visualizer::get()->push_box(rand_color());
+    }
+
+    //TEST SUPPRESSION
+    if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
+        Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
+    }
+}
+
+void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
+{
+    Ptr const& visu = get();
+    visu->w_w = static_cast<float>(w);
+    visu->w_h = static_cast<float>(h);
+    visu->_updateProj();
+}
+
+void Visualizer::setup()
+{
+    SSS::GL::Window::CreateArgs args;
+    args.title = "VISUALIZER";
+    args.w = static_cast<int>(w_w);
+    args.h = static_cast<int>(w_h);
+    window = SSS::GL::Window::create(args);
+    if (!window) {
+        SSS::throw_exc("Couldn't create a window");
+    }
+
+    SSS::GL::Context const context(window);
+
+    window->setVSYNC(true);
+    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window->setCallback(glfwSetKeyCallback, key_callback);
+
+    //GL TRIANGLE
+    VertexArrayID;
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
+    glGenBuffers(1, &vertexbuffer);
+    glGenBuffers(1, &debug.debug_vb);
+
+    Box::box_shader = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
+    line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
+    debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
+    
+    //CAMERA SETUP AND CANVAS
+    _updateProj();
+}
 
 void Visualizer::draw()
 {
@@ -477,48 +530,6 @@ void Visualizer::pop_box(std::string ID)
     last_selected_ID.clear();
     current_selected_ID.clear();
 }
-
-void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
-{
-    Ptr const& visu = get();
-    visu->w_w = static_cast<float>(w);
-    visu->w_h = static_cast<float>(h);
-    visu->_updateProj();
-}
-
-void Visualizer::setup()
-{
-    SSS::GL::Window::CreateArgs args;
-    args.title = "VISUALIZER";
-    args.w = static_cast<int>(w_w);
-    args.h = static_cast<int>(w_h);
-    window = SSS::GL::Window::create(args);
-    if (!window) {
-        SSS::throw_exc("Couldn't create a window");
-    }
-
-    SSS::GL::Context const context(window);
-
-    window->setVSYNC(true);
-    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
-    window->setCallback(glfwSetKeyCallback, key_callback);
-
-    //GL TRIANGLE
-    VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    glGenBuffers(1, &vertexbuffer);
-    glGenBuffers(1, &debug.debug_vb);
-
-    Box::box_shader = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
-    line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
-    debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
-    
-    //CAMERA SETUP AND CANVAS
-    _updateProj();
-}
-
 
 
 bool Visualizer::check_frustrum_render(Box &b)
@@ -789,17 +800,4 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
 void Visualizer::_updateProj()
 {
     projection = glm::ortho(-w_w / 2.f, w_w / 2.f, -w_h / 2.f, w_h / 2.f, 0.0f, 100.0f);
-}
-
-void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    //INPUTS BOX
-    if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
-        Visualizer::get()->push_box(rand_color());
-    }
-
-    //TEST SUPPRESSION
-    if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
-        Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
-    }
 }
