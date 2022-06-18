@@ -20,7 +20,7 @@ public:
 
 private:
 	static void resize_callback(GLFWwindow* win, int w, int h);
-
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 	void setup();
 	void draw();

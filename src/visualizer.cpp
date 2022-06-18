@@ -342,16 +342,16 @@ void Visualizer::input()
     }
 
 
-    //INPUTS BOX
-    //TEST AJOUT
-    if (inputs[GLFW_KEY_KP_ADD]) {
-        push_box(rand_color());
-    }
+    ////INPUTS BOX
+    ////TEST AJOUT
+    //if (inputs[GLFW_KEY_KP_ADD]) {
+    //    push_box(rand_color());
+    //}
 
-    //TEST SUPPRESSION
-    if (inputs[GLFW_KEY_KP_SUBTRACT]) {
-        pop_box(last_selected_ID);
-    }
+    ////TEST SUPPRESSION
+    //if (inputs[GLFW_KEY_KP_SUBTRACT]) {
+    //    pop_box(last_selected_ID);
+    //}
 }
 
 
@@ -501,6 +501,7 @@ void Visualizer::setup()
 
     window->setVSYNC(true);
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window->setCallback(glfwSetKeyCallback, key_callback);
 
     //GL TRIANGLE
     VertexArrayID;
@@ -788,4 +789,17 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
 void Visualizer::_updateProj()
 {
     projection = glm::ortho(-w_w / 2.f, w_w / 2.f, -w_h / 2.f, w_h / 2.f, 0.0f, 100.0f);
+}
+
+void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    //INPUTS BOX
+    if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
+        Visualizer::get()->push_box(rand_color());
+    }
+
+    //TEST SUPPRESSION
+    if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
+        Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
+    }
 }
