@@ -536,7 +536,7 @@ bool Visualizer::check_frustrum_render(Box &b)
 }
 
 glm::vec3 Visualizer::cursor_map_coordinates() {
-    return glm::vec3{ (c_x - w_w / 2), (w_h / 2 - c_y), 0.0 } + cam_pos;
+    return glm::vec3{ (c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, 0.0 };
 }
 
 void Visualizer::frustrum_test()
@@ -601,7 +601,6 @@ void Visualizer::drag_boxes()
                 box_map.at(current_selected_ID).update();
                 link_box(box_map.at(current_selected_ID));
             }
-            
             cur_pos = new_pos; //update the position
         }
 
@@ -647,10 +646,7 @@ void Visualizer::line_drag_link()
 
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-
-
         arrow_map.at("CUTLINE") = Polyline::Segment(first_cursor_pos, second_cursor_pos);
-
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
@@ -677,9 +673,7 @@ void Visualizer::line_drag_link()
             cut_lines_selection.clear();
 
             _states = V_STATES::DEFAULT;
-        }
-
-        
+        }        
     }
 
 
