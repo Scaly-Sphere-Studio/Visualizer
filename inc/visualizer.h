@@ -51,10 +51,10 @@ private:
 	//Remove the selected box
 	void pop_box(std::string ID);
 	
-	std::string current_selected_ID = "";
-	std::string last_selected_ID = "";
-	std::string first_link_ID = "";
-	std::string second_link_ID = "";
+	std::string current_selected_ID;
+	std::string last_selected_ID;
+	std::string first_link_ID;
+	std::string second_link_ID;
 
 	//Translate the screen cursor position from input to the world coordinates
 	glm::vec3 cursor_map_coordinates();
@@ -72,7 +72,6 @@ private:
 	/* [RENDERER DATA] */
 	GLuint VertexArrayID;
 	GLuint MatrixID;
-	glm::vec3 cam_pos{ 0,0,3 };
 	//GL CONTEXT / SHADERS / PARTICLES
 	//Shaders
 	GLuint programID;
@@ -86,9 +85,6 @@ private:
 	GLuint vertexbuffer;
 	double c_x = 0.0, c_y = 0.0;
 
-	void _updateProj();
-	glm::mat4 projection;
-	glm::mat4 view;
 	glm::mat4 mvp;
 
 	/* [DEBUGGER] */

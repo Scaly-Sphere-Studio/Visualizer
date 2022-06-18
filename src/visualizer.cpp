@@ -150,6 +150,7 @@ Visualizer::~Visualizer()
     Box::box_batch.clear();
     arrow_map.clear();
     box_map.clear();
+    SSS::TR::terminate();
 }
 
 void Visualizer::run()
@@ -185,12 +186,7 @@ void Visualizer::run()
 
         //TEST CURSOR DRAG
         //UPDATE MVP MATRIX
-        view = glm::lookAt(
-            cam_pos,
-            glm::vec3(cam_pos.x, cam_pos.y, 0),
-            glm::vec3(0, 1, 0)
-        );
-        mvp = projection * view;
+        mvp = window->getObjects().cameras.at(0)->getVP();
 
         //Collision test
         drag_boxes();
@@ -223,11 +219,15 @@ void Visualizer::run()
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
             
             draw();
+            glBindVertexArray(0);
         }
 
         //DEBUG RENDERER
         {
-            if (debug.debugmode) { debug.rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1); }
+            if (debug.debugmode) {
+                glm::vec3 cam_pos = window->getObjects().cameras.at(0)->getPosition();
+                debug.rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1);
+            }
             for (auto it = box_map.begin(); it != box_map.end(); it++) {
                 debug.debug_box(it->second);
             }
@@ -248,8 +248,7 @@ void Visualizer::run()
 
 
 
-
-
+        window->drawObjects();
         window->printFrame();
         debug.debug_batch.clear();
         Box::box_batch.clear();
@@ -276,7 +275,6 @@ void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
     Ptr const& visu = get();
     visu->w_w = static_cast<float>(w);
     visu->w_h = static_cast<float>(h);
-    visu->_updateProj();
 }
 
 void Visualizer::setup()
@@ -296,6 +294,34 @@ void Visualizer::setup()
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
 
+    window->createTexture(0);
+    window->createCamera(0);
+    window->createPlane(0);
+    window->createRenderer<SSS::GL::Plane::Renderer>(0);
+
+    auto const& objects = window->getObjects();
+
+    SSS::TR::init();
+    SSS::TR::loadFont("arial.ttf");
+    SSS::TR::Area::create(0, 300, 300);
+    SSS::TR::Format fmt;
+    fmt.style.charsize = 50;
+    SSS::TR::Area::getMap().at(0)->setFormat(fmt);
+    SSS::TR::Area::getMap().at(0)->parseString("Lorem ipsum dolor sit amet.");
+
+    objects.textures.at(0)->setTextAreaID(0);
+    objects.textures.at(0)->setType(SSS::GL::Texture::Type::Text);
+
+    objects.cameras.at(0)->setPosition({0, 0, 3});
+    objects.cameras.at(0)->setProjectionType( SSS::GL::Camera::Projection::OrthoFixed );
+
+    objects.planes.at(0)->setTextureID(0);
+    objects.planes.at(0)->scale(glm::vec3(300));
+
+    objects.renderers.at(0)->chunks.emplace_back();
+    objects.renderers.at(0)->chunks.at(0).reset_depth_before = true;
+    objects.renderers.at(0)->chunks.at(0).objects.push_back(0);
+
     //GL TRIANGLE
     VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -307,9 +333,6 @@ void Visualizer::setup()
     Box::box_shader = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
     line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
     debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
-    
-    //CAMERA SETUP AND CANVAS
-    _updateProj();
 }
 
 void Visualizer::draw()
@@ -375,19 +398,19 @@ void Visualizer::input()
     float speed = 10.0f;
 
     if (inputs[GLFW_KEY_DOWN]) {
-        cam_pos -= glm::vec3(0.0f, speed, 0.0f);
+        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, -speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_RIGHT]) {
-        cam_pos += glm::vec3(speed, 0.0f, 0.0f);
+        window->getObjects().cameras.at(0)->move(glm::vec3(speed, 0.0f, 0.0f));
     }
 
     if (inputs[GLFW_KEY_UP]) {
-        cam_pos += glm::vec3(0.0f, speed, 0.0f);
+        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_LEFT]) {
-        cam_pos -= glm::vec3(speed, 0.0f, 0.0f);
+        window->getObjects().cameras.at(0)->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
 
     if (inputs[GLFW_KEY_KP_0]) {
@@ -535,6 +558,7 @@ void Visualizer::pop_box(std::string ID)
 bool Visualizer::check_frustrum_render(Box &b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
+    glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
     float const dx = glm::abs(cam_pos.x - b._pos.x);
     float const dxmax = (b._size.x + w_w) * 0.5f;    
     float const dy = glm::abs(cam_pos.y - b._pos.y);
@@ -547,7 +571,9 @@ bool Visualizer::check_frustrum_render(Box &b)
     return false;
 }
 
-glm::vec3 Visualizer::cursor_map_coordinates() {
+glm::vec3 Visualizer::cursor_map_coordinates()
+{
+    glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
     return glm::vec3{ (c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, 0.0 };
 }
 
@@ -795,9 +821,4 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
         }
     }
     return ID;
-}
-
-void Visualizer::_updateProj()
-{
-    projection = glm::ortho(-w_w / 2.f, w_w / 2.f, -w_h / 2.f, w_h / 2.f, 0.0f, 100.0f);
 }
