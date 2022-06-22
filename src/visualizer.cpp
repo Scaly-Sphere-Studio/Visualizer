@@ -268,6 +268,11 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
     if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
         Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
     }
+
+    if (key == GLFW_KEY_KP_0 || key == GLFW_KEY_ESCAPE ) {
+        glfwSetWindowShouldClose(Visualizer::get()->window->getGLFWwindow(), true);
+    }
+
 }
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
@@ -413,9 +418,7 @@ void Visualizer::input()
         window->getObjects().cameras.at(0)->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
 
-    if (inputs[GLFW_KEY_KP_0]) {
-        glfwSetWindowShouldClose(window->getGLFWwindow(), true);
-    }
+
 
 
     ////INPUTS BOX
