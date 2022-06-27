@@ -298,31 +298,29 @@ void Visualizer::setup()
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
 
-    window->createTexture(0);
-    window->createCamera(0);
-    window->createPlane(0);
-    window->createRenderer<SSS::GL::Plane::Renderer>(0);
-
-    auto const& objects = window->getObjects();
-
     SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
     SSS::TR::Format fmt = area->getFormat();
     fmt.style.charsize = 50;
     area->setFormat(fmt);
     area->parseString("Lorem ipsum dolor sit amet.");
 
-    objects.textures.at(0)->setTextAreaID(area->getID());
-    objects.textures.at(0)->setType(SSS::GL::Texture::Type::Text);
+    auto const& texture = SSS::GL::Texture::create();
+    auto const& camera = SSS::GL::Camera::create();
+    auto const& plane = SSS::GL::Plane::create();
+    auto const& renderer = SSS::GL::Plane::Renderer::create();
 
-    objects.cameras.at(0)->setPosition({0, 0, 3});
-    objects.cameras.at(0)->setProjectionType( SSS::GL::Camera::Projection::OrthoFixed );
+    texture->setTextAreaID(area->getID());
+    texture->setType(SSS::GL::Texture::Type::Text);
 
-    objects.planes.at(0)->setTextureID(0);
-    objects.planes.at(0)->scale(glm::vec3(300));
+    camera->setPosition({0, 0, 3});
+    camera->setProjectionType( SSS::GL::Camera::Projection::OrthoFixed );
 
-    objects.renderers.at(0)->chunks.emplace_back();
-    objects.renderers.at(0)->chunks.at(0).reset_depth_before = true;
-    objects.renderers.at(0)->chunks.at(0).objects.push_back(0);
+    plane->setTextureID(texture->getID());
+    plane->scale(glm::vec3(300));
+
+    renderer->chunks.emplace_back();
+    renderer->chunks[0].reset_depth_before = true;
+    renderer->chunks[0].objects.push_back(0);
 
     //GL TRIANGLE
     VertexArrayID;
