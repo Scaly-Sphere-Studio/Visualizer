@@ -150,7 +150,6 @@ Visualizer::~Visualizer()
     Box::box_batch.clear();
     arrow_map.clear();
     box_map.clear();
-    SSS::TR::terminate();
 }
 
 void Visualizer::run()
@@ -306,15 +305,13 @@ void Visualizer::setup()
 
     auto const& objects = window->getObjects();
 
-    SSS::TR::init();
-    SSS::TR::loadFont("arial.ttf");
-    SSS::TR::Area::create(0, 300, 300);
-    SSS::TR::Format fmt;
+    SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
+    SSS::TR::Format fmt = area->getFormat();
     fmt.style.charsize = 50;
-    SSS::TR::Area::getMap().at(0)->setFormat(fmt);
-    SSS::TR::Area::getMap().at(0)->parseString("Lorem ipsum dolor sit amet.");
+    area->setFormat(fmt);
+    area->parseString("Lorem ipsum dolor sit amet.");
 
-    objects.textures.at(0)->setTextAreaID(0);
+    objects.textures.at(0)->setTextAreaID(area->getID());
     objects.textures.at(0)->setType(SSS::GL::Texture::Type::Text);
 
     objects.cameras.at(0)->setPosition({0, 0, 3});
