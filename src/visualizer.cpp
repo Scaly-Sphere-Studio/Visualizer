@@ -208,15 +208,15 @@ void Visualizer::run()
         //BOX RENDERER
         {
             glBindVertexArray(VertexArrayID);
-            glUseProgram(Box::box_shader);
+            glUseProgram(box_shaderID);
             if (Box::box_batch.size() > 0) {
                 glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);            
+                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
             }
-            
-            MatrixID = glGetUniformLocation(Box::box_shader, "u_MVP");
+
+            MatrixID = glGetUniformLocation(box_shaderID, "u_MVP");
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-            
+
             draw();
             glBindVertexArray(0);
         }
@@ -268,7 +268,7 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
         Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
     }
 
-    if (key == GLFW_KEY_KP_0 || key == GLFW_KEY_ESCAPE ) {
+    if (key == GLFW_KEY_KP_0 || key == GLFW_KEY_ESCAPE) {
         glfwSetWindowShouldClose(Visualizer::get()->window->getGLFWwindow(), true);
     }
 
@@ -312,8 +312,8 @@ void Visualizer::setup()
     texture->setTextAreaID(area->getID());
     texture->setType(SSS::GL::Texture::Type::Text);
 
-    camera->setPosition({0, 0, 3});
-    camera->setProjectionType( SSS::GL::Camera::Projection::OrthoFixed );
+    camera->setPosition({ 0, 0, 3 });
+    camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
     plane->setTextureID(texture->getID());
     plane->scale(glm::vec3(300));
@@ -330,7 +330,7 @@ void Visualizer::setup()
     glGenBuffers(1, &vertexbuffer);
     glGenBuffers(1, &debug.debug_vb);
 
-    Box::box_shader = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
+    box_shaderID = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
     line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
     debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
 }

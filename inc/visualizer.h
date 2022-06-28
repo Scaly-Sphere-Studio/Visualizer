@@ -74,6 +74,7 @@ private:
 	GLuint MatrixID;
 	//GL CONTEXT / SHADERS / PARTICLES
 	//Shaders
+	GLuint box_shaderID;
 	GLuint programID;
 	GLuint line_shader_ID;
 

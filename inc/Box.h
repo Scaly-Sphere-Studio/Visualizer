@@ -50,8 +50,6 @@ public:
 	std::vector<uint16_t> tags;
 
 	static std::vector<testBox> box_batch;
-	static GLuint box_shader;
-
 
 
 	std::list<std::string> link_to;

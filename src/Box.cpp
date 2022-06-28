@@ -1,8 +1,6 @@
 #include "Box.h"
 
 std::vector<testBox>Box::box_batch{};
-GLuint Box::box_shader = 0;
-
 
 Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
 {
