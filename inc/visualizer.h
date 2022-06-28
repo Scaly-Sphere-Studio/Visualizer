@@ -71,12 +71,10 @@ private:
 
 	/* [RENDERER DATA] */
 	GLuint VertexArrayID;
-	GLuint MatrixID;
 	//GL CONTEXT / SHADERS / PARTICLES
 	//Shaders
-	GLuint box_shaderID;
-	GLuint programID;
-	GLuint line_shader_ID;
+	uint32_t line_shader_id;
+	uint32_t box_shader_id;
 
 	//Instancing
 	GLuint billboard_vertex_buffer;

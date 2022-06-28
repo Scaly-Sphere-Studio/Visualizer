@@ -14,8 +14,8 @@ public:
 	Debugger();
 	~Debugger();
 	//DEBUG
-	GLuint debug_vb;
-	GLuint debugID;
+	GLuint debug_vb{ 0 };
+	uint32_t shader_id{ 0 };
 
 	bool debugmode = true;
 

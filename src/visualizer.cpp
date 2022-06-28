@@ -196,27 +196,27 @@ void Visualizer::run()
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
 
+        SSS::GL::Window::Objects const& objects = window->getObjects();
 
         //LINE RENDERER
         {
-            glUseProgram(line_shader_ID);
-            MatrixID = glGetUniformLocation(line_shader_ID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+            auto const& shader = objects.shaders.at(line_shader_id);
+            shader->use();
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
             Line_Batch::render();
         }
 
         //BOX RENDERER
         {
             glBindVertexArray(VertexArrayID);
-            glUseProgram(box_shaderID);
+            auto const& shader = objects.shaders.at(box_shader_id);
+            shader->use();
             if (Box::box_batch.size() > 0) {
                 glBindBuffer(GL_ARRAY_BUFFER, particles_data);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
             }
 
-            MatrixID = glGetUniformLocation(box_shaderID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
             draw();
             glBindVertexArray(0);
         }
@@ -239,9 +239,10 @@ void Visualizer::run()
                 debug.debug_batch.size() * sizeof(debug_Vertex),
                 debug.debug_batch.data(),
                 GL_STATIC_DRAW);
-            glUseProgram(debug.debugID);
-            MatrixID = glGetUniformLocation(debug.debugID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+            auto const& shader = objects.shaders.at(debug.shader_id);
+            shader->use();
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
             debug.debug_show(debug.debug_vb, debug.debug_batch.data(), debug.debug_batch.size());
         }
 
@@ -330,9 +331,17 @@ void Visualizer::setup()
     glGenBuffers(1, &vertexbuffer);
     glGenBuffers(1, &debug.debug_vb);
 
-    box_shaderID = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
-    line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
-    debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
+    auto const& line_shader = window->createShaders();
+    line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
+    line_shader_id = line_shader->getID();
+    
+    auto const& box_shader = window->createShaders();
+    box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
+    box_shader_id = box_shader->getID();
+    
+    auto const& debug_shader = window->createShaders();
+    debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
+    debug.shader_id = debug_shader->getID();
 }
 
 void Visualizer::draw()

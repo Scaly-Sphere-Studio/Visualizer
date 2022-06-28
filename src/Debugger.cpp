@@ -14,8 +14,6 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
 
 Debugger::Debugger()
 {
-    debug_vb = 0;
-    debugID = 0;
 }
 
 Debugger::~Debugger()
