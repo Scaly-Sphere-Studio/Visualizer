@@ -206,6 +206,8 @@ void Visualizer::run()
             shader->use();
             shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
+            objects.textures.at(0)->bind();
+
             // Draw
             glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr,
                 static_cast<GLsizei>(Box::box_batch.size()));
@@ -344,14 +346,19 @@ void Visualizer::setup()
         // Static vertices
         {
             constexpr GLfloat vertices[] = {
-                0.f,  0.f, 0.f, // Top left
-                0.f, -1.f, 0.f, // Bottom left
-                1.f, -1.f, 0.f, // Bottom right
-                1.f,  0.f, 0.f, // Top right
+                // Position         // Texture UV
+                0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
+                0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
+                1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
+                1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
             };
             billboard_vbo->edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                sizeof(float) * 5, (void*)0);
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE,
+                sizeof(float) * 5, (void*)(sizeof(float) * 3));
 
             constexpr GLuint indices[] = {
                 0, 1, 2,    // First triangle
