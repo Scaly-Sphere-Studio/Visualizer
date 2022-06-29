@@ -1,12 +1,5 @@
 #include "visualizer.h"
 
-static const GLfloat g_vertex_buffer_data[] = {
- 0.0f, -1.0f, 0.0f,
- 1.0f, -1.0f, 0.0f,
- 0.0f, 0.0f, 0.0f,
- 1.0f, 0.0f, 0.0f,
-};
-
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
 {
@@ -156,13 +149,6 @@ void Visualizer::run()
 {
     SSS::GL::Context const context(window);
 
-    //UPDATES THE BUFFER
-    glGenBuffers(1, &billboard_vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &particles_data);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -183,10 +169,6 @@ void Visualizer::run()
         //FRUSTRUM 
         frustrum_test();
 
-        //TEST CURSOR DRAG
-        //UPDATE MVP MATRIX
-        mvp = window->getObjects().cameras.at(0)->getVP();
-
         //Collision test
         drag_boxes();
         line_drag_link();
@@ -196,29 +178,41 @@ void Visualizer::run()
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
 
+        SSS::GL::Window::Objects const& objects = window->getObjects();
+
+        //TEST CURSOR DRAG
+        //UPDATE MVP MATRIX
+        glm::mat4 mvp = objects.cameras.at(0)->getVP();
 
         //LINE RENDERER
         {
-            glUseProgram(line_shader_ID);
-            MatrixID = glGetUniformLocation(line_shader_ID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+            auto const& shader = objects.shaders.at(line_shader_id);
+            shader->use();
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
             Line_Batch::render();
         }
 
         //BOX RENDERER
         {
-            glBindVertexArray(VertexArrayID);
-            glUseProgram(box_shaderID);
+            // Setup VAO
+            vao->bind();
             if (Box::box_batch.size() > 0) {
-                glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
+                particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(),
+                    Box::box_batch.data(), GL_DYNAMIC_DRAW);
             }
+            
+            // Setup shader
+            auto const& shader = objects.shaders.at(box_shader_id);
+            shader->use();
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
-            MatrixID = glGetUniformLocation(box_shaderID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+            objects.textures.at(0)->bind();
 
-            draw();
-            glBindVertexArray(0);
+            // Draw
+            glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr,
+                static_cast<GLsizei>(Box::box_batch.size()));
+
+            vao->unbind();
         }
 
         //DEBUG RENDERER
@@ -234,15 +228,15 @@ void Visualizer::run()
             //ORIGIN CURSOR
             debug.cross(0, 0, 0, cursor_size);
             debug.circle(0, 0, 0, cursor_size);
-            glBindBuffer(GL_ARRAY_BUFFER, debug.debug_vb);
-            glBufferData(GL_ARRAY_BUFFER,
+            debug.vbo->edit(
                 debug.debug_batch.size() * sizeof(debug_Vertex),
                 debug.debug_batch.data(),
                 GL_STATIC_DRAW);
-            glUseProgram(debug.debugID);
-            MatrixID = glGetUniformLocation(debug.debugID, "u_MVP");
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-            debug.debug_show(debug.debug_vb, debug.debug_batch.data(), debug.debug_batch.size());
+
+            auto const& shader = objects.shaders.at(debug.shader_id);
+            shader->use();
+            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
+            debug.debug_show();
         }
 
 
@@ -298,119 +292,133 @@ void Visualizer::setup()
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
 
-    SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
-    SSS::TR::Format fmt = area->getFormat();
-    fmt.style.charsize = 50;
-    area->setFormat(fmt);
-    area->parseString("Lorem ipsum dolor sit amet.");
+    // SSS/GL objects
+    {
+        SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
+        SSS::TR::Format fmt = area->getFormat();
+        fmt.style.charsize = 50;
+        area->setFormat(fmt);
+        area->parseString("Lorem ipsum dolor sit amet.");
 
-    auto const& texture = SSS::GL::Texture::create();
-    auto const& camera = SSS::GL::Camera::create();
-    auto const& plane = SSS::GL::Plane::create();
-    auto const& renderer = SSS::GL::Plane::Renderer::create();
+        auto const& texture = SSS::GL::Texture::create();
+        auto const& camera = SSS::GL::Camera::create();
+        auto const& plane = SSS::GL::Plane::create();
+        auto const& renderer = SSS::GL::Plane::Renderer::create();
 
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
+        texture->setTextAreaID(area->getID());
+        texture->setType(SSS::GL::Texture::Type::Text);
 
-    camera->setPosition({ 0, 0, 3 });
-    camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+        camera->setPosition({ 0, 0, 3 });
+        camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-    plane->setTextureID(texture->getID());
-    plane->scale(glm::vec3(300));
+        plane->setTextureID(texture->getID());
+        plane->scale(glm::vec3(300));
 
-    renderer->chunks.emplace_back();
-    renderer->chunks[0].reset_depth_before = true;
-    renderer->chunks[0].objects.push_back(0);
+        renderer->chunks.emplace_back();
+        renderer->chunks[0].reset_depth_before = true;
+        renderer->chunks[0].objects.push_back(0);
+    }
 
-    //GL TRIANGLE
-    VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    // Shaders
+    {
+        auto const& line_shader = window->createShaders();
+        line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
+        line_shader_id = line_shader->getID();
+    
+        auto const& box_shader = window->createShaders();
+        box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
+        box_shader_id = box_shader->getID();
+    
+        auto const& debug_shader = window->createShaders();
+        debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
+        debug.shader_id = debug_shader->getID();
+    }
 
-    glGenBuffers(1, &vertexbuffer);
-    glGenBuffers(1, &debug.debug_vb);
+    // VAO
+    {
+        vao.reset(new SSS::GL::Basic::VAO(window));
+        billboard_vbo.reset(new SSS::GL::Basic::VBO(window));
+        billboard_ibo.reset(new SSS::GL::Basic::IBO(window));
+        particles_vbo.reset(new SSS::GL::Basic::VBO(window));
 
-    box_shaderID = LoadShaders("glsl/instance.vert", "glsl/instance.frag");
-    line_shader_ID = LoadShaders("glsl/line.vert", "glsl/line.frag");
-    debug.debugID = LoadShaders("glsl/triangle.vert", "glsl/triangle.frag");
-}
+        vao->bind();
 
-void Visualizer::draw()
-{
-    //Render
-    //// 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-    glVertexAttribPointer(
-        0,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(float) * 3, (void*)0
-    );
+        // Static vertices
+        {
+            constexpr GLfloat vertices[] = {
+                // Position         // Texture UV
+                0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
+                0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
+                1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
+                1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
+            };
+            billboard_vbo->edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                sizeof(float) * 5, (void*)0);
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE,
+                sizeof(float) * 5, (void*)(sizeof(float) * 3));
 
-    //Particles
-    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+            constexpr GLuint indices[] = {
+                0, 1, 2,    // First triangle
+                2, 3, 0     // Second triangle
+            };
+            billboard_ibo->edit(sizeof(indices), indices, GL_STATIC_DRAW);
+        }
 
-    //Size separate by width and height
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1,
-        2, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)(sizeof(glm::vec3))
-    );
+        // Particles
+        {
+            particles_vbo->bind();
 
-    //Color
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(
-        2,
-        4, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
-    );
+            // Size (width / height)
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)(sizeof(glm::vec3)));
+            glVertexAttribDivisor(1, 1);
 
-    //Position
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(
-        3,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)0
-    );
+            // Color
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
+            );
+            glVertexAttribDivisor(2, 1);
 
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribDivisor(1, 1);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
+            // Position
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)0);
+            glVertexAttribDivisor(3, 1);
+        }
 
+        vao->unbind();
+    }
 
-    // Draw the triangle !
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4,
-        static_cast<GLsizei>(Box::box_batch.size()));
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
-
+    debug.vbo.reset(new SSS::GL::Basic::VBO(window));
 }
 
 void Visualizer::input()
 {
     SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
     //INPUT CAMERA
-    float speed = 10.0f;
+    constexpr float speed = 10.0f;
+
+    auto const& camera = window->getObjects().cameras.at(0);
 
     if (inputs[GLFW_KEY_DOWN]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, -speed, 0.0f));
+        camera->move(glm::vec3(0.0f, -speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_RIGHT]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(speed, 0.0f, 0.0f));
     }
 
     if (inputs[GLFW_KEY_UP]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, speed, 0.0f));
+        camera->move(glm::vec3(0.0f, speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_LEFT]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(-speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
 
 

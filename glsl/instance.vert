@@ -5,11 +5,13 @@ layout(location = 0) in vec3 v_pos;
 layout(location = 1) in vec2 box_size;
 layout(location = 2) in vec4 box_col;
 layout(location = 3) in vec3 box_pos;
+layout(location = 4) in vec2 tex_uv;
 
 
 uniform mat4 u_MVP;
 
 out vec4 v_col;
+out vec2 uv;
 
 void main(){
 	//Updates the coordinates and size of the particles
@@ -22,5 +24,6 @@ void main(){
 
 	//Updates the colors
 	v_col = box_col;
+	uv = tex_uv;
 }
 
