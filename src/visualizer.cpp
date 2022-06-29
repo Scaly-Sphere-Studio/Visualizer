@@ -1,12 +1,5 @@
 #include "visualizer.h"
 
-static const GLfloat g_vertex_buffer_data[] = {
- 0.0f, -1.0f, 0.0f,
- 1.0f, -1.0f, 0.0f,
- 0.0f, 0.0f, 0.0f,
- 1.0f, 0.0f, 0.0f,
-};
-
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
 {
@@ -156,12 +149,6 @@ void Visualizer::run()
 {
     SSS::GL::Context const context(window);
 
-    //UPDATES THE BUFFER
-    billboard_vbo.reset(new SSS::GL::Basic::VBO(window));
-    billboard_vbo->edit(sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    particles_vbo.reset(new SSS::GL::Basic::VBO(window));
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -207,15 +194,22 @@ void Visualizer::run()
 
         //BOX RENDERER
         {
+            // Setup VAO
             vao->bind();
+            if (Box::box_batch.size() > 0) {
+                particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(),
+                    Box::box_batch.data(), GL_DYNAMIC_DRAW);
+            }
+            
+            // Setup shader
             auto const& shader = objects.shaders.at(box_shader_id);
             shader->use();
-            if (Box::box_batch.size() > 0) {
-                particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
-            }
-
             shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-            draw();
+
+            // Draw
+            glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr,
+                static_cast<GLsizei>(Box::box_batch.size()));
+
             vao->unbind();
         }
 
@@ -296,103 +290,104 @@ void Visualizer::setup()
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
 
-    SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
-    SSS::TR::Format fmt = area->getFormat();
-    fmt.style.charsize = 50;
-    area->setFormat(fmt);
-    area->parseString("Lorem ipsum dolor sit amet.");
+    // SSS/GL objects
+    {
+        SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
+        SSS::TR::Format fmt = area->getFormat();
+        fmt.style.charsize = 50;
+        area->setFormat(fmt);
+        area->parseString("Lorem ipsum dolor sit amet.");
 
-    auto const& texture = SSS::GL::Texture::create();
-    auto const& camera = SSS::GL::Camera::create();
-    auto const& plane = SSS::GL::Plane::create();
-    auto const& renderer = SSS::GL::Plane::Renderer::create();
+        auto const& texture = SSS::GL::Texture::create();
+        auto const& camera = SSS::GL::Camera::create();
+        auto const& plane = SSS::GL::Plane::create();
+        auto const& renderer = SSS::GL::Plane::Renderer::create();
 
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
+        texture->setTextAreaID(area->getID());
+        texture->setType(SSS::GL::Texture::Type::Text);
 
-    camera->setPosition({ 0, 0, 3 });
-    camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+        camera->setPosition({ 0, 0, 3 });
+        camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-    plane->setTextureID(texture->getID());
-    plane->scale(glm::vec3(300));
+        plane->setTextureID(texture->getID());
+        plane->scale(glm::vec3(300));
 
-    renderer->chunks.emplace_back();
-    renderer->chunks[0].reset_depth_before = true;
-    renderer->chunks[0].objects.push_back(0);
+        renderer->chunks.emplace_back();
+        renderer->chunks[0].reset_depth_before = true;
+        renderer->chunks[0].objects.push_back(0);
+    }
 
-    //GL TRIANGLE
-    vao.reset(new SSS::GL::Basic::VAO(window));
-    vao->bind();
+    // Shaders
+    {
+        auto const& line_shader = window->createShaders();
+        line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
+        line_shader_id = line_shader->getID();
+    
+        auto const& box_shader = window->createShaders();
+        box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
+        box_shader_id = box_shader->getID();
+    
+        auto const& debug_shader = window->createShaders();
+        debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
+        debug.shader_id = debug_shader->getID();
+    }
+
+    // VAO
+    {
+        vao.reset(new SSS::GL::Basic::VAO(window));
+        billboard_vbo.reset(new SSS::GL::Basic::VBO(window));
+        billboard_ibo.reset(new SSS::GL::Basic::IBO(window));
+        particles_vbo.reset(new SSS::GL::Basic::VBO(window));
+
+        vao->bind();
+
+        // Static vertices
+        {
+            constexpr GLfloat vertices[] = {
+                0.f,  0.f, 0.f, // Top left
+                0.f, -1.f, 0.f, // Bottom left
+                1.f, -1.f, 0.f, // Bottom right
+                1.f,  0.f, 0.f, // Top right
+            };
+            billboard_vbo->edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+
+            constexpr GLuint indices[] = {
+                0, 1, 2,    // First triangle
+                2, 3, 0     // Second triangle
+            };
+            billboard_ibo->edit(sizeof(indices), indices, GL_STATIC_DRAW);
+        }
+
+        // Particles
+        {
+            particles_vbo->bind();
+
+            // Size (width / height)
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)(sizeof(glm::vec3)));
+            glVertexAttribDivisor(1, 1);
+
+            // Color
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
+            );
+            glVertexAttribDivisor(2, 1);
+
+            // Position
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+                sizeof(testBox), (void*)0);
+            glVertexAttribDivisor(3, 1);
+        }
+
+        vao->unbind();
+    }
 
     debug.vbo.reset(new SSS::GL::Basic::VBO(window));
-
-    auto const& line_shader = window->createShaders();
-    line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
-    line_shader_id = line_shader->getID();
-    
-    auto const& box_shader = window->createShaders();
-    box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
-    box_shader_id = box_shader->getID();
-    
-    auto const& debug_shader = window->createShaders();
-    debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
-    debug.shader_id = debug_shader->getID();
-}
-
-void Visualizer::draw()
-{
-    //Render
-    //// 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    billboard_vbo->bind();
-    glVertexAttribPointer(
-        0,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(float) * 3, (void*)0
-    );
-
-    //Particles
-    particles_vbo->bind();
-
-    //Size separate by width and height
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1,
-        2, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)(sizeof(glm::vec3))
-    );
-
-    //Color
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(
-        2,
-        4, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
-    );
-
-    //Position
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(
-        3,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(testBox), (void*)0
-    );
-
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribDivisor(1, 1);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
-
-
-    // Draw the triangle !
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4,
-        static_cast<GLsizei>(Box::box_batch.size()));
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
-
 }
 
 void Visualizer::input()
