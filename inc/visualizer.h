@@ -81,10 +81,8 @@ private:
 	GLuint particles_data;
 
 	SSS::GL::Window::Shared window;
-	GLuint vertexbuffer;
 	double c_x = 0.0, c_y = 0.0;
 
-	glm::mat4 mvp;
 
 	/* [DEBUGGER] */
 	Debugger debug;

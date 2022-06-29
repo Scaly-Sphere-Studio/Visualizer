@@ -183,10 +183,6 @@ void Visualizer::run()
         //FRUSTRUM 
         frustrum_test();
 
-        //TEST CURSOR DRAG
-        //UPDATE MVP MATRIX
-        mvp = window->getObjects().cameras.at(0)->getVP();
-
         //Collision test
         drag_boxes();
         line_drag_link();
@@ -197,6 +193,10 @@ void Visualizer::run()
 
 
         SSS::GL::Window::Objects const& objects = window->getObjects();
+
+        //TEST CURSOR DRAG
+        //UPDATE MVP MATRIX
+        glm::mat4 mvp = objects.cameras.at(0)->getVP();
 
         //LINE RENDERER
         {
@@ -328,7 +328,6 @@ void Visualizer::setup()
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    glGenBuffers(1, &vertexbuffer);
     glGenBuffers(1, &debug.debug_vb);
 
     auto const& line_shader = window->createShaders();
@@ -404,22 +403,24 @@ void Visualizer::input()
 {
     SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
     //INPUT CAMERA
-    float speed = 10.0f;
+    constexpr float speed = 10.0f;
+
+    auto const& camera = window->getObjects().cameras.at(0);
 
     if (inputs[GLFW_KEY_DOWN]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, -speed, 0.0f));
+        camera->move(glm::vec3(0.0f, -speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_RIGHT]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(speed, 0.0f, 0.0f));
     }
 
     if (inputs[GLFW_KEY_UP]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(0.0f, speed, 0.0f));
+        camera->move(glm::vec3(0.0f, speed, 0.0f));
     }
 
     if (inputs[GLFW_KEY_LEFT]) {
-        window->getObjects().cameras.at(0)->move(glm::vec3(-speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
 
 
