@@ -104,13 +104,13 @@ void Debugger::cross(float x, float y, float radius, float angle)
 
 }
 
-void Debugger::debug_show(GLuint buffer, void* data, size_t size)
+void Debugger::debug_show()
 {
 
     //Render
+    vbo->bind();
     //// 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glVertexAttribPointer(
         0,
         3, GL_FLOAT, GL_FALSE,
@@ -120,7 +120,6 @@ void Debugger::debug_show(GLuint buffer, void* data, size_t size)
 
     //// 2nd attribute buffer : colors
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glVertexAttribPointer(
         1,
         3, GL_FLOAT, GL_FALSE,
@@ -129,7 +128,7 @@ void Debugger::debug_show(GLuint buffer, void* data, size_t size)
     );
 
     // Draw the triangle !
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(size)); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(debug_batch.size())); // Starting from vertex 0; 3 vertices total -> 1 triangle
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }

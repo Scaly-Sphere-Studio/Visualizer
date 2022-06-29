@@ -157,11 +157,10 @@ void Visualizer::run()
     SSS::GL::Context const context(window);
 
     //UPDATES THE BUFFER
-    glGenBuffers(1, &billboard_vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    billboard_vbo.reset(new SSS::GL::Basic::VBO(window));
+    billboard_vbo->edit(sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &particles_data);
+    particles_vbo.reset(new SSS::GL::Basic::VBO(window));
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -208,17 +207,16 @@ void Visualizer::run()
 
         //BOX RENDERER
         {
-            glBindVertexArray(VertexArrayID);
+            vao->bind();
             auto const& shader = objects.shaders.at(box_shader_id);
             shader->use();
             if (Box::box_batch.size() > 0) {
-                glBindBuffer(GL_ARRAY_BUFFER, particles_data);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
+                particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(), Box::box_batch.data(), GL_STATIC_DRAW);
             }
 
             shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
             draw();
-            glBindVertexArray(0);
+            vao->unbind();
         }
 
         //DEBUG RENDERER
@@ -234,8 +232,7 @@ void Visualizer::run()
             //ORIGIN CURSOR
             debug.cross(0, 0, 0, cursor_size);
             debug.circle(0, 0, 0, cursor_size);
-            glBindBuffer(GL_ARRAY_BUFFER, debug.debug_vb);
-            glBufferData(GL_ARRAY_BUFFER,
+            debug.vbo->edit(
                 debug.debug_batch.size() * sizeof(debug_Vertex),
                 debug.debug_batch.data(),
                 GL_STATIC_DRAW);
@@ -243,7 +240,7 @@ void Visualizer::run()
             auto const& shader = objects.shaders.at(debug.shader_id);
             shader->use();
             shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-            debug.debug_show(debug.debug_vb, debug.debug_batch.data(), debug.debug_batch.size());
+            debug.debug_show();
         }
 
 
@@ -324,11 +321,10 @@ void Visualizer::setup()
     renderer->chunks[0].objects.push_back(0);
 
     //GL TRIANGLE
-    VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    vao.reset(new SSS::GL::Basic::VAO(window));
+    vao->bind();
 
-    glGenBuffers(1, &debug.debug_vb);
+    debug.vbo.reset(new SSS::GL::Basic::VBO(window));
 
     auto const& line_shader = window->createShaders();
     line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
@@ -348,7 +344,7 @@ void Visualizer::draw()
     //Render
     //// 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+    billboard_vbo->bind();
     glVertexAttribPointer(
         0,
         3, GL_FLOAT, GL_FALSE,
@@ -356,7 +352,7 @@ void Visualizer::draw()
     );
 
     //Particles
-    glBindBuffer(GL_ARRAY_BUFFER, particles_data);
+    particles_vbo->bind();
 
     //Size separate by width and height
     glEnableVertexAttribArray(1);

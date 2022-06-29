@@ -70,15 +70,15 @@ private:
 
 
 	/* [RENDERER DATA] */
-	GLuint VertexArrayID;
+	SSS::GL::Basic::VAO::Ptr vao;
 	//GL CONTEXT / SHADERS / PARTICLES
 	//Shaders
 	uint32_t line_shader_id;
 	uint32_t box_shader_id;
 
 	//Instancing
-	GLuint billboard_vertex_buffer;
-	GLuint particles_data;
+	SSS::GL::Basic::VBO::Ptr billboard_vbo;
+	SSS::GL::Basic::VBO::Ptr particles_vbo;
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;

@@ -14,7 +14,7 @@ public:
 	Debugger();
 	~Debugger();
 	//DEBUG
-	GLuint debug_vb{ 0 };
+	SSS::GL::Basic::VBO::Ptr vbo;
 	uint32_t shader_id{ 0 };
 
 	bool debugmode = true;
@@ -22,7 +22,7 @@ public:
 
 	std::vector<debug_Vertex> debug_batch;
 	void debug_box(const Box& b);
-	void debug_show(GLuint buffer, void* data, size_t size);
+	void debug_show();
 
 	//Differents shapes for the debugging process
 	void circle(float x, float y, float z, float radius);
