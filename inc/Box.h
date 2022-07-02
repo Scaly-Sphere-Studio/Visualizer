@@ -6,9 +6,13 @@
 struct testBox {
 	testBox();
 	testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
+	// ---------- Below data is passed to OpenGL VBO
 	glm::vec3 _pos;
 	glm::vec2 _size;
 	glm::vec4 _color;
+	GLuint _glsl_tex_unit{ UINT32_MAX };
+	// ---------- Below data is purely internal and not passed to OpenGL
+	uint32_t _sss_tex_id{ UINT32_MAX };
 };
 
 

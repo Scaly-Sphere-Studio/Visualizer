@@ -194,6 +194,56 @@ void Visualizer::run()
 
         //BOX RENDERER
         {
+            // Batch info
+            struct Batch_ {
+                GLuint offset{ 0 };
+                GLuint count{ 0 };
+                std::vector<uint32_t> tex_ids;
+            };
+            std::queue<Batch_> queue;
+            Batch_* batch = &queue.emplace();
+
+            // Process batch queue
+            for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
+                testBox& box = Box::box_batch[i];
+                uint32_t const tex_id = box._sss_tex_id;
+                // Skip if no texture needed
+                if (objects.textures.count(tex_id) == 0) {
+                    batch->count++;
+                    continue;
+                }
+                // Check if texture ID is already in batch
+                auto const it = std::find(
+                    batch->tex_ids.cbegin(),
+                    batch->tex_ids.cend(),
+                    box._sss_tex_id
+                );
+                // If not found, push texture ID in batch
+                if (it == batch->tex_ids.cend()) {
+                    // Max number of texture units in the fragment shader
+                    static uint32_t const max_texture_units = []() {
+                        int i;
+                        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i);
+                        return static_cast<uint32_t>(i);
+                    }();
+                    // If texture IDs are full, create new batch
+                    if (batch->tex_ids.size() >= max_texture_units) {
+                        batch = &queue.emplace();
+                        batch->offset = i;
+                    }
+                    // Add texture ID to batch and batch ID to particle
+                    batch->tex_ids.push_back(box._sss_tex_id);
+                    box._glsl_tex_unit = static_cast<GLint>(batch->tex_ids.size() - 1);
+                }
+                // Else just add corresponding batch ID
+                else {
+                    box._glsl_tex_unit =
+                        static_cast<GLint>(std::distance(batch->tex_ids.cbegin(), it));
+                }
+                // Increment elements count
+                batch->count++;
+            }
+
             // Setup VAO
             vao->bind();
             if (Box::box_batch.size() > 0) {
@@ -206,11 +256,29 @@ void Visualizer::run()
             shader->use();
             shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
-            objects.textures.at(0)->bind();
-
-            // Draw
-            glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr,
-                static_cast<GLsizei>(Box::box_batch.size()));
+            // Draw all particles
+            static constexpr std::array<GLint, 128> texture_IDs = {
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+                96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+                112, 113, 114, 115, 116, 117, 118, 119, 110, 121, 122, 123, 124, 125, 126, 127
+            };
+            for (; !queue.empty(); queue.pop()) {
+                Batch_ const& batch = queue.front();
+                shader->setUniform1iv("u_Textures", batch.count, &texture_IDs[0]);
+                // Bind needed textures
+                for (uint32_t i = 0; i < batch.tex_ids.size(); ++i) {
+                    glActiveTexture(GL_TEXTURE0 + i);
+                    objects.textures.at(batch.tex_ids[i])->bind();
+                }
+                // Draw batch
+                glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
+                    nullptr, batch.count, batch.offset);
+            }
 
             vao->unbind();
         }
@@ -389,6 +457,12 @@ void Visualizer::setup()
             glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
                 sizeof(testBox), (void*)0);
             glVertexAttribDivisor(3, 1);
+
+            // Texture unit
+            glEnableVertexAttribArray(5);
+            glVertexAttribIPointer(5, 1, GL_UNSIGNED_INT,
+                sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
+            glVertexAttribDivisor(5, 1);
         }
 
         vao->unbind();

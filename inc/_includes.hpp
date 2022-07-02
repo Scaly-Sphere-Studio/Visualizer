@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <list>
+#include <queue>
 #include <unordered_map>
 #include <algorithm>
 #include <random>
