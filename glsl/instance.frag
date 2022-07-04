@@ -12,5 +12,5 @@ uniform sampler2D u_Textures[gl_MaxTextureImageUnits];
 void main(){
   // Blend with texture
   vec4 tex_col = texture(u_Textures[id], uv);
-  Color = vec4(mix(v_col, tex_col, tex_col.a).rgb, 255);
+  Color = mix(v_col, tex_col, tex_col.a);
 }
