@@ -15,6 +15,21 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
     //Create the model
     model.emplace_back(_pos, _size, glm::vec4(_color));
     model.emplace_back(_pos, glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
+
+    // Create text area & gl texture
+    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    auto fmt = area->getFormat();
+    fmt.style.charsize = (int)_size.y / 3;
+    fmt.style.has_outline = true;
+    fmt.style.outline_size = 20;
+    area->setFormat(fmt);
+    area->parseString(hex);
+
+    auto const& texture = SSS::GL::Texture::create();
+    texture->setTextAreaID(area->getID());
+    texture->setType(SSS::GL::Texture::Type::Text);
+
+    model.emplace_back(_pos, _size, glm::vec4(0))._sss_tex_id = texture->getID();
 }
 
 Box::~Box()
