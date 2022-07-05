@@ -97,3 +97,19 @@ static bool sort_box(testBox& a, testBox& b) {
 
 	return a._pos.z < b._pos.z;
 }
+
+//JSON CONVERTION
+//Text data convertion
+void to_json(nlohmann::json& j, const Box& t);
+void from_json(const nlohmann::json& j, Box& t);
+
+namespace glm {
+	void to_json(nlohmann::json& j, const vec2& t);
+	void from_json(const nlohmann::json& j, vec2& t);
+
+	void to_json(nlohmann::json& j, const vec3& t);
+	void from_json(const nlohmann::json& j, vec3& t);
+
+	void to_json(nlohmann::json& j, const vec4& t);
+	void from_json(const nlohmann::json& j, vec4& t);
+}

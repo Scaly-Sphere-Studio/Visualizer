@@ -2,6 +2,7 @@
 
 #include "Box.h"
 #include "Debugger.h"
+#include "backend.hpp"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -78,4 +79,15 @@ private:
 
 	/* [DEBUGGER] */
 	Debugger debug;
+
+	//PARSER
+	void parse_info_data_to_json(const std::string& path, const bool prettify);
+	void parse_info_data_from_json(const std::string& path);
+	void save();
+	void load();
 };
+
+//JSON CONVERTION
+//Text data convertion
+void to_json(nlohmann::json& j, const Visualizer& t);
+void from_json(const nlohmann::json& j, Visualizer& t);
