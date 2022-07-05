@@ -19,7 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend.cpp" />
     <ClCompile Include="src\commons.cpp" />
+    <ClCompile Include="src\data.cpp" />
+    <ClCompile Include="src\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\Box.cpp" />
     <ClCompile Include="src\Debugger.cpp" />
@@ -27,6 +31,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\backend.hpp" />
+    <ClInclude Include="inc\data.hpp" />
+    <ClInclude Include="inc\imgui_impl_glfw.h" />
+    <ClInclude Include="inc\imgui_impl_opengl3.h" />
     <ClInclude Include="inc\_includes.hpp" />
     <ClInclude Include="inc\commons.h" />
     <ClInclude Include="inc\shader.hpp" />
