@@ -11,6 +11,8 @@ enum struct V_STATES {
 };
 
 class Visualizer {
+	friend Debugger;
+
 	Visualizer();
 public:
 	using Ptr = std::unique_ptr<Visualizer>;
@@ -72,13 +74,13 @@ private:
 	/* [RENDERER DATA] */
 	// Shaders
 	uint32_t line_shader_id;
+	// Renderers
+	uint32_t box_renderer_id;
+	uint32_t debug_renderer_id;
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
 
-
-	/* [DEBUGGER] */
-	Debugger debug;
 
 	//PARSER
 	void parse_info_data_to_json(const std::string& path, const bool prettify);

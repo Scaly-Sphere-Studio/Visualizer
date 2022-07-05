@@ -194,35 +194,7 @@ void Visualizer::run()
 
         // Draw with Renderers
         window->drawObjects();
-
-        //DEBUG RENDERER
-        {
-            if (debug.debugmode) {
-                glm::vec3 cam_pos = window->getObjects().cameras.at(0)->getPosition();
-                debug.rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1);
-            }
-            for (auto it = box_map.begin(); it != box_map.end(); it++) {
-                debug.debug_box(it->second);
-            }
-            float cursor_size = 5;
-            //ORIGIN CURSOR
-            debug.cross(0, 0, 0, cursor_size);
-            debug.circle(0, 0, 0, cursor_size);
-            debug.vbo->edit(
-                debug.debug_batch.size() * sizeof(debug_Vertex),
-                debug.debug_batch.data(),
-                GL_STATIC_DRAW);
-
-            auto const& shader = objects.shaders.at(debug.shader_id);
-            shader->use();
-            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-            debug.debug_show();
-        }
-
-
-
         window->printFrame();
-        debug.debug_batch.clear();
         Box::box_batch.clear();
     }
 
@@ -308,13 +280,17 @@ void Visualizer::setup()
         box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
         auto const& box_renderer = window->createRenderer<BoxRenderer>();
         box_renderer->setShadersID(box_shader->getID());
+        box_renderer_id = box_renderer->getID();
     
         auto const& debug_shader = window->createShaders();
         debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
-        debug.shader_id = debug_shader->getID();
+        auto const& debug_renderer = window->createRenderer<Debugger>();
+        debug_renderer->setShadersID(debug_shader->getID());
+        debug_renderer_id = debug_renderer->getID();
+        // Enable or disable debugger
+        debug_renderer->setActivity(true);
     }
 
-    debug.vbo.reset(new SSS::GL::Basic::VBO(window));
 }
 
 void Visualizer::input()
