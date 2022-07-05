@@ -747,7 +747,7 @@ void Visualizer::parse_info_data_from_json(const std::string& path)
     ifs >> tmp;
     ifs.close();
 
-    //*this = tmp;
+    *this = tmp;
 }
 
 void Visualizer::save()

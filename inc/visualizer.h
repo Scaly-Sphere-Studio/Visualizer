@@ -13,8 +13,9 @@ enum struct V_STATES {
 class Visualizer {
 	friend Debugger;
 
-	Visualizer();
 public:
+	// Make constructor public for JSON operations
+	Visualizer();
 	using Ptr = std::unique_ptr<Visualizer>;
 	static Ptr const& get();
 	~Visualizer();
