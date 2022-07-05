@@ -11,3 +11,5 @@
 
 #include <SSS/Line/line.h>
 #include <SSS/GL.hpp>
+
+#include <nlohmann/json.hpp>

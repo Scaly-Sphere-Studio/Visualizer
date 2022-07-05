@@ -902,3 +902,46 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
     }
     return ID;
 }
+
+void Visualizer::parse_info_data_to_json(const std::string& path, const bool prettify)
+{
+    nlohmann::json dst;
+    dst = *this;
+
+    std::ofstream ofs(path);
+    if (prettify) {
+        ofs << std::setw(4) << dst << std::endl;
+    }
+    else {
+        ofs << dst << std::endl;
+    }
+    ofs.close();
+}
+
+void Visualizer::parse_info_data_from_json(const std::string& path)
+{
+    std::ifstream ifs(path);
+    nlohmann::json tmp;
+    ifs >> tmp;
+    ifs.close();
+
+    *this = tmp;
+}
+
+void Visualizer::save()
+{
+}
+
+void Visualizer::load()
+{
+}
+
+void to_json(nlohmann::json& j, const Visualizer& t)
+{
+    j = nlohmann::json{
+    };
+}
+
+void from_json(const nlohmann::json& j, Visualizer& t)
+{
+}
