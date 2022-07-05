@@ -2,7 +2,6 @@
 
 #include "commons.h"
 #include "shader.hpp"
-#include <visualizer.h>
 
 struct testBox {
 	testBox();

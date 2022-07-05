@@ -88,7 +88,10 @@ private:
 	Debugger debug;
 
 	//PARSER
+	void parse_info_data_to_json(const std::string& path, const bool prettify);
+	void parse_info_data_from_json(const std::string& path);
 	void save();
+	void load();
 };
 
 //JSON CONVERTION
