@@ -71,13 +71,6 @@ private:
 	/* [RENDERER DATA] */
 	// Shaders
 	uint32_t line_shader_id;
-	uint32_t box_shader_id;
-	// VAO, VBO, IBO
-	SSS::GL::Basic::VAO::Ptr vao;
-	SSS::GL::Basic::VBO::Ptr billboard_vbo;
-	SSS::GL::Basic::IBO::Ptr billboard_ibo;
-	SSS::GL::Basic::VBO::Ptr particles_vbo;
-
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
