@@ -2,7 +2,6 @@
 
 #include "commons.h"
 #include "shader.hpp"
-#include <visualizer.h>
 
 struct testBox {
 	testBox();
@@ -62,6 +61,27 @@ public:
 
 };
 
+class BoxRenderer : public SSS::GL::Renderer {
+	friend SSS::GL::Window;
+
+private:
+	BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id);
+
+public:
+	virtual void render();
+
+private:
+	struct Batch {
+		GLuint offset{ 0 };
+		GLuint count{ 0 };
+		std::vector<uint32_t> tex_ids;
+	};
+
+	SSS::GL::Basic::VAO::Ptr vao;
+	SSS::GL::Basic::VBO::Ptr billboard_vbo;
+	SSS::GL::Basic::IBO::Ptr billboard_ibo;
+	SSS::GL::Basic::VBO::Ptr particles_vbo;
+};
 
 class Selection_square : testBox {
 public:

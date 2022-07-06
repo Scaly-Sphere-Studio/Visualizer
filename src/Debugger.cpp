@@ -1,7 +1,7 @@
 #include "Debugger.h"
+#include "Visualizer.h"
 
-
-glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
+static constexpr glm::vec3 debug_color{ 0.0f,1.0f,0.0f };
 
 debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
 {
@@ -12,8 +12,31 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
     _col = col;
 }
 
-Debugger::Debugger()
+Debugger::Debugger(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
+    : SSS::GL::Renderer(win, id)
 {
+    SSS::GL::Context const context(_window);
+
+    vbo.reset(new SSS::GL::Basic::VBO(_window));
+    
+    vbo->bind();
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0,
+        3, GL_FLOAT, GL_FALSE,
+        sizeof(debug_Vertex),
+        (void*)0
+    );
+
+    //// 2nd attribute buffer : colors
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1,
+        3, GL_FLOAT, GL_FALSE,
+        sizeof(debug_Vertex),
+        (void*)(3 * sizeof(float))
+    );
 }
 
 Debugger::~Debugger()
@@ -104,31 +127,38 @@ void Debugger::cross(float x, float y, float radius, float angle)
 
 }
 
-void Debugger::debug_show()
+void Debugger::render()
 {
+    if (!isActive()) return;
+
+    Visualizer::Ptr const& visu = Visualizer::get();
+
+    SSS::GL::Context const context(_window);
+    SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
+
+    glm::vec3 const cam_pos = objects.cameras.at(0)->getPosition();
+    rectangle(cam_pos.x - visu->w_w / 2 + 1, cam_pos.y + visu->w_h / 2, visu->w_w - 1, visu->w_h - 1);
+    for (auto it = visu->box_map.begin(); it != visu->box_map.end(); it++) {
+        debug_box(it->second);
+    }
+    float cursor_size = 5;
+    //ORIGIN CURSOR
+    cross(0, 0, 0, cursor_size);
+    circle(0, 0, 0, cursor_size);
+    vbo->edit(
+        debug_batch.size() * sizeof(debug_Vertex),
+        debug_batch.data(),
+        GL_STATIC_DRAW
+    );
+
+    auto const& shader = objects.shaders.at(getShadersID());
+    glm::mat4 const mvp = objects.cameras.at(0)->getVP();
+    shader->use();
+    shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
     //Render
     vbo->bind();
-    //// 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(debug_Vertex),
-        (void*)0
-    );
-
-    //// 2nd attribute buffer : colors
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1,
-        3, GL_FLOAT, GL_FALSE,
-        sizeof(debug_Vertex),
-        (void*)(3 * sizeof(float))
-    );
-
-    // Draw the triangle !
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(debug_batch.size())); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+
+    debug_batch.clear();
 }

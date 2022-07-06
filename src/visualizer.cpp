@@ -192,126 +192,9 @@ void Visualizer::run()
             Line_Batch::render();
         }
 
-        //BOX RENDERER
-        {
-            // Batch info
-            struct Batch_ {
-                GLuint offset{ 0 };
-                GLuint count{ 0 };
-                std::vector<uint32_t> tex_ids;
-            };
-            std::queue<Batch_> queue;
-            Batch_* batch = &queue.emplace();
-
-            // Process batch queue
-            for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
-                testBox& box = Box::box_batch[i];
-                uint32_t const tex_id = box._sss_tex_id;
-                // Skip if no texture needed
-                if (objects.textures.count(tex_id) == 0) {
-                    batch->count++;
-                    continue;
-                }
-                // Check if texture ID is already in batch
-                auto const it = std::find(
-                    batch->tex_ids.cbegin(),
-                    batch->tex_ids.cend(),
-                    box._sss_tex_id
-                );
-                // If not found, push texture ID in batch
-                if (it == batch->tex_ids.cend()) {
-                    // Max number of texture units in the fragment shader
-                    static uint32_t const max_texture_units = []() {
-                        int i;
-                        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i);
-                        return static_cast<uint32_t>(i);
-                    }();
-                    // If texture IDs are full, create new batch
-                    if (batch->tex_ids.size() >= max_texture_units) {
-                        batch = &queue.emplace();
-                        batch->offset = i;
-                    }
-                    // Add texture ID to batch and batch ID to particle
-                    batch->tex_ids.push_back(box._sss_tex_id);
-                    box._glsl_tex_unit = static_cast<GLint>(batch->tex_ids.size() - 1);
-                }
-                // Else just add corresponding batch ID
-                else {
-                    box._glsl_tex_unit =
-                        static_cast<GLint>(std::distance(batch->tex_ids.cbegin(), it));
-                }
-                // Increment elements count
-                batch->count++;
-            }
-
-            // Setup VAO
-            vao->bind();
-            if (Box::box_batch.size() > 0) {
-                particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(),
-                    Box::box_batch.data(), GL_DYNAMIC_DRAW);
-            }
-            
-            // Setup shader
-            auto const& shader = objects.shaders.at(box_shader_id);
-            shader->use();
-            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-
-            // Draw all particles
-            static constexpr std::array<GLint, 128> texture_IDs = {
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-                64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-                80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-                96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
-                112, 113, 114, 115, 116, 117, 118, 119, 110, 121, 122, 123, 124, 125, 126, 127
-            };
-            for (; !queue.empty(); queue.pop()) {
-                Batch_ const& batch = queue.front();
-                shader->setUniform1iv("u_Textures", batch.count, &texture_IDs[0]);
-                // Bind needed textures
-                for (uint32_t i = 0; i < batch.tex_ids.size(); ++i) {
-                    glActiveTexture(GL_TEXTURE0 + i);
-                    objects.textures.at(batch.tex_ids[i])->bind();
-                }
-                // Draw batch
-                glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-                    nullptr, batch.count, batch.offset);
-            }
-
-            vao->unbind();
-        }
-
-        //DEBUG RENDERER
-        {
-            if (debug.debugmode) {
-                glm::vec3 cam_pos = window->getObjects().cameras.at(0)->getPosition();
-                debug.rectangle(cam_pos.x - w_w / 2 + 1, cam_pos.y + w_h / 2, w_w - 1, w_h - 1);
-            }
-            for (auto it = box_map.begin(); it != box_map.end(); it++) {
-                debug.debug_box(it->second);
-            }
-            float cursor_size = 5;
-            //ORIGIN CURSOR
-            debug.cross(0, 0, 0, cursor_size);
-            debug.circle(0, 0, 0, cursor_size);
-            debug.vbo->edit(
-                debug.debug_batch.size() * sizeof(debug_Vertex),
-                debug.debug_batch.data(),
-                GL_STATIC_DRAW);
-
-            auto const& shader = objects.shaders.at(debug.shader_id);
-            shader->use();
-            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-            debug.debug_show();
-        }
-
-
-
+        // Draw with Renderers
         window->drawObjects();
         window->printFrame();
-        debug.debug_batch.clear();
         Box::box_batch.clear();
     }
 
@@ -387,7 +270,7 @@ void Visualizer::setup()
         renderer->chunks[0].objects.push_back(0);
     }
 
-    // Shaders
+    // Shaders & Renderers
     {
         auto const& line_shader = window->createShaders();
         line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
@@ -395,80 +278,19 @@ void Visualizer::setup()
     
         auto const& box_shader = window->createShaders();
         box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
-        box_shader_id = box_shader->getID();
+        auto const& box_renderer = window->createRenderer<BoxRenderer>();
+        box_renderer->setShadersID(box_shader->getID());
+        box_renderer_id = box_renderer->getID();
     
         auto const& debug_shader = window->createShaders();
         debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
-        debug.shader_id = debug_shader->getID();
+        auto const& debug_renderer = window->createRenderer<Debugger>();
+        debug_renderer->setShadersID(debug_shader->getID());
+        debug_renderer_id = debug_renderer->getID();
+        // Enable or disable debugger
+        debug_renderer->setActivity(true);
     }
 
-    // VAO
-    {
-        vao.reset(new SSS::GL::Basic::VAO(window));
-        billboard_vbo.reset(new SSS::GL::Basic::VBO(window));
-        billboard_ibo.reset(new SSS::GL::Basic::IBO(window));
-        particles_vbo.reset(new SSS::GL::Basic::VBO(window));
-
-        vao->bind();
-
-        // Static vertices
-        {
-            constexpr GLfloat vertices[] = {
-                // Position         // Texture UV
-                0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
-                0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
-                1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
-                1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
-            };
-            billboard_vbo->edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                sizeof(float) * 5, (void*)0);
-            glEnableVertexAttribArray(4);
-            glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE,
-                sizeof(float) * 5, (void*)(sizeof(float) * 3));
-
-            constexpr GLuint indices[] = {
-                0, 1, 2,    // First triangle
-                2, 3, 0     // Second triangle
-            };
-            billboard_ibo->edit(sizeof(indices), indices, GL_STATIC_DRAW);
-        }
-
-        // Particles
-        {
-            particles_vbo->bind();
-
-            // Size (width / height)
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-                sizeof(testBox), (void*)(sizeof(glm::vec3)));
-            glVertexAttribDivisor(1, 1);
-
-            // Color
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
-                sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
-            );
-            glVertexAttribDivisor(2, 1);
-
-            // Position
-            glEnableVertexAttribArray(3);
-            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-                sizeof(testBox), (void*)0);
-            glVertexAttribDivisor(3, 1);
-
-            // Texture unit
-            glEnableVertexAttribArray(5);
-            glVertexAttribIPointer(5, 1, GL_UNSIGNED_INT,
-                sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
-            glVertexAttribDivisor(5, 1);
-        }
-
-        vao->unbind();
-    }
-
-    debug.vbo.reset(new SSS::GL::Basic::VBO(window));
 }
 
 void Visualizer::input()

@@ -11,8 +11,11 @@ enum struct V_STATES {
 };
 
 class Visualizer {
-	Visualizer();
+	friend Debugger;
+
 public:
+	// Make constructor public for JSON operations
+	Visualizer();
 	using Ptr = std::unique_ptr<Visualizer>;
 	static Ptr const& get();
 	~Visualizer();
@@ -72,23 +75,19 @@ private:
 	/* [RENDERER DATA] */
 	// Shaders
 	uint32_t line_shader_id;
-	uint32_t box_shader_id;
-	// VAO, VBO, IBO
-	SSS::GL::Basic::VAO::Ptr vao;
-	SSS::GL::Basic::VBO::Ptr billboard_vbo;
-	SSS::GL::Basic::IBO::Ptr billboard_ibo;
-	SSS::GL::Basic::VBO::Ptr particles_vbo;
-
+	// Renderers
+	uint32_t box_renderer_id;
+	uint32_t debug_renderer_id;
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
 
 
-	/* [DEBUGGER] */
-	Debugger debug;
-
 	//PARSER
+	void parse_info_data_to_json(const std::string& path, const bool prettify);
+	void parse_info_data_from_json(const std::string& path);
 	void save();
+	void load();
 };
 
 //JSON CONVERTION
