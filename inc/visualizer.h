@@ -23,11 +23,16 @@ public:
 	void run();
 
 private:
+	friend void to_json(nlohmann::json& j, const Visualizer& t);
+	friend void from_json(const nlohmann::json& j, Visualizer& t);
+
+	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 	void setup();
 	void input();
+	void refresh();
 	
 	V_STATES _states = V_STATES::DEFAULT;
 	float w_h{ 810.f };
@@ -74,18 +79,19 @@ private:
 
 	/* [RENDERER DATA] */
 	// Shaders
-	uint32_t line_shader_id;
+	uint32_t line_shader_id = 0;
 	// Renderers
-	uint32_t box_renderer_id;
-	uint32_t debug_renderer_id;
+	uint32_t box_renderer_id = 0;
+	uint32_t debug_renderer_id = 0;
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
 
 
 	//PARSER
-	void parse_info_data_to_json(const std::string& path, const bool prettify);
 	void parse_info_data_from_json(const std::string& path);
+	void parse_info_data_to_json(const std::string& path, const bool prettify = false);
+	
 	void save();
 	void load();
 };

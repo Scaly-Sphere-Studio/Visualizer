@@ -1,4 +1,4 @@
-#include "data.hpp"
+#include "Text_data.h"
 
 /// 
 /// MAIN TRADUCTION STRUCTURE MANAGER
@@ -10,7 +10,7 @@ Traduction_data::Traduction_data()
 }
 
 
-Traduction_data::Traduction_data(std::string &path)
+Traduction_data::Traduction_data(std::string& path)
 {
 	parse_traduction_data_from_json(path);
 }
@@ -37,7 +37,7 @@ void Traduction_data::parse_traduction_data_to_json(const std::string& path, con
 		ofs << std::setw(4) << dst << std::endl;
 	}
 	else {
-		ofs <<  dst << std::endl;
+		ofs << dst << std::endl;
 	}
 	ofs.close();
 }

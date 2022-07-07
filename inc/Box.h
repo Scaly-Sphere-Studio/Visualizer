@@ -2,6 +2,7 @@
 
 #include "commons.h"
 #include "shader.hpp"
+#include <set>
 
 struct testBox {
 	testBox();
@@ -18,6 +19,7 @@ struct testBox {
 
 class Box : public testBox{
 public:
+	Box();
 	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
 	~Box();
 
@@ -56,8 +58,8 @@ public:
 	static std::vector<testBox> box_batch;
 
 
-	std::list<std::string> link_to;
-	std::list<std::string> link_from;
+	std::set<std::string> link_to;
+	std::set<std::string> link_from;
 
 };
 

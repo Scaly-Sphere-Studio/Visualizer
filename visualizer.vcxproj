@@ -27,6 +27,7 @@
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\Box.cpp" />
     <ClCompile Include="src\Debugger.cpp" />
+    <ClCompile Include="src\Text_data.cpp" />
     <ClCompile Include="src\visualizer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -35,6 +36,7 @@
     <ClInclude Include="inc\data.hpp" />
     <ClInclude Include="inc\imgui_impl_glfw.h" />
     <ClInclude Include="inc\imgui_impl_opengl3.h" />
+    <ClInclude Include="inc\Text_data.h" />
     <ClInclude Include="inc\_includes.hpp" />
     <ClInclude Include="inc\commons.h" />
     <ClInclude Include="inc\shader.hpp" />

@@ -113,22 +113,21 @@ Visualizer::Visualizer()
 {
     //TODO RANDSEED 
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    setup();
+
+ 
+    //Box b1 = Box(glm::vec3(-400.0f, 75.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
+    //Box b2 = Box(glm::vec3(400.0f, -80.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
+
+    //b1.id = i1;
+    //b2.id = i2;
+
+    //box_map.insert(std::make_pair(i1, b1));
+    //box_map.insert(std::make_pair(i2, b2));
+
+    //link_box(box_map.at(i1), box_map.at(i2));
+    //link_box(box_map.at(i2), box_map.at(i1));
 
     
-    Box b1 = Box(glm::vec3(-400.0f, 75.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
-    Box b2 = Box(glm::vec3(400.0f, -80.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
-
-    b1.id = i1;
-    b2.id = i2;
-
-    box_map.insert(std::make_pair(i1, b1));
-    box_map.insert(std::make_pair(i2, b2));
-
-    link_box(box_map.at(i1), box_map.at(i2));
-    link_box(box_map.at(i2), box_map.at(i1));
-
-    clear_color = hex_to_rgb("#4d5f83");
 }
 
 Visualizer::Ptr const& Visualizer::get()
@@ -147,7 +146,13 @@ Visualizer::~Visualizer()
 
 void Visualizer::run()
 {
+    //load
+    parse_info_data_from_json("save.json");
+    setup();
+    refresh();
     SSS::GL::Context const context(window);
+
+    clear_color = hex_to_rgb("#4d5f83");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -317,7 +322,13 @@ void Visualizer::input()
         camera->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
 
+    if (inputs[GLFW_KEY_LEFT_CONTROL] && inputs[GLFW_KEY_S]) {
+        std::cout << "saved" << std::endl;
+        std::string str = "save.json";
+        parse_info_data_to_json(str, true);
+    }
 
+   
 
 
     ////INPUTS BOX
@@ -330,6 +341,14 @@ void Visualizer::input()
     //if (inputs[GLFW_KEY_KP_SUBTRACT]) {
     //    pop_box(last_selected_ID);
     //}
+}
+
+void Visualizer::refresh()
+{
+    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+        link_box(it->second);
+
+    }
 }
 
 
@@ -361,8 +380,13 @@ void Visualizer::link_box(Box& a, Box& b)
 
     //Add the dst box to the 'link to' list of the src box
     //And add the src box to the 'link from' list of the dst box
-    a.link_to.emplace_back(b.id);
-    b.link_from.emplace_back(a.id);
+    if (!a.link_to.contains(b.id)) {
+        a.link_to.emplace(b.id);
+    }
+
+    if (!b.link_to.contains(a.id)) {
+        b.link_from.emplace(a.id);
+    }
 
     //The arrow ID is the cat of the two boxes ID as it keeps the order
     arrow_map.insert(std::make_pair(a.id + b.id, seg));
@@ -413,8 +437,8 @@ void Visualizer::link_box_to_cursor(Box& b)
 void Visualizer::pop_link(Box& a, Box& b)
 {
     arrow_map.erase(a.id + b.id);
-    a.link_to.remove(b.id);  
-    b.link_from.remove(a.id);
+    a.link_to.erase(b.id);  
+    b.link_from.erase(a.id);
 }
 
 
@@ -435,7 +459,7 @@ void Visualizer::pop_box(std::string ID)
         //Erase the ID from their 'Link to' list
         for (std::string f_ID : box_map.at(ID).link_from) {
             arrow_map.erase(f_ID + ID);
-            box_map.at(f_ID).link_to.remove(ID);
+            box_map.at(f_ID).link_to.erase(ID);
         }
 
         //Clear all the arrows connected to other boxes
@@ -444,7 +468,7 @@ void Visualizer::pop_box(std::string ID)
         //Erase the ID from their 'link from' list
         for (std::string l_ID : box_map.at(ID).link_to) {
             arrow_map.erase(ID + l_ID);
-            box_map.at(l_ID).link_from.remove(ID);
+            box_map.at(l_ID).link_from.erase(ID);
         }
 
         //Clear the box from the map
@@ -632,8 +656,8 @@ void Visualizer::line_drag_link()
                         //Erase the arrows connected to the box
                         //Erase the ID from their 'Link to' and 'Link from' list
                         arrow_map.erase(first_link_ID + second_link_ID);
-                        box_map.at(first_link_ID).link_to.remove(second_link_ID);
-                        box_map.at(second_link_ID).link_from.remove(first_link_ID);
+                        box_map.at(first_link_ID).link_to.erase(second_link_ID);
+                        box_map.at(second_link_ID).link_from.erase(first_link_ID);
                     }
                     else {
                         //If it doesn't, create the link between the two boxes
@@ -756,14 +780,21 @@ void Visualizer::save()
 
 void Visualizer::load()
 {
+    
 }
 
 void to_json(nlohmann::json& j, const Visualizer& t)
 {
     j = nlohmann::json{
+        {"HEIGHT", t.w_h},
+        {"WIDTH", t.w_w},
+        {"BOX", t.box_map}
     };
 }
 
 void from_json(const nlohmann::json& j, Visualizer& t)
 {
+    j.at("HEIGHT").get_to(t.w_h);
+    j.at("WIDTH").get_to(t.w_w);
+    j.at("BOX").get_to(t.box_map);
 }

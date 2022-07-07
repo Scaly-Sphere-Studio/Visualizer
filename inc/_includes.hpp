@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <list>
 #include <queue>
 #include <unordered_map>
+#include <vector>
+#include <set>
 #include <algorithm>
 #include <random>
 #include <cmath>
