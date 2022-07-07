@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="src\backend.cpp" />
     <ClCompile Include="src\commons.cpp" />
-    <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\imgui_impl_glfw.cpp" />
     <ClCompile Include="src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\shader.cpp" />
