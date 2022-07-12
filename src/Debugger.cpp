@@ -137,8 +137,8 @@ void Debugger::render()
     SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
 
     glm::vec3 const cam_pos = objects.cameras.at(0)->getPosition();
-    rectangle(cam_pos.x - visu->w_w / 2 + 1, cam_pos.y + visu->w_h / 2, visu->w_w - 1, visu->w_h - 1);
-    for (auto it = visu->box_map.begin(); it != visu->box_map.end(); it++) {
+    rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
+    for (auto it = visu->_proj.box_map.begin(); it != visu->_proj.box_map.end(); it++) {
         debug_box(it->second);
     }
     float cursor_size = 5;

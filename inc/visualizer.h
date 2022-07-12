@@ -10,6 +10,16 @@ enum struct V_STATES {
 	MULTI_SELECT = 2
 };
 
+struct VISUALISER_INFO {
+	float _h{ 810.f };
+	float _w{ 1440.f };
+};
+
+struct PROJECT_DATA {
+	~PROJECT_DATA();
+	std::unordered_map<std::string, Box> box_map;
+};
+
 class Visualizer {
 	friend Debugger;
 
@@ -23,8 +33,10 @@ public:
 	void run();
 
 private:
-	friend void to_json(nlohmann::json& j, const Visualizer& t);
-	friend void from_json(const nlohmann::json& j, Visualizer& t);
+	PROJECT_DATA _proj;
+	VISUALISER_INFO _info;
+	//friend void to_json(nlohmann::json& j, const Visualizer& t);
+	//friend void from_json(const nlohmann::json& j, Visualizer& t);
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
@@ -35,14 +47,11 @@ private:
 	void refresh();
 	
 	V_STATES _states = V_STATES::DEFAULT;
-	float w_h{ 810.f };
-	float w_w{ 1440.f };
+
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
-	std::unordered_map<std::string, Box> box_map;
+	//std::unordered_map<std::string, Box> box_map;
 	std::unordered_map<std::string, std::shared_ptr<Polyline>> arrow_map;
-	std::string i1 = rand_color();
-	std::string i2 = rand_color();
-	
+
 
 	/* [BOX METHODS] */
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
@@ -89,8 +98,11 @@ private:
 
 
 	//PARSER
-	void parse_info_data_from_json(const std::string& path);
-	void parse_info_data_to_json(const std::string& path, const bool prettify = false);
+	void parse_info_data_visualizer_from_json(const std::string& path);
+	void parse_info_data_visualizer_to_json(const std::string& path, const bool prettify = false);
+	
+	void parse_info_data_project_from_json(const std::string& path);
+	void parse_info_data_project_to_json(const std::string& path, const bool prettify = false);
 	
 	void save();
 	void load();
@@ -98,5 +110,8 @@ private:
 
 //JSON CONVERTION
 //Text data convertion
-void to_json(nlohmann::json& j, const Visualizer& t);
-void from_json(const nlohmann::json& j, Visualizer& t);
+void to_json(nlohmann::json& j, const VISUALISER_INFO& t);
+void from_json(const nlohmann::json& j, VISUALISER_INFO& t);
+
+void to_json(nlohmann::json& j, const PROJECT_DATA& t);
+void from_json(const nlohmann::json& j, PROJECT_DATA& t);

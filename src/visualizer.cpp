@@ -114,18 +114,8 @@ Visualizer::Visualizer()
     //TODO RANDSEED 
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
- 
-    //Box b1 = Box(glm::vec3(-400.0f, 75.0f, 0.0f), glm::vec2(300.0f,150.0f), "1E1022");
-    //Box b2 = Box(glm::vec3(400.0f, -80.0f, 0.0f), glm::vec2(300.0f,150.0f), "0E2556");
-
-    //b1.id = i1;
-    //b2.id = i2;
-
-    //box_map.insert(std::make_pair(i1, b1));
-    //box_map.insert(std::make_pair(i2, b2));
-
-    //link_box(box_map.at(i1), box_map.at(i2));
-    //link_box(box_map.at(i2), box_map.at(i1));
+    //TODO Check if the data exists
+    parse_info_data_visualizer_from_json("save.json");
 
     
 }
@@ -141,14 +131,16 @@ Visualizer::~Visualizer()
 
     Box::box_batch.clear();
     arrow_map.clear();
-    box_map.clear();
+    //_proj.box_map.clear();
 }
 
 void Visualizer::run()
 {
     //load
-    parse_info_data_from_json("save.json");
     setup();
+
+    parse_info_data_project_from_json("data.json");
+
     refresh();
     SSS::GL::Context const context(window);
 
@@ -227,16 +219,16 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
     Ptr const& visu = get();
-    visu->w_w = static_cast<float>(w);
-    visu->w_h = static_cast<float>(h);
+    visu->_info._w = static_cast<float>(w);
+    visu->_info._h = static_cast<float>(h);
 }
 
 void Visualizer::setup()
 {
     SSS::GL::Window::CreateArgs args;
     args.title = "VISUALIZER";
-    args.w = static_cast<int>(w_w);
-    args.h = static_cast<int>(w_h);
+    args.w = static_cast<int>(_info._w);
+    args.h = static_cast<int>(_info._h);
     window = SSS::GL::Window::create(args);
     if (!window) {
         SSS::throw_exc("Couldn't create a window");
@@ -324,8 +316,10 @@ void Visualizer::input()
 
     if (inputs[GLFW_KEY_LEFT_CONTROL] && inputs[GLFW_KEY_S]) {
         std::cout << "saved" << std::endl;
+        std::string data_str = "data.json";
         std::string str = "save.json";
-        parse_info_data_to_json(str, true);
+        parse_info_data_project_to_json(data_str, true);
+        parse_info_data_visualizer_to_json(str, true);
     }
 
    
@@ -345,9 +339,9 @@ void Visualizer::input()
 
 void Visualizer::refresh()
 {
-    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         link_box(it->second);
-
+        //it->second.update();
     }
 }
 
@@ -396,10 +390,10 @@ void Visualizer::link_box(Box& a, Box& b)
 void Visualizer::link_box(Box& a)
 {
     for (std::string lt : a.link_to) {
-        link_box(a, box_map.at(lt));
+        link_box(a, _proj.box_map.at(lt));
     }
     for (std::string lf : a.link_from) {
-        link_box(box_map.at(lf), a);
+        link_box(_proj.box_map.at(lf), a);
     }
 }
 
@@ -446,8 +440,8 @@ void Visualizer::pop_link(Box& a, Box& b)
 void Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
-    box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
-    box_map.at(boxID).id = boxID;
+    _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
+    _proj.box_map.at(boxID).id = boxID;
 }
 
 void Visualizer::pop_box(std::string ID)
@@ -457,22 +451,22 @@ void Visualizer::pop_box(std::string ID)
 
         //Erase the arrows connected to the box
         //Erase the ID from their 'Link to' list
-        for (std::string f_ID : box_map.at(ID).link_from) {
+        for (std::string f_ID : _proj.box_map.at(ID).link_from) {
             arrow_map.erase(f_ID + ID);
-            box_map.at(f_ID).link_to.erase(ID);
+            _proj.box_map.at(f_ID).link_to.erase(ID);
         }
 
         //Clear all the arrows connected to other boxes
 
         //Erase the arrows that connect to other boxes
         //Erase the ID from their 'link from' list
-        for (std::string l_ID : box_map.at(ID).link_to) {
+        for (std::string l_ID : _proj.box_map.at(ID).link_to) {
             arrow_map.erase(ID + l_ID);
-            box_map.at(l_ID).link_from.erase(ID);
+            _proj.box_map.at(l_ID).link_from.erase(ID);
         }
 
         //Clear the box from the map
-        box_map.erase(last_selected_ID);
+        _proj.box_map.erase(last_selected_ID);
     }
    
     //Erase the selection
@@ -486,9 +480,9 @@ bool Visualizer::check_frustrum_render(Box &b)
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
     glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
     float const dx = glm::abs(cam_pos.x - b._pos.x);
-    float const dxmax = (b._size.x + w_w) * 0.5f;    
+    float const dxmax = (b._size.x + _info._w) * 0.5f;
     float const dy = glm::abs(cam_pos.y - b._pos.y);
-    float const dymax = (b._size.y + w_h) * 0.5f;
+    float const dymax = (b._size.y + _info._h) * 0.5f;
 
 
     if ((dx < dxmax) && (dy < dymax)) {
@@ -500,7 +494,7 @@ bool Visualizer::check_frustrum_render(Box &b)
 glm::vec3 Visualizer::cursor_map_coordinates()
 {
     glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
-    return glm::vec3{ (c_x - w_w / 2) + cam_pos.x, (w_h / 2 - c_y) + cam_pos.y, 0.0 };
+    return glm::vec3{ (c_x - _info._w / 2) + cam_pos.x, (_info._h / 2 - c_y) + cam_pos.y, 0.0 };
 }
 
 void Visualizer::frustrum_test()
@@ -516,7 +510,7 @@ void Visualizer::frustrum_test()
     //    //}
     //}
 
-    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
         //if (check_frustrum_render(boxes[i])) {
         //    debug_box(boxes[i]);
@@ -537,14 +531,14 @@ void Visualizer::drag_boxes()
 
         if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
             //Reset the Z offset for priority 
-            box_map.at(last_selected_ID)._pos.z = rand_float();
-            box_map.at(last_selected_ID).update();
+            _proj.box_map.at(last_selected_ID)._pos.z = rand_float();
+            _proj.box_map.at(last_selected_ID).update();
         }
 
         if (!current_selected_ID.empty()) {
-            box_map.at(current_selected_ID)._clicked = true;
-            box_map.at(current_selected_ID)._pos.z = 2;
-            box_map.at(current_selected_ID).update();
+            _proj.box_map.at(current_selected_ID)._clicked = true;
+            _proj.box_map.at(current_selected_ID)._pos.z = 2;
+            _proj.box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
         cur_pos = cursor_map_coordinates();
@@ -556,22 +550,22 @@ void Visualizer::drag_boxes()
     if (!current_selected_ID.empty()) {
         //DRAG BOX
         static glm::vec3 delta;
-        if (box_map.at(current_selected_ID)._clicked) {
+        if (_proj.box_map.at(current_selected_ID)._clicked) {
             glm::vec3 new_pos = cursor_map_coordinates();
             delta = new_pos - cur_pos;
             //Update only if the box has moved
             if (new_pos != cur_pos) {
-                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
-                box_map.at(current_selected_ID).update();
-                link_box(box_map.at(current_selected_ID));
+                _proj.box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
+                _proj.box_map.at(current_selected_ID).update();
+                link_box(_proj.box_map.at(current_selected_ID));
             }
             cur_pos = new_pos; //update the position
         }
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-            && box_map.at(current_selected_ID)._clicked) {
+            && _proj.box_map.at(current_selected_ID)._clicked) {
             
-            box_map.at(current_selected_ID)._clicked = false;
+            _proj.box_map.at(current_selected_ID)._clicked = false;
             current_selected_ID.clear();
         }
     }
@@ -616,12 +610,12 @@ void Visualizer::line_drag_link()
             arrow_map.erase("CUTLINE");
             static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
-            for (auto it = box_map.begin(); it != box_map.end(); it++) {
+            for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
                 Box *b1 = &it->second;
                 glm::vec3 offset{ 0, 400, 0 }; //TODO
 
                 for (std::string s : b1->link_to) {
-                    Box *b2 = &box_map.at(s);
+                    Box *b2 = &_proj.box_map.at(s);
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         first_cursor_pos, second_cursor_pos)) {
@@ -631,7 +625,7 @@ void Visualizer::line_drag_link()
             }
 
             for (size_t i = 0; i < cut_lines_selection.size(); i++) {
-                pop_link(box_map.at(cut_lines_selection[i].first), box_map.at(cut_lines_selection[i].second));
+                pop_link(_proj.box_map.at(cut_lines_selection[i].first), _proj.box_map.at(cut_lines_selection[i].second));
             }
 
             cut_lines_selection.clear();
@@ -643,25 +637,25 @@ void Visualizer::line_drag_link()
 
     if (_states == V_STATES::DEFAULT) {
         if (!first_link_ID.empty()) {
-            link_box_to_cursor(box_map.at(first_link_ID));
+            link_box_to_cursor(_proj.box_map.at(first_link_ID));
 
             if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
                 if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
 
                     //First look out if the link between boxes already exists
-                    auto it = std::find(box_map.at(first_link_ID).link_to.begin(), box_map.at(first_link_ID).link_to.end(), second_link_ID);
+                    auto it = std::find(_proj.box_map.at(first_link_ID).link_to.begin(), _proj.box_map.at(first_link_ID).link_to.end(), second_link_ID);
 
-                    if (it != box_map.at(first_link_ID).link_to.end()) {
+                    if (it != _proj.box_map.at(first_link_ID).link_to.end()) {
                         //If it already exists delete it
                         //Erase the arrows connected to the box
                         //Erase the ID from their 'Link to' and 'Link from' list
                         arrow_map.erase(first_link_ID + second_link_ID);
-                        box_map.at(first_link_ID).link_to.erase(second_link_ID);
-                        box_map.at(second_link_ID).link_from.erase(first_link_ID);
+                        _proj.box_map.at(first_link_ID).link_to.erase(second_link_ID);
+                        _proj.box_map.at(second_link_ID).link_from.erase(first_link_ID);
                     }
                     else {
                         //If it doesn't, create the link between the two boxes
-                        link_box(box_map.at(first_link_ID), box_map.at(second_link_ID));
+                        link_box(_proj.box_map.at(first_link_ID), _proj.box_map.at(second_link_ID));
                     }
                 }
 
@@ -687,14 +681,14 @@ void Visualizer::multi_select_drag()
 
         if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
             //Reset the Z offset for priority 
-            box_map.at(last_selected_ID)._pos.z = rand_float();
-            box_map.at(last_selected_ID).update();
+            _proj.box_map.at(last_selected_ID)._pos.z = rand_float();
+            _proj.box_map.at(last_selected_ID).update();
         }
 
         if (!current_selected_ID.empty()) {
-            box_map.at(current_selected_ID)._clicked = true;
-            box_map.at(current_selected_ID)._pos.z = 2;
-            box_map.at(current_selected_ID).update();
+            _proj.box_map.at(current_selected_ID)._clicked = true;
+            _proj.box_map.at(current_selected_ID)._pos.z = 2;
+            _proj.box_map.at(current_selected_ID).update();
         }
         //DELTA DE POSITION A CALCULER
         cur_pos = cursor_map_coordinates();
@@ -706,23 +700,23 @@ void Visualizer::multi_select_drag()
     if (!current_selected_ID.empty()) {
         //DRAG BOX
         static glm::vec3 delta;
-        if (box_map.at(current_selected_ID)._clicked) {
+        if (_proj.box_map.at(current_selected_ID)._clicked) {
             glm::vec3 new_pos = cursor_map_coordinates();
             delta = new_pos - cur_pos;
             //Update only if the box has moved
             if (new_pos != cur_pos) {
-                box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
-                box_map.at(current_selected_ID).update();
-                link_box(box_map.at(current_selected_ID));
+                _proj.box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
+                _proj.box_map.at(current_selected_ID).update();
+                link_box(_proj.box_map.at(current_selected_ID));
             }
 
             cur_pos = new_pos; //update the position
         }
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-            && box_map.at(current_selected_ID)._clicked) {
+            && _proj.box_map.at(current_selected_ID)._clicked) {
 
-            box_map.at(current_selected_ID)._clicked = false;
+            _proj.box_map.at(current_selected_ID)._clicked = false;
             current_selected_ID.clear();
         }
     }
@@ -730,7 +724,7 @@ void Visualizer::multi_select_drag()
 
 std::string Visualizer::clicked_box_ID(std::string& ID)
 {
-    for (auto it = box_map.begin(); it != box_map.end(); it++) {
+    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         if (it->second.check_collision(cursor_map_coordinates()))
         {
             std::string on_top_box_ID = it->first;
@@ -740,7 +734,7 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
                 ID = on_top_box_ID;
             }
 
-            if (!ID.empty() && (box_map.at(ID)._pos.z < box_map.at(on_top_box_ID)._pos.z)) {
+            if (!ID.empty() && (_proj.box_map.at(ID)._pos.z < _proj.box_map.at(on_top_box_ID)._pos.z)) {
                 //Check if the current Box is on top of the already other selected box
                 ID = on_top_box_ID;
             }
@@ -749,10 +743,10 @@ std::string Visualizer::clicked_box_ID(std::string& ID)
     return ID;
 }
 
-void Visualizer::parse_info_data_to_json(const std::string& path, const bool prettify)
+void Visualizer::parse_info_data_visualizer_to_json(const std::string& path, const bool prettify)
 {
     nlohmann::json dst;
-    dst = *this;
+    dst = this->_info;
 
     std::ofstream ofs(path);
     if (prettify) {
@@ -764,14 +758,39 @@ void Visualizer::parse_info_data_to_json(const std::string& path, const bool pre
     ofs.close();
 }
 
-void Visualizer::parse_info_data_from_json(const std::string& path)
+void Visualizer::parse_info_data_project_from_json(const std::string& path)
 {
     std::ifstream ifs(path);
     nlohmann::json tmp;
     ifs >> tmp;
     ifs.close();
 
-    *this = tmp;
+    this->_proj = tmp;
+}
+
+void Visualizer::parse_info_data_project_to_json(const std::string& path, const bool prettify)
+{
+    nlohmann::json dst;
+    dst = this->_proj;
+
+    std::ofstream ofs(path);
+    if (prettify) {
+        ofs << std::setw(4) << dst << std::endl;
+    }
+    else {
+        ofs << dst << std::endl;
+    }
+    ofs.close();
+}
+
+void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
+{
+    std::ifstream ifs(path);
+    nlohmann::json tmp;
+    ifs >> tmp;
+    ifs.close();
+
+    this->_info = tmp;
 }
 
 void Visualizer::save()
@@ -783,18 +802,34 @@ void Visualizer::load()
     
 }
 
-void to_json(nlohmann::json& j, const Visualizer& t)
+void to_json(nlohmann::json& j, const VISUALISER_INFO& t)
 {
     j = nlohmann::json{
-        {"HEIGHT", t.w_h},
-        {"WIDTH", t.w_w},
-        {"BOX", t.box_map}
+        {"HEIGHT", t._h},
+        {"WIDTH", t._w},
     };
 }
 
-void from_json(const nlohmann::json& j, Visualizer& t)
+void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 {
-    j.at("HEIGHT").get_to(t.w_h);
-    j.at("WIDTH").get_to(t.w_w);
+    j.at("HEIGHT").get_to(t._h);
+    j.at("WIDTH").get_to(t._w);
+
+}
+
+void to_json(nlohmann::json& j, const PROJECT_DATA& t)
+{
+    j = nlohmann::json{
+           {"BOX", t.box_map}
+    };
+}
+
+void from_json(const nlohmann::json& j, PROJECT_DATA& t)
+{
     j.at("BOX").get_to(t.box_map);
+}
+
+PROJECT_DATA::~PROJECT_DATA()
+{
+    box_map.clear();
 }
