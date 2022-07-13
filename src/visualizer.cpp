@@ -174,21 +174,6 @@ void Visualizer::run()
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
-
-        SSS::GL::Window::Objects const& objects = window->getObjects();
-
-        //TEST CURSOR DRAG
-        //UPDATE MVP MATRIX
-        glm::mat4 mvp = objects.cameras.at(0)->getVP();
-
-        //LINE RENDERER
-        {
-            auto const& shader = objects.shaders.at(line_shader_id);
-            shader->use();
-            shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-            Line_Batch::render();
-        }
-
         // Draw with Renderers
         window->drawObjects();
         window->printFrame();
@@ -272,7 +257,10 @@ void Visualizer::setup()
     {
         auto const& line_shader = window->createShaders();
         line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
-        line_shader_id = line_shader->getID();
+        auto const& line_renderer = window->createRenderer<LineRenderer>();
+        line_renderer->setShadersID(line_shader->getID());
+        line_renderer->castAs<LineRenderer>().cam_id = main_cam_id;
+        line_renderer_id = line_renderer->getID();
     
         auto const& box_shader = window->createShaders();
         box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SSS/Line/line.h>
 #include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
@@ -50,7 +51,7 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	//std::unordered_map<std::string, Box> box_map;
-	std::unordered_map<std::string, std::shared_ptr<Polyline>> arrow_map;
+	std::unordered_map<std::string, Polyline::Shared> arrow_map;
 
 
 	/* [BOX METHODS] */
@@ -87,11 +88,10 @@ private:
 
 
 	/* [RENDERER DATA] */
-	// Shaders
-	uint32_t line_shader_id = 0;
 	// Objects
 	uint32_t main_cam_id{ 0 };
 	// Renderers
+	uint32_t line_renderer_id{ 0 };
 	uint32_t box_renderer_id{ 0 };
 	uint32_t debug_renderer_id{ 0 };
 
