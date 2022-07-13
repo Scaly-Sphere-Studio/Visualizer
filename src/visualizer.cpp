@@ -369,7 +369,7 @@ void Visualizer::link_box(Box& a, Box& b)
         a.link_to.emplace(b.id);
     }
 
-    if (!b.link_to.contains(a.id)) {
+    if (!b.link_from.contains(a.id)) {
         b.link_from.emplace(a.id);
     }
 
