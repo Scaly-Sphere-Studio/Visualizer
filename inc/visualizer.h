@@ -89,9 +89,11 @@ private:
 	/* [RENDERER DATA] */
 	// Shaders
 	uint32_t line_shader_id = 0;
+	// Objects
+	uint32_t main_cam_id{ 0 };
 	// Renderers
-	uint32_t box_renderer_id = 0;
-	uint32_t debug_renderer_id = 0;
+	uint32_t box_renderer_id{ 0 };
+	uint32_t debug_renderer_id{ 0 };
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;

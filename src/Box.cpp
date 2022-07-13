@@ -236,7 +236,7 @@ void BoxRenderer::render()
     // Setup shader
     auto const& shader = objects.shaders.at(getShadersID());
 
-    auto mvp = objects.cameras.at(0)->getVP();
+    auto mvp = objects.cameras.at(cam_id)->getVP();
 
     shader->use();
     shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);

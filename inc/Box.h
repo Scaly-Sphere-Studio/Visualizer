@@ -70,6 +70,8 @@ private:
 	BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id);
 
 public:
+	uint32_t cam_id{ 0 };
+
 	virtual void render();
 
 private:

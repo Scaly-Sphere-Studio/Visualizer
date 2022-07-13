@@ -258,6 +258,7 @@ void Visualizer::setup()
 
         camera->setPosition({ 0, 0, 3 });
         camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+        main_cam_id = camera->getID();
 
         plane->setTextureID(texture->getID());
         plane->scale(glm::vec3(300));
@@ -277,12 +278,14 @@ void Visualizer::setup()
         box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
         auto const& box_renderer = window->createRenderer<BoxRenderer>();
         box_renderer->setShadersID(box_shader->getID());
+        box_renderer->castAs<BoxRenderer>().cam_id = main_cam_id;
         box_renderer_id = box_renderer->getID();
     
         auto const& debug_shader = window->createShaders();
         debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
         auto const& debug_renderer = window->createRenderer<Debugger>();
         debug_renderer->setShadersID(debug_shader->getID());
+        debug_renderer->castAs<Debugger>().cam_id = main_cam_id;
         debug_renderer_id = debug_renderer->getID();
         // Enable or disable debugger
         debug_renderer->setActivity(true);
@@ -296,7 +299,7 @@ void Visualizer::input()
     //INPUT CAMERA
     constexpr float speed = 10.0f;
 
-    auto const& camera = window->getObjects().cameras.at(0);
+    auto const& camera = window->getObjects().cameras.at(main_cam_id);
 
     if (inputs[GLFW_KEY_DOWN]) {
         camera->move(glm::vec3(0.0f, -speed, 0.0f));
@@ -478,7 +481,7 @@ void Visualizer::pop_box(std::string ID)
 bool Visualizer::check_frustrum_render(Box &b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
+    glm::vec3 const cam_pos = window->getObjects().cameras.at(main_cam_id)->getPosition();
     float const dx = glm::abs(cam_pos.x - b._pos.x);
     float const dxmax = (b._size.x + _info._w) * 0.5f;
     float const dy = glm::abs(cam_pos.y - b._pos.y);
@@ -493,7 +496,7 @@ bool Visualizer::check_frustrum_render(Box &b)
 
 glm::vec3 Visualizer::cursor_map_coordinates()
 {
-    glm::vec3 const cam_pos = window->getObjects().cameras.at(0)->getPosition();
+    glm::vec3 const cam_pos = window->getObjects().cameras.at(main_cam_id)->getPosition();
     return glm::vec3{ (c_x - _info._w / 2) + cam_pos.x, (_info._h / 2 - c_y) + cam_pos.y, 0.0 };
 }
 

@@ -17,6 +17,8 @@ private:
 public:
 	~Debugger();
 	
+	uint32_t cam_id{ 0 };
+
 	virtual void render();
 
 private:

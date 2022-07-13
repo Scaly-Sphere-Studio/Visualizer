@@ -135,8 +135,9 @@ void Debugger::render()
 
     SSS::GL::Context const context(_window);
     SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
+    SSS::GL::Camera::Ptr const& camera = objects.cameras.at(cam_id);
 
-    glm::vec3 const cam_pos = objects.cameras.at(0)->getPosition();
+    glm::vec3 const cam_pos = camera->getPosition();
     rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
     for (auto it = visu->_proj.box_map.begin(); it != visu->_proj.box_map.end(); it++) {
         debug_box(it->second);
@@ -152,7 +153,7 @@ void Debugger::render()
     );
 
     auto const& shader = objects.shaders.at(getShadersID());
-    glm::mat4 const mvp = objects.cameras.at(0)->getVP();
+    glm::mat4 const mvp = camera->getVP();
     shader->use();
     shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
