@@ -4,9 +4,9 @@
 #include "shader.hpp"
 #include <set>
 
-struct testBox {
-	testBox();
-	testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
+struct Particle {
+	Particle();
+	Particle(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
 	// ---------- Below data is passed to OpenGL VBO
 	glm::vec3 _pos;
 	glm::vec2 _size;
@@ -16,8 +16,17 @@ struct testBox {
 	uint32_t _sss_tex_id{ UINT32_MAX };
 };
 
+struct Tags : public Particle {
+	Tags();
+	Tags(std::string _name, uint32_t weight = 1, std::string hex = "#111111");
+	~Tags();
+	std::string name;
+	std::vector<Particle> model;
+	uint32_t weight;
+};
 
-class Box : public testBox{
+
+class Box : public Particle{
 public:
 	Box();
 	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
@@ -37,7 +46,7 @@ public:
 
 
 	//Box rendering
-	std::vector<testBox> model;
+	std::vector<Particle> model;
 
 
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
@@ -55,7 +64,7 @@ public:
 	std::string id;
 	std::vector<uint16_t> tags;
 
-	static std::vector<testBox> box_batch;
+	static std::vector<Particle> box_batch;
 
 
 	std::set<std::string> link_to;
@@ -87,17 +96,17 @@ private:
 	SSS::GL::Basic::VBO::Ptr particles_vbo;
 };
 
-class Selection_square : testBox {
+class Selection_square : Particle {
 public:
 
 	//Box rendering
-	testBox model;
+	Particle model;
 
-	static std::vector<testBox> box_batch;
+	static std::vector<Particle> box_batch;
 };
 
 
-static bool sort_box(testBox& a, testBox& b) {
+static bool sort_box(Particle& a, Particle& b) {
 
 	return a._pos.z < b._pos.z;
 }

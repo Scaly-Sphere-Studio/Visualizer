@@ -108,6 +108,9 @@ private:
 	
 	void save();
 	void load();
+
+	Tags test_tag;
+
 };
 
 //JSON CONVERTION

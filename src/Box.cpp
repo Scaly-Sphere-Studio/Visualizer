@@ -1,6 +1,6 @@
 #include "Box.h"
 
-std::vector<testBox>Box::box_batch{};
+std::vector<Particle>Box::box_batch{};
 
 Box::Box() { }
 
@@ -95,14 +95,14 @@ glm::vec3 Box::center()
     return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
 }
 
-testBox::testBox()
+Particle::Particle()
 {
     _pos = glm::vec3{ 0 };
     _size = glm::vec2{ 0 };
     _color = glm::vec4{ 0 };
 }
 
-testBox::testBox(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
+Particle::Particle(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
     _pos(_pos), _size(s), _color(_col)
 {
 }
@@ -150,26 +150,26 @@ BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
         // Size (width / height)
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-            sizeof(testBox), (void*)(sizeof(glm::vec3)));
+            sizeof(Particle), (void*)(sizeof(glm::vec3)));
         glVertexAttribDivisor(1, 1);
 
         // Color
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
-            sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
+            sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
         );
         glVertexAttribDivisor(2, 1);
 
         // Position
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-            sizeof(testBox), (void*)0);
+            sizeof(Particle), (void*)0);
         glVertexAttribDivisor(3, 1);
 
         // Texture unit
         glEnableVertexAttribArray(5);
         glVertexAttribIPointer(5, 1, GL_UNSIGNED_INT,
-            sizeof(testBox), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
+            sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
         glVertexAttribDivisor(5, 1);
     }
 
@@ -187,7 +187,7 @@ void BoxRenderer::render()
 
     // Process batch queue
     for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
-        testBox& box = Box::box_batch[i];
+        Particle& box = Box::box_batch[i];
         uint32_t const tex_id = box._sss_tex_id;
         // Skip if no texture needed
         if (objects.textures.count(tex_id) == 0) {
@@ -229,7 +229,7 @@ void BoxRenderer::render()
     // Setup VAO
     vao->bind();
     if (Box::box_batch.size() > 0) {
-        particles_vbo->edit(sizeof(testBox) * Box::box_batch.size(),
+        particles_vbo->edit(sizeof(Particle) * Box::box_batch.size(),
             Box::box_batch.data(), GL_DYNAMIC_DRAW);
     }
 
@@ -268,3 +268,43 @@ void BoxRenderer::render()
     vao->unbind();
 }
 
+Tags::Tags()
+{
+}
+
+Tags::Tags(std::string _name, uint32_t weight, std::string hex)
+{
+    int char_size = 15;
+    _size = { char_size * _name.size() - 5, char_size * 1.5f};
+    //Center the box around the cursor
+    _pos = { 0.0f, 0.0f, 0.0f };
+    _color = hex_to_rgb(hex);
+
+    //Brightning the color
+    glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
+
+    //Create the model
+    model.emplace_back(_pos, _size, glm::vec4(_color));
+
+    // Create text area & gl texture
+    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    auto fmt = area->getFormat();
+    //fmt.style.charsize = (int)_size.y / 3;
+    fmt.style.charsize = char_size;
+    fmt.style.has_outline = false;
+    fmt.style.outline_size = 10;
+    fmt.color.text.plain = SSS::RGB24(0x000000);
+    area->setFormat(fmt);
+    area->parseString(_name);
+
+    auto const& texture = SSS::GL::Texture::create();
+    texture->setTextAreaID(area->getID());
+    texture->setType(SSS::GL::Texture::Type::Text);
+
+    model.emplace_back(_pos + glm::vec3{3,5,0}, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+}
+
+Tags::~Tags()
+{
+    model.clear();
+}
