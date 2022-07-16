@@ -138,7 +138,8 @@ void Visualizer::run()
     //load
 
     setup();
-    test_tag = Tags{ "test", 1, "#abcdef" };
+    Box::tags_list.emplace(0, Tags{ "TAG", 1, "#abcdef" });
+    //std::cout << Box::tags_list.size() << std::endl;
     parse_info_data_project_from_json("data.json");
 
     refresh();
@@ -508,7 +509,7 @@ void Visualizer::frustrum_test()
         //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
         //}
     }
-    
+
 }
 
 void Visualizer::drag_boxes()

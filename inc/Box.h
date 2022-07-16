@@ -65,6 +65,7 @@ public:
 	std::vector<uint16_t> tags;
 
 	static std::vector<Particle> box_batch;
+	static std::map<uint16_t, Tags> tags_list;
 
 
 	std::set<std::string> link_to;

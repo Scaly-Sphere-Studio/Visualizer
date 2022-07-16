@@ -1,6 +1,7 @@
 #include "Box.h"
 
 std::vector<Particle>Box::box_batch{};
+std::map<uint16_t, Tags>Box::tags_list{};
 
 Box::Box() { }
 
@@ -32,6 +33,13 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
     texture->setType(SSS::GL::Texture::Type::Text);
 
     model.emplace_back(_pos, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+
+
+    //Tags
+    std::cout << tags_list[0].model.size() << std::endl;
+    model.insert(model.end(), tags_list[0].model.begin(), tags_list[0].model.end());
+
+
 }
 
 Box::~Box()
@@ -274,17 +282,12 @@ Tags::Tags()
 
 Tags::Tags(std::string _name, uint32_t weight, std::string hex)
 {
-    int char_size = 15;
-    _size = { char_size * _name.size() - 5, char_size * 1.5f};
+    int char_size = 12;
+    _size = { char_size * _name.size() + 5, char_size * 1.5f};
     //Center the box around the cursor
     _pos = { 0.0f, 0.0f, 0.0f };
     _color = hex_to_rgb(hex);
 
-    //Brightning the color
-    glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
-
-    //Create the model
-    model.emplace_back(_pos, _size, glm::vec4(_color));
 
     // Create text area & gl texture
     auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
@@ -301,7 +304,9 @@ Tags::Tags(std::string _name, uint32_t weight, std::string hex)
     texture->setTextAreaID(area->getID());
     texture->setType(SSS::GL::Texture::Type::Text);
 
-    model.emplace_back(_pos + glm::vec3{3,5,0}, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+    //Create the model
+    model.emplace_back(_pos, _size, glm::vec4(_color));
+    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))._sss_tex_id = texture->getID();
 }
 
 Tags::~Tags()

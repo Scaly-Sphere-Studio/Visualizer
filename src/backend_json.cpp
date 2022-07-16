@@ -94,4 +94,11 @@ void from_json(const nlohmann::json& j, Box& t)
     texture->setType(SSS::GL::Texture::Type::Text);
 
     t.model.emplace_back(t._pos, t._size, glm::vec4(0))._sss_tex_id = texture->getID();
+
+    for (size_t i = 0; i < Box::tags_list[0].model.size(); i++) {
+        Particle tmp = Box::tags_list[0].model[i];
+        tmp._pos += t._pos + glm::vec3(5, - t._size.y + 25, 0);
+        t.model.emplace_back(tmp);
+    }
+    //t.model.insert(t.model.end(), Box::tags_list[0].model.begin(), Box::tags_list[0].model.end());
 }
