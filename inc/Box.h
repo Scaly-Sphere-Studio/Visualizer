@@ -1,8 +1,6 @@
 #pragma once
 
 #include "commons.h"
-#include "shader.hpp"
-#include <set>
 
 struct Particle {
 	Particle();

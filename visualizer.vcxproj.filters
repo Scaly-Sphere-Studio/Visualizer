@@ -21,9 +21,6 @@
     <ClCompile Include="src\commons.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\shader.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="src\Box.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -37,12 +34,6 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\backend.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_impl_glfw.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_impl_opengl3.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\Text_data.cpp">
@@ -59,9 +50,6 @@
     <ClInclude Include="inc\commons.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="inc\shader.hpp">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="inc\Box.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -75,12 +63,6 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="inc\data.hpp">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\imgui_impl_glfw.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\imgui_impl_opengl3.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="inc\Text_data.h">
