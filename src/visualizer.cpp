@@ -29,8 +29,8 @@ static std::array<float, 3> CubicRoots(float a, float b, float c, float d)
 
     if (D >= 0)                                 // complex or duplicate roots POI
     {
-        float S = signum(R + std::sqrt(D)) * std::pow(std::abs(R + std::sqrt(D)), (1.0f / 3.0f));
-        float T = signum(R - std::sqrt(D)) * std::pow(std::abs(R - std::sqrt(D)), (1.0f / 3.0f));
+        float S = SSS::Math::signum(R + std::sqrt(D)) * std::pow(std::abs(R + std::sqrt(D)), (1.0f / 3.0f));
+        float T = SSS::Math::signum(R - std::sqrt(D)) * std::pow(std::abs(R - std::sqrt(D)), (1.0f / 3.0f));
 
         t[0] = -A / 3.0f + (S + T);                         // real root
         t[1] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
@@ -258,9 +258,9 @@ void Visualizer::setup()
     {
         auto const& line_shader = window->createShaders();
         line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
-        auto const& line_renderer = window->createRenderer<LineRenderer>();
+        auto const& line_renderer = window->createRenderer<SSS::GL::LineRenderer>();
         line_renderer->setShadersID(line_shader->getID());
-        line_renderer->castAs<LineRenderer>().cam_id = main_cam_id;
+        line_renderer->castAs<SSS::GL::LineRenderer>().cam_id = main_cam_id;
         line_renderer_id = line_renderer->getID();
     
         auto const& box_shader = window->createShaders();
@@ -344,19 +344,19 @@ void Visualizer::link_box(Box& a, Box& b)
 
     glm::vec3 offset{ 0.f, 400.f, 0.f };
     //Create a bezier curve to link the two boxes
-    Gradient<glm::vec4> Col_grdt;
+    SSS::Math::Gradient<glm::vec4> Col_grdt;
     Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
     Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
 
-    Gradient<float> Thk_grdt;
+    SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
-    auto seg = Polyline::Bezier(
+    auto seg = SSS::GL::Polyline::Bezier(
         a.center(), a.center() - offset,
         b.center() + offset, b.center(),
         Thk_grdt, Col_grdt,
-        JointType::BEVEL, TermType::SQUARE
+        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
     );
 
     if (arrow_map.count(a.id + b.id)) {
@@ -394,19 +394,19 @@ void Visualizer::link_box_to_cursor(Box& b)
     glm::vec3 c_pos = cursor_map_coordinates();
 
     //Create a bezier curve to link the two boxes
-    Gradient<glm::vec4> Col_grdt;
+    SSS::Math::Gradient<glm::vec4> Col_grdt;
     Col_grdt.push(std::make_pair(0.f, glm::vec4(b._color)));
     Col_grdt.push(std::make_pair(1.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
 
-    Gradient<float> Thk_grdt;
+    SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
-    auto seg = Polyline::Bezier(
+    auto seg = SSS::GL::Polyline::Bezier(
         b.center(), b.center() - glm::vec3(0, 800, 0),
         c_pos + glm::vec3(0, 0, 0), c_pos,
         Thk_grdt, Col_grdt,
-        JointType::BEVEL, TermType::SQUARE
+        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
     );
 
     if (arrow_map.count(first_link_ID)) {
@@ -579,7 +579,7 @@ void Visualizer::line_drag_link()
 
                 //Begin the cut line 
                 first_cursor_pos = cursor_map_coordinates();
-                arrow_map.insert(std::make_pair("CUTLINE", Polyline::Segment(first_cursor_pos, first_cursor_pos)));
+                arrow_map.insert(std::make_pair("CUTLINE", SSS::GL::Polyline::Segment(first_cursor_pos, first_cursor_pos)));
 
             }
         }
@@ -597,7 +597,7 @@ void Visualizer::line_drag_link()
 
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map.at("CUTLINE") = Polyline::Segment(first_cursor_pos, second_cursor_pos);
+        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(first_cursor_pos, second_cursor_pos);
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");

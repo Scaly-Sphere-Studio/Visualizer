@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SSS/Line/line.h>
 #include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
@@ -51,7 +50,7 @@ private:
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	//std::unordered_map<std::string, Box> box_map;
-	std::unordered_map<std::string, Polyline::Shared> arrow_map;
+	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
 
 
 	/* [BOX METHODS] */
