@@ -280,7 +280,7 @@ Tags::Tags()
 {
 }
 
-Tags::Tags(std::string _name, uint32_t weight, std::string hex)
+Tags::Tags(std::string _name, std::string hex, uint32_t weight)
 {
     int char_size = 12;
     _size = { char_size * _name.size() + 5, char_size * 1.5f};

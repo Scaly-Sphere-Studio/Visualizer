@@ -16,7 +16,7 @@ struct Particle {
 
 struct Tags : public Particle {
 	Tags();
-	Tags(std::string _name, uint32_t weight = 1, std::string hex = "#111111");
+	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
 	~Tags();
 	std::string name;
 	std::vector<Particle> model;
