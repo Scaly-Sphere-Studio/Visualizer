@@ -3,6 +3,8 @@
 #include "commons.h"
 #include "Text_data.h"
 
+#define epsilon 1.0f / static_cast<float>(RAND_MAX * 100.0f)
+
 struct Particle {
 	Particle();
 	Particle(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
@@ -30,6 +32,8 @@ public:
 	Box();
 	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
 	~Box();
+	
+	void update();
 
 	void set_selected_col(std::string hex);
 	void set_col(std::string hex);
@@ -48,7 +52,6 @@ public:
 	//Initialisation of the box and fill the model array
 	void create_box();
 	//Update the positions of all the subboxes 
-	void update();
 
 	// DATA
 	Text_data _td;   

@@ -62,7 +62,7 @@ void Box::create_box()
     //Background
     model.emplace_back(_pos, _size, glm::vec4(_color));
     //ID Background
-    model.emplace_back(_pos, glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
+    model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
     
     // Create text area & gl texture
     auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
@@ -77,7 +77,7 @@ void Box::create_box()
     texture->setTextAreaID(area->getID());
     texture->setType(SSS::GL::Texture::Type::Text);
 
-    model.emplace_back(_pos, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+    model.emplace_back(_pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size, glm::vec4(0))._sss_tex_id = texture->getID();
 
     //Tags
     if (tags.size() > 0) {
@@ -95,20 +95,15 @@ void Box::update()
 {
     //Numbers of particles for each box
     // Background, id background, numbers of tags, comment,  *2 + info particles
-    int count = 0;
-    count += tags.size();
 
     for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos + glm::vec3(0.,0.,(float)i * 0.1);
-        model[i]._size = _size;
-        model[i]._color = _color * glm::vec4(1.0,1.0,(float)i*0.9, 1.0);
+        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
     }
 
 }
 
 glm::vec3 Box::center()
 {
-
     return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
 }
 
