@@ -1,6 +1,7 @@
 #pragma once
 
 #include "commons.h"
+#include "Text_data.h"
 
 struct Particle {
 	Particle();
@@ -33,42 +34,33 @@ public:
 	void set_selected_col(std::string hex);
 	void set_col(std::string hex);
 
-
-	bool check_collision(glm::vec3 const& c_pos);
-
-
 	//STATES 
 	bool _render = true;
 	bool _hovered = false;
 	bool _clicked = false;
-
-
-	//Box rendering
-	std::vector<Particle> model;
-
-
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
+	//Box rendering
+	//Check for a collision box/point
+	bool check_collision(glm::vec3 const& c_pos);
+	//Return the coordinates of the center of the box
+	glm::vec3 center();
+	//Initialisation of the box and fill the model array
 	void create_box();
 	//Update the positions of all the subboxes 
 	void update();
 
-
-	//Return the coordinates of the center of the box
-	glm::vec3 center();
-
 	// DATA
-	std::string text;
-	std::string id;
+	Text_data _td;   
+
+	std::string _id;
+	std::vector<Particle> model;
 	std::vector<uint16_t> tags;
-
-	static std::vector<Particle> box_batch;
-	static std::map<uint16_t, Tags> tags_list;
-
-
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
-
+	
+	static std::vector<Particle> box_batch;
+	static std::map<uint16_t, Tags> tags_list;
 };
 
 class BoxRenderer : public SSS::GL::Renderer {

@@ -11,35 +11,9 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
     //Center the box around the cursor
     _pos = pos + glm::vec3{ -_size.x / 2.0f , _size.y / 2.0f, rand_float() };
     _color = hex_to_rgb(hex);
+    _id = hex;
 
-    //Brightning the color
-    glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
-
-    //Create the model
-    model.emplace_back(_pos, _size, glm::vec4(_color));
-    model.emplace_back(_pos, glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
-
-    // Create text area & gl texture
-    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    auto fmt = area->getFormat();
-    fmt.style.charsize = (int)_size.y / 3;
-    fmt.style.has_outline = true;
-    fmt.style.outline_size = 20;
-    area->setFormat(fmt);
-    area->parseString(hex);
-
-    auto const& texture = SSS::GL::Texture::create();
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
-
-    model.emplace_back(_pos, _size, glm::vec4(0))._sss_tex_id = texture->getID();
-
-
-    //Tags
-    std::cout << tags_list[0].model.size() << std::endl;
-    model.insert(model.end(), tags_list[0].model.begin(), tags_list[0].model.end());
-
-
+    create_box();
 }
 
 Box::~Box()
@@ -51,12 +25,10 @@ Box::~Box()
 
 void Box::set_selected_col(std::string hex)
 {
-    selected_color = hex_to_rgb(hex);
 }
 
 void Box::set_col(std::string hex)
 {
-    _color = hex_to_rgb(hex);
 }
 
 
@@ -75,7 +47,6 @@ bool Box::check_collision(glm::vec3 const& c_pos)
     }
 
     if (_hovered) {
-
         _hovered ^= 1;
     }
 
@@ -84,15 +55,53 @@ bool Box::check_collision(glm::vec3 const& c_pos)
 
 void Box::create_box()
 {
-    set_selected_col("C32530");
+    //Brightning the color
+    glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
+
+    //Create the model
+    //Background
+    model.emplace_back(_pos, _size, glm::vec4(_color));
+    //ID Background
+    model.emplace_back(_pos, glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
+    
+    // Create text area & gl texture
+    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    auto fmt = area->getFormat();
+    fmt.style.charsize = (int)_size.y / 3;
+    fmt.style.has_outline = true;
+    fmt.style.outline_size = 20;
+    area->setFormat(fmt);
+    area->parseString(_id);
+
+    auto const& texture = SSS::GL::Texture::create();
+    texture->setTextAreaID(area->getID());
+    texture->setType(SSS::GL::Texture::Type::Text);
+
+    model.emplace_back(_pos, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+
+    //Tags
+    if (tags.size() > 0) {
+        model.reserve(tags.size() * 2);
+        for (size_t i = 0; i < tags.size(); ++i) {
+            model.insert(model.end(), tags_list[tags[i]].model.begin(), tags_list[tags[i]].model.end());
+        }
+    }
+
+    LOG_MSG(model.size());
+
 }
 
 void Box::update()
 {
+    //Numbers of particles for each box
+    // Background, id background, numbers of tags, comment,  *2 + info particles
+    int count = 0;
+    count += tags.size();
+
     for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos;
+        model[i]._pos = _pos + glm::vec3(0.,0.,(float)i * 0.1);
         model[i]._size = _size;
-        model[i]._color = _color;
+        model[i]._color = _color * glm::vec4(1.0,1.0,(float)i*0.9, 1.0);
     }
 
 }

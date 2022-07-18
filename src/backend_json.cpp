@@ -52,7 +52,7 @@ void glm::from_json(const nlohmann::json& j, vec4& t)
 void to_json(nlohmann::json& j, const Box& t)
 {
     j = nlohmann::json{
-    {"ID", t.id},
+    {"ID", t._id},
     {"COLOR", t._color},
     {"POSITION", t._pos},
     {"SIZE", t._size},
@@ -64,7 +64,7 @@ void to_json(nlohmann::json& j, const Box& t)
 
 void from_json(const nlohmann::json& j, Box& t)
 {
-    j.at("ID").get_to(t.id);
+    j.at("ID").get_to(t._id);
     j.at("COLOR").get_to(t._color);
     j.at("POSITION").get_to(t._pos);
     j.at("SIZE").get_to(t._size);
@@ -73,32 +73,5 @@ void from_json(const nlohmann::json& j, Box& t)
     j.at("LINK_FROM").get_to(t.link_from);
 
 
-    //Brightning the color
-    glm::vec4 factor = (glm::vec4(1.f) - t._color) * glm::vec4(0.2f);
-
-    //Create the model
-    t.model.emplace_back(t._pos, t._size, t._color);
-    t.model.emplace_back(t._pos, glm::vec2(t._size.x - 2, t._size.y / 3), glm::vec4(t._color + factor));
-
-    // Create text area & gl texture
-    auto const& area = SSS::TR::Area::create((int)t._size.x, (int)t._size.y);
-    auto fmt = area->getFormat();
-    fmt.style.charsize = (int)t._size.y / 3;
-    fmt.style.has_outline = true;
-    fmt.style.outline_size = 20;
-    area->setFormat(fmt);
-    area->parseString(rgb_to_hex(t._color));
-
-    auto const& texture = SSS::GL::Texture::create();
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
-
-    t.model.emplace_back(t._pos, t._size, glm::vec4(0))._sss_tex_id = texture->getID();
-
-    for (size_t i = 0; i < Box::tags_list[0].model.size(); i++) {
-        Particle tmp = Box::tags_list[0].model[i];
-        tmp._pos += t._pos + glm::vec3(5, - t._size.y + 25, 0);
-        t.model.emplace_back(tmp);
-    }
-    //t.model.insert(t.model.end(), Box::tags_list[0].model.begin(), Box::tags_list[0].model.end());
+    t.create_box();
 }

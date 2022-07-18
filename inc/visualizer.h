@@ -35,8 +35,7 @@ public:
 private:
 	PROJECT_DATA _proj;
 	VISUALISER_INFO _info;
-	//friend void to_json(nlohmann::json& j, const Visualizer& t);
-	//friend void from_json(const nlohmann::json& j, Visualizer& t);
+	V_STATES _states = V_STATES::DEFAULT;
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
@@ -45,12 +44,8 @@ private:
 	void setup();
 	void input();
 	void refresh();
-	
-	V_STATES _states = V_STATES::DEFAULT;
-
-	glm::vec3 clear_color = glm::vec3{ 1.0f };
-	//std::unordered_map<std::string, Box> box_map;
-	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
+	void save();
+	void load();
 
 
 	/* [BOX METHODS] */
@@ -62,19 +57,18 @@ private:
 	void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
 	void pop_link(Box& a, Box& b);
-
 	//Add a new box at the current cursor position
 	void push_box(std::string boxID);
 	//Remove the selected box
 	void pop_box(std::string ID);
+	//Translate the screen cursor position from input to the world coordinates
+	glm::vec3 cursor_map_coordinates();
+
 	
 	std::string current_selected_ID;
 	std::string last_selected_ID;
 	std::string first_link_ID;
 	std::string second_link_ID;
-
-	//Translate the screen cursor position from input to the world coordinates
-	glm::vec3 cursor_map_coordinates();
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
@@ -97,6 +91,9 @@ private:
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
 
+	glm::vec3 clear_color = glm::vec3{ 1.0f };
+	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
+	Traduction_data _td;
 
 	//PARSER
 	void parse_info_data_visualizer_from_json(const std::string& path);
@@ -104,12 +101,6 @@ private:
 	
 	void parse_info_data_project_from_json(const std::string& path);
 	void parse_info_data_project_to_json(const std::string& path, const bool prettify = false);
-	
-	void save();
-	void load();
-
-	Tags test_tag;
-
 };
 
 //JSON CONVERTION

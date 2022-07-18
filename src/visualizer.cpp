@@ -116,8 +116,7 @@ Visualizer::Visualizer()
 
     //TODO Check if the data exists
     parse_info_data_visualizer_from_json("save.json");
-
-    
+    setup();
 }
 
 Visualizer::Ptr const& Visualizer::get()
@@ -136,11 +135,7 @@ Visualizer::~Visualizer()
 void Visualizer::run()
 {
     //load
-
-    setup();
-    Box::tags_list.emplace(0, Tags{ "TAG", 1, "#abcdef" });
-    //std::cout << Box::tags_list.size() << std::endl;
-    parse_info_data_project_from_json("data.json");
+    load();
 
     refresh();
     SSS::GL::Context const context(window);
@@ -200,6 +195,9 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
         glfwSetWindowShouldClose(Visualizer::get()->window->getGLFWwindow(), true);
     }
 
+    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S && action == GLFW_PRESS) {
+        Visualizer::get()->save();
+    }
 }
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
@@ -305,35 +303,12 @@ void Visualizer::input()
     if (inputs[GLFW_KEY_LEFT]) {
         camera->move(glm::vec3(-speed, 0.0f, 0.0f));
     }
-
-    if (inputs[GLFW_KEY_LEFT_CONTROL] && inputs[GLFW_KEY_S]) {
-        std::cout << "saved" << std::endl;
-        std::string data_str = "data.json";
-        std::string str = "save.json";
-        parse_info_data_project_to_json(data_str, true);
-        parse_info_data_visualizer_to_json(str, true);
-    }
-
-   
-
-
-    ////INPUTS BOX
-    ////TEST AJOUT
-    //if (inputs[GLFW_KEY_KP_ADD]) {
-    //    push_box(rand_color());
-    //}
-
-    ////TEST SUPPRESSION
-    //if (inputs[GLFW_KEY_KP_SUBTRACT]) {
-    //    pop_box(last_selected_ID);
-    //}
 }
 
 void Visualizer::refresh()
 {
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         link_box(it->second);
-        //it->second.update();
     }
 }
 
@@ -359,23 +334,23 @@ void Visualizer::link_box(Box& a, Box& b)
         SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
     );
 
-    if (arrow_map.count(a.id + b.id)) {
-        arrow_map.at(a.id + b.id) = seg;
+    if (arrow_map.count(a._id + b._id)) {
+        arrow_map.at(a._id + b._id) = seg;
         return;
     }
 
     //Add the dst box to the 'link to' list of the src box
     //And add the src box to the 'link from' list of the dst box
-    if (!a.link_to.contains(b.id)) {
-        a.link_to.emplace(b.id);
+    if (!a.link_to.contains(b._id)) {
+        a.link_to.emplace(b._id);
     }
 
-    if (!b.link_from.contains(a.id)) {
-        b.link_from.emplace(a.id);
+    if (!b.link_from.contains(a._id)) {
+        b.link_from.emplace(a._id);
     }
 
     //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map.insert(std::make_pair(a.id + b.id, seg));
+    arrow_map.insert(std::make_pair(a._id + b._id, seg));
 
 }
 
@@ -410,21 +385,21 @@ void Visualizer::link_box_to_cursor(Box& b)
     );
 
     if (arrow_map.count(first_link_ID)) {
-        arrow_map.at(b.id) = seg;
+        arrow_map.at(b._id) = seg;
         return;
     }
 
 
     //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map.insert(std::make_pair(b.id, seg));
+    arrow_map.insert(std::make_pair(b._id, seg));
 
 }
 
 void Visualizer::pop_link(Box& a, Box& b)
 {
-    arrow_map.erase(a.id + b.id);
-    a.link_to.erase(b.id);  
-    b.link_from.erase(a.id);
+    arrow_map.erase(a._id + b._id);
+    a.link_to.erase(b._id);  
+    b.link_from.erase(a._id);
 }
 
 
@@ -433,7 +408,7 @@ void Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
     _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
-    _proj.box_map.at(boxID).id = boxID;
+    _proj.box_map.at(boxID)._id = boxID;
 }
 
 void Visualizer::pop_box(std::string ID)
@@ -612,7 +587,7 @@ void Visualizer::line_drag_link()
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         first_cursor_pos, second_cursor_pos)) {
-                        cut_lines_selection.emplace_back(std::make_pair(b1->id, b2->id));
+                        cut_lines_selection.emplace_back(std::make_pair(b1->_id, b2->_id));
                     }  
                 }
             }
@@ -788,11 +763,18 @@ void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
 
 void Visualizer::save()
 {
+    LOG_MSG("SAVED");
+    
+    std::string data_str = "data.json";
+    parse_info_data_project_to_json(data_str, true);
+    std::string str = "save.json";
+    parse_info_data_visualizer_to_json(str, true);
 }
 
 void Visualizer::load()
 {
-    
+    LOG_MSG("LOADED");
+    parse_info_data_project_from_json("data.json");
 }
 
 void to_json(nlohmann::json& j, const VISUALISER_INFO& t)
@@ -813,7 +795,7 @@ void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 void to_json(nlohmann::json& j, const PROJECT_DATA& t)
 {
     j = nlohmann::json{
-           {"BOX", t.box_map}
+        {"BOX", t.box_map}
     };
 }
 
