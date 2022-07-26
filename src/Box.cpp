@@ -69,7 +69,7 @@ void Box::create_box()
     auto fmt = area->getFormat();
     fmt.style.charsize = (int)_size.y / 3;
     fmt.style.has_outline = true;
-    fmt.style.outline_size = 20;
+    fmt.style.outline_size = 3;
     area->setFormat(fmt);
     area->parseString(_id);
 
@@ -248,7 +248,7 @@ void BoxRenderer::render()
     // Setup shader
     auto const& shader = objects.shaders.at(getShadersID());
 
-    auto mvp = objects.cameras.at(cam_id)->getVP();
+    auto mvp = camera->getVP();
 
     shader->use();
     shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
@@ -299,7 +299,7 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
     //fmt.style.charsize = (int)_size.y / 3;
     fmt.style.charsize = char_size;
     fmt.style.has_outline = false;
-    fmt.style.outline_size = 10;
+    fmt.style.outline_size = 2;
     fmt.color.text.plain = SSS::RGB24(0x000000);
     area->setFormat(fmt);
     area->parseString(_name);

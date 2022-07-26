@@ -233,23 +233,22 @@ void Visualizer::setup()
         area->parseString("Lorem ipsum dolor sit amet.");
 
         auto const& texture = SSS::GL::Texture::create();
-        auto const& camera = SSS::GL::Camera::create();
+        camera = SSS::GL::Camera::create();
         auto const& plane = SSS::GL::Plane::create();
-        auto const& renderer = SSS::GL::Plane::Renderer::create();
+        auto const& renderer = SSS::GL::Renderer::create<SSS::GL::PlaneRenderer>();
 
         texture->setTextAreaID(area->getID());
         texture->setType(SSS::GL::Texture::Type::Text);
 
         camera->setPosition({ 0, 0, 3 });
         camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
-        main_cam_id = camera->getID();
 
         plane->setTextureID(texture->getID());
         plane->scale(glm::vec3(300));
 
-        renderer->chunks.emplace_back();
-        renderer->chunks[0].reset_depth_before = true;
-        renderer->chunks[0].objects.push_back(0);
+        auto& chunks = renderer->castAs<SSS::GL::PlaneRenderer>().chunks;
+        chunks.emplace_back(camera, true);
+        chunks.back().planes.emplace_back(plane);
     }
 
     // Shaders & Renderers
@@ -258,21 +257,21 @@ void Visualizer::setup()
         line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
         auto const& line_renderer = window->createRenderer<SSS::GL::LineRenderer>();
         line_renderer->setShadersID(line_shader->getID());
-        line_renderer->castAs<SSS::GL::LineRenderer>().cam_id = main_cam_id;
+        line_renderer->castAs<SSS::GL::LineRenderer>().camera = camera;
         line_renderer_id = line_renderer->getID();
     
         auto const& box_shader = window->createShaders();
         box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
         auto const& box_renderer = window->createRenderer<BoxRenderer>();
         box_renderer->setShadersID(box_shader->getID());
-        box_renderer->castAs<BoxRenderer>().cam_id = main_cam_id;
+        box_renderer->castAs<BoxRenderer>().camera = camera;
         box_renderer_id = box_renderer->getID();
     
         auto const& debug_shader = window->createShaders();
         debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
         auto const& debug_renderer = window->createRenderer<Debugger>();
         debug_renderer->setShadersID(debug_shader->getID());
-        debug_renderer->castAs<Debugger>().cam_id = main_cam_id;
+        debug_renderer->castAs<Debugger>().camera = camera;
         debug_renderer_id = debug_renderer->getID();
         // Enable or disable debugger
         debug_renderer->setActivity(true);
@@ -285,8 +284,6 @@ void Visualizer::input()
     SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
     //INPUT CAMERA
     constexpr float speed = 10.0f;
-
-    auto const& camera = window->getObjects().cameras.at(main_cam_id);
 
     if (inputs[GLFW_KEY_DOWN]) {
         camera->move(glm::vec3(0.0f, -speed, 0.0f));
@@ -445,7 +442,7 @@ void Visualizer::pop_box(std::string ID)
 bool Visualizer::check_frustrum_render(Box &b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    glm::vec3 const cam_pos = window->getObjects().cameras.at(main_cam_id)->getPosition();
+    glm::vec3 const cam_pos = camera->getPosition();
     float const dx = glm::abs(cam_pos.x - b._pos.x);
     float const dxmax = (b._size.x + _info._w) * 0.5f;
     float const dy = glm::abs(cam_pos.y - b._pos.y);
@@ -460,7 +457,7 @@ bool Visualizer::check_frustrum_render(Box &b)
 
 glm::vec3 Visualizer::cursor_map_coordinates()
 {
-    glm::vec3 const cam_pos = window->getObjects().cameras.at(main_cam_id)->getPosition();
+    glm::vec3 const cam_pos = camera->getPosition();
     return glm::vec3{ (c_x - _info._w / 2) + cam_pos.x, (_info._h / 2 - c_y) + cam_pos.y, 0.0 };
 }
 

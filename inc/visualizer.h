@@ -82,7 +82,7 @@ private:
 
 	/* [RENDERER DATA] */
 	// Objects
-	uint32_t main_cam_id{ 0 };
+	SSS::GL::Camera::Shared camera;
 	// Renderers
 	uint32_t line_renderer_id{ 0 };
 	uint32_t box_renderer_id{ 0 };

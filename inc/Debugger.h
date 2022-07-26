@@ -17,7 +17,7 @@ private:
 public:
 	~Debugger();
 	
-	uint32_t cam_id{ 0 };
+	SSS::GL::Camera::Shared camera;
 
 	virtual void render();
 

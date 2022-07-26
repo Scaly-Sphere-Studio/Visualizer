@@ -135,7 +135,6 @@ void Debugger::render()
 
     SSS::GL::Context const context(_window);
     SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
-    SSS::GL::Camera::Ptr const& camera = objects.cameras.at(cam_id);
 
     glm::vec3 const cam_pos = camera->getPosition();
     rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
