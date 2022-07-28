@@ -163,7 +163,7 @@ void Visualizer::run()
         frustrum_test();
 
         //Collision test
-        drag_boxes();
+        //drag_boxes();
         line_drag_link();
         //multi_select_drag();
 
@@ -181,6 +181,7 @@ void Visualizer::run()
 
 void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+
     //INPUTS BOX
     if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
         Visualizer::get()->push_box(rand_color());
@@ -188,6 +189,7 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 
     //TEST SUPPRESSION
     if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
+
         Visualizer::get()->pop_box(Visualizer::get()->last_selected_ID);
     }
 
@@ -198,6 +200,83 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S && action == GLFW_PRESS) {
         Visualizer::get()->save();
     }
+}
+
+void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    //using namespace std::chrono_literals;
+
+    for (std::string s : Visualizer::get()->_selected_IDs) {
+        std::cout << s << std::endl;
+    }
+
+    
+    if (mods == 0 && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::string selection;
+        Visualizer::get()->clicked_box_ID(selection);
+
+        if (Visualizer::get()->_selected_IDs.size() < 2) {
+            //Create a selection or switch the two IDs
+            if (!selection.empty()) {
+                Visualizer::get()->_selected_IDs.clear();
+                Visualizer::get()->_selected_IDs.emplace(selection);
+            }
+            
+        }
+
+        if (Visualizer::get()->double_click_detection(std::chrono::milliseconds(500))) {
+            //Double click detected
+            LOG_MSG("DOUBLE CLICK");
+            
+            //If none box is selected, clear the selections
+
+            
+            Visualizer::get()->_selected_IDs.clear();
+            
+            if (selection.empty()) {
+                 Visualizer::get()->_last_selected_IDs.clear();
+                return;
+            }
+
+            //Replace the selection with the current selected box
+            Visualizer::get()->_selected_IDs.emplace(selection);
+
+            //If a box is selected, check if a text area is selected and put it in update mode
+            //todo
+        }
+        return;
+    }
+
+    if (mods == GLFW_MOD_SHIFT && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        //Visualizer::get()->_states = V_STATES::MULTI_SELECT;
+        return;
+    }
+    if (mods == GLFW_MOD_CONTROL && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::string selection;
+        Visualizer::get()->clicked_box_ID(selection);
+        if (!selection.empty()) {
+            Visualizer::get()->_selected_IDs.emplace(selection);
+        }
+
+        return;
+    }
+
+
+
+
+    //if (mods == 0 && button == GLFW_MOUSE_BUTTON_RIGHT) {
+    //    if (action == GLFW_PRESS) {
+    //        Visualizer::get()->_states = V_STATES::CUTLINE;
+    //        return;
+    //    }
+
+    //    if (action == GLFW_PRESS) {
+    //        Visualizer::get()->_states = V_STATES::DEFAULT;
+    //        return;
+    //    }
+    //}
+
+    
 }
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
@@ -223,32 +302,31 @@ void Visualizer::setup()
     window->setVSYNC(true);
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
+    window->setCallback(glfwSetMouseButtonCallback, mouse_callback);
 
     // SSS/GL objects
     {
-        SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
-        SSS::TR::Format fmt = area->getFormat();
-        fmt.style.charsize = 50;
-        area->setFormat(fmt);
-        area->parseString("Lorem ipsum dolor sit amet.");
+        //SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
+        //SSS::TR::Format fmt = area->getFormat();
+        //fmt.style.charsize = 50;
+        //area->setFormat(fmt);
+        //area->parseString("Lorem ipsum dolor sit amet.");
 
-        auto const& texture = SSS::GL::Texture::create();
-        camera = SSS::GL::Camera::create();
-        auto const& plane = SSS::GL::Plane::create();
+        //auto const& texture = SSS::GL::Texture::create();
+        //auto const& plane = SSS::GL::Plane::create();
+        //texture->setTextAreaID(area->getID());
+        //texture->setType(SSS::GL::Texture::Type::Text);
+        //plane->setTextureID(texture->getID());
+        //plane->scale(glm::vec3(300));
+
         auto const& renderer = SSS::GL::Renderer::create<SSS::GL::PlaneRenderer>();
-
-        texture->setTextAreaID(area->getID());
-        texture->setType(SSS::GL::Texture::Type::Text);
-
+        camera = SSS::GL::Camera::create();
         camera->setPosition({ 0, 0, 3 });
         camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-        plane->setTextureID(texture->getID());
-        plane->scale(glm::vec3(300));
-
         auto& chunks = renderer->castAs<SSS::GL::PlaneRenderer>().chunks;
         chunks.emplace_back(camera, true);
-        chunks.back().planes.emplace_back(plane);
+        /*chunks.back().planes.emplace_back(plane);*/
     }
 
     // Shaders & Renderers
@@ -748,6 +826,23 @@ void Visualizer::parse_info_data_project_to_json(const std::string& path, const 
     ofs.close();
 }
 
+bool Visualizer::double_click_detection(std::chrono::milliseconds timestamp)
+{
+    using namespace std::chrono_literals;
+
+    static std::chrono::steady_clock::time_point start;
+    static std::chrono::steady_clock::time_point end;
+
+    start = std::chrono::steady_clock::now();
+    if ((start - end) < timestamp) {
+        auto elapsed_time = std::chrono::duration(start - end);
+        end = start;
+        return true;
+    }
+    end = start;
+    return false;
+}
+
 void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
 {
     std::ifstream ifs(path);
@@ -766,6 +861,10 @@ void Visualizer::save()
     parse_info_data_project_to_json(data_str, true);
     std::string str = "save.json";
     parse_info_data_visualizer_to_json(str, true);
+
+    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
+
+    }
 }
 
 void Visualizer::load()

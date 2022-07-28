@@ -7,7 +7,8 @@
 enum struct V_STATES {
 	DEFAULT = 0,
 	CUTLINE = 1,
-	MULTI_SELECT = 2
+	DRAG_BOX = 2,
+	MULTI_SELECT = 3
 };
 
 struct VISUALISER_INFO {
@@ -40,6 +41,7 @@ private:
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void mouse_callback(GLFWwindow* window, int button, int action, int mods);
 
 	void setup();
 	void input();
@@ -66,6 +68,8 @@ private:
 
 	
 	std::string current_selected_ID;
+	std::set<std::string> _selected_IDs;
+	std::set<std::string> _last_selected_IDs;
 	std::string last_selected_ID;
 	std::string first_link_ID;
 	std::string second_link_ID;
@@ -77,6 +81,7 @@ private:
 	void drag_boxes();
 	void line_drag_link();
 	void multi_select_drag();
+	//Check if the user clicked on a box and returns its ID
 	std::string clicked_box_ID(std::string &ID);
 
 
@@ -101,6 +106,9 @@ private:
 	
 	void parse_info_data_project_from_json(const std::string& path);
 	void parse_info_data_project_to_json(const std::string& path, const bool prettify = false);
+
+	//Check if a double click is detected in a selected time interval
+	bool double_click_detection(std::chrono::milliseconds timestamp);
 };
 
 //JSON CONVERTION
