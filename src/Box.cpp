@@ -110,7 +110,7 @@ glm::vec3 Box::center()
 Particle::Particle()
 {
     _pos = glm::vec3{ 0 };
-    _size = glm::vec2{ 0 };
+    _size = glm::vec2{ 50.f, 50.f };
     _color = glm::vec4{ 0 };
 }
 

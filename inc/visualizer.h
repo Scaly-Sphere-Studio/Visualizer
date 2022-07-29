@@ -67,12 +67,14 @@ private:
 	glm::vec3 cursor_map_coordinates();
 
 	
-	std::string current_selected_ID;
+
 	std::set<std::string> _selected_IDs;
-	std::set<std::string> _last_selected_IDs;
-	std::string last_selected_ID;
+	Particle Selection_box;
+
+
 	std::string first_link_ID;
 	std::string second_link_ID;
+	glm::vec3 _cur_pos;
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
@@ -83,7 +85,6 @@ private:
 	void multi_select_drag();
 	//Check if the user clicked on a box and returns its ID
 	std::string clicked_box_ID(std::string &ID);
-
 
 	/* [RENDERER DATA] */
 	// Objects
