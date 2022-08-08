@@ -164,9 +164,12 @@ void Visualizer::run()
 
         //Collision test
         switch (_states) {
-        case V_STATES::DRAG_BOX: 
-            {
+        case V_STATES::DRAG_BOX: {
                 drag_boxes();
+                break;
+            }
+        case V_STATES::MULTI_SELECT: {
+                multi_select();
                 break;
             }
         }
@@ -211,16 +214,28 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S && action == GLFW_PRESS) {
         Visualizer::get()->save();
     }
+    
+    if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_Q && action == GLFW_PRESS) {
+        //Select all
+        Visualizer::get()->_selected_IDs.clear();
+        for (auto it = Visualizer::get()->_proj.box_map.begin(); it != Visualizer::get()->_proj.box_map.end(); ++it) {
+            Visualizer::get()->_selected_IDs.emplace(it->first);
+        }
+    }
+
+
 }
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
 {
     //using namespace std::chrono_literals;
-
+    static int mod_state;
     for (std::string s : Visualizer::get()->_selected_IDs) {
         std::cout << s << std::endl;
     }
 
+
+    //LEFT CLICK
     if (mods == 0 && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         std::string selection;
         Visualizer::get()->clicked_box_ID(selection);
@@ -263,27 +278,45 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         return;
     }
 
-    if (mods == GLFW_MOD_SHIFT && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        //Visualizer::get()->_states = V_STATES::MULTI_SELECT;
+
+    //SELECTION
+    //if (Visualizer::get()->_states == V_STATES::MULTI_SELECT && (mod_state =! mods) && (action == GLFW_RELEASE)) {
+    //    mod_state = 0;
+    //    std::cout << "oh" << std::endl;
+    //    Visualizer::get()->Selection_box._color = glm::vec4(0.f);
+    //    Visualizer::get()->Selection_box._pos = glm::vec3(INT32_MAX);
+    //    Visualizer::get()->Selection_box._size = glm::vec2(0.f);
+
+    //    return;
+    //}
+
+
+    if (mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
+        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f,1.f,1.f,0.3f);
+        Visualizer::get()->_otherpos = Visualizer::get()->cursor_map_coordinates();
+        Visualizer::get()->_states = V_STATES::MULTI_SELECT;
         return;
     }
+
     if (mods == GLFW_MOD_CONTROL && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         std::string selection;
         //Add the selected box to the selection
         Visualizer::get()->clicked_box_ID(selection);
         if (!selection.empty()) {
+            if (Visualizer::get()->_selected_IDs.find(selection) != Visualizer::get()->_selected_IDs.end()) {
+                Visualizer::get()->_selected_IDs.erase(selection);
+                return;
+            }
+            
             Visualizer::get()->_selected_IDs.emplace(selection);
         }
 
         return;
     }
 
-    if (Visualizer::get()->_states == V_STATES::DRAG_BOX && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+    if (action == GLFW_RELEASE && Visualizer::get()->_states == V_STATES::DRAG_BOX) {
         Visualizer::get()->_states = V_STATES::DEFAULT;
-        LOG_MSG("DEFAULT MODE");
-        return;
     }
-
 
     //if (mods == 0 && button == GLFW_MOUSE_BUTTON_RIGHT) {
     //    if (action == GLFW_PRESS) {
@@ -383,7 +416,6 @@ void Visualizer::input()
     SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
     //INPUT CAMERA
     constexpr float speed = 10.0f;
-
     if (inputs[GLFW_KEY_DOWN]) {
         camera->move(glm::vec3(0.0f, -speed, 0.0f));
     }
@@ -579,6 +611,7 @@ void Visualizer::frustrum_test()
         //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
         //}
     }
+    Box::box_batch.emplace_back(Selection_box);
 
 }
 
@@ -708,57 +741,18 @@ void Visualizer::line_drag_link()
 
 }
 
-void Visualizer::multi_select_drag()
+void Visualizer::multi_select()
 {
-    //static glm::vec3 cur_pos;
+    SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
 
-    ////CHECK THE MAP FOR A COLLISION WITH A BOX 
-    //if (current_selected_ID.empty() && glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    if ((inputs[GLFW_KEY_LEFT_SHIFT] == GLFW_RELEASE) || (inputs[GLFW_KEY_RIGHT_SHIFT] == GLFW_RELEASE)) {
+        _states == V_STATES::DEFAULT;
+    }
 
-    //    //Retrieve the ID of the current selected box
-    //    clicked_box_ID(current_selected_ID);
+    glm::vec3 new_pos = cursor_map_coordinates();
+    Selection_box._pos = _otherpos;
+    Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
 
-    //    if (!last_selected_ID.empty() && (last_selected_ID != current_selected_ID)) {
-    //        //Reset the Z offset for priority 
-    //        _proj.box_map.at(last_selected_ID)._pos.z = rand_float();
-    //        _proj.box_map.at(last_selected_ID).update();
-    //    }
-
-    //    if (!current_selected_ID.empty()) {
-    //        _proj.box_map.at(current_selected_ID)._clicked = true;
-    //        _proj.box_map.at(current_selected_ID)._pos.z = 2;
-    //        _proj.box_map.at(current_selected_ID).update();
-    //    }
-    //    //DELTA DE POSITION A CALCULER
-    //    cur_pos = cursor_map_coordinates();
-    //    //update the front selected box
-    //    last_selected_ID = current_selected_ID;
-
-    //}
-
-    //if (!current_selected_ID.empty()) {
-    //    //DRAG BOX
-    //    static glm::vec3 delta;
-    //    if (_proj.box_map.at(current_selected_ID)._clicked) {
-    //        glm::vec3 new_pos = cursor_map_coordinates();
-    //        delta = new_pos - cur_pos;
-    //        //Update only if the box has moved
-    //        if (new_pos != cur_pos) {
-    //            _proj.box_map.at(current_selected_ID)._pos += glm::vec3{ delta.x, delta.y, 0 };
-    //            _proj.box_map.at(current_selected_ID).update();
-    //            link_box(_proj.box_map.at(current_selected_ID));
-    //        }
-
-    //        cur_pos = new_pos; //update the position
-    //    }
-
-    //    if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE
-    //        && _proj.box_map.at(current_selected_ID)._clicked) {
-
-    //        _proj.box_map.at(current_selected_ID)._clicked = false;
-    //        current_selected_ID.clear();
-    //    }
-    //}
 }
 
 std::string Visualizer::clicked_box_ID(std::string& ID)
@@ -858,6 +852,8 @@ void Visualizer::save()
     std::string str = "save.json";
     parse_info_data_visualizer_to_json(str, true);
 
+
+    //Todo save the text data in their own file
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
 
     }

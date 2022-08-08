@@ -69,12 +69,13 @@ private:
 	
 
 	std::set<std::string> _selected_IDs;
-	Particle Selection_box;
+	Particle Selection_box{glm::vec3(0,0,0), glm::vec2(50,50), glm::vec4(0,0,0,0)};
 
 
 	std::string first_link_ID;
 	std::string second_link_ID;
 	glm::vec3 _cur_pos;
+	glm::vec3 _otherpos;
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
@@ -82,7 +83,7 @@ private:
 	void frustrum_test();
 	void drag_boxes();
 	void line_drag_link();
-	void multi_select_drag();
+	void multi_select();
 	//Check if the user clicked on a box and returns its ID
 	std::string clicked_box_ID(std::string &ID);
 
