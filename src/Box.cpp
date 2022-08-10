@@ -38,18 +38,19 @@ bool Box::check_collision(glm::vec3 const& c_pos)
     //Point to Box Collision test
     if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
         ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
-
-        if (!_hovered) {
-            //switch selected state
-            _hovered ^= 1;
-        }
         return true;
     }
+    return false;
+}
 
-    if (_hovered) {
-        _hovered ^= 1;
+bool Box::check_collision(Particle p)
+{
+    glm::vec2 delta = glm::vec3(glm::abs(p.center() - this->center()));
+    glm::vec2 sum = (glm::abs(p._size) + this->_size) / 2.f;
+
+    if (delta.x < sum.x && delta.y < sum.y) {
+        return true;
     }
-
     return false;
 }
 
@@ -102,7 +103,7 @@ void Box::update()
 
 }
 
-glm::vec3 Box::center()
+glm::vec3 Particle::center()
 {
     return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
 }

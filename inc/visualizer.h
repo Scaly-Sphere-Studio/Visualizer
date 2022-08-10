@@ -97,6 +97,8 @@ private:
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;
+	int mod = INT_MAX;
+	int mouse_action = INT_MAX;
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;

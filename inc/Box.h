@@ -15,6 +15,9 @@ struct Particle {
 	GLuint _glsl_tex_unit{ UINT32_MAX };
 	// ---------- Below data is purely internal and not passed to OpenGL
 	uint32_t _sss_tex_id{ UINT32_MAX };
+
+	//Return the coordinates of the center of the box
+	glm::vec3 center();
 };
 
 struct Tags : public Particle {
@@ -47,8 +50,9 @@ public:
 	//Box rendering
 	//Check for a collision box/point
 	bool check_collision(glm::vec3 const& c_pos);
-	//Return the coordinates of the center of the box
-	glm::vec3 center();
+	//Check for a collision with another particle
+	bool check_collision(Particle p);
+	
 	//Initialisation of the box and fill the model array
 	void create_box();
 	//Update the positions of all the subboxes 

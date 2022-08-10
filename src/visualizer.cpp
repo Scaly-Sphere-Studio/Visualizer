@@ -193,6 +193,8 @@ void Visualizer::run()
 void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 
+    Visualizer::get()->mod = mods;
+
     //INPUTS BOX
     if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
         Visualizer::get()->push_box(rand_color());
@@ -228,6 +230,8 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    Visualizer::get()->mouse_action = action;
+
     //using namespace std::chrono_literals;
     static int mod_state;
     for (std::string s : Visualizer::get()->_selected_IDs) {
@@ -645,7 +649,7 @@ void Visualizer::drag_boxes()
 
 void Visualizer::line_drag_link()
 {
-
+    //TODO
     static glm::vec3 first_cursor_pos;
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
     if (_states == V_STATES::DEFAULT) {
@@ -664,15 +668,6 @@ void Visualizer::line_drag_link()
         }
     }
 
-
-
-    //switch (_states) {
-    //case V_STATES::DEFAULT: break;
-    //case V_STATES::CUTLINE: break;
-    //case V_STATES::MULTI_SELECT: break;
-    //
-
-    //}
 
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
@@ -745,13 +740,34 @@ void Visualizer::multi_select()
 {
     SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
 
-    if ((inputs[GLFW_KEY_LEFT_SHIFT] == GLFW_RELEASE) || (inputs[GLFW_KEY_RIGHT_SHIFT] == GLFW_RELEASE)) {
-        _states == V_STATES::DEFAULT;
+    glm::vec3 new_pos = cursor_map_coordinates();
+    //MAKE THE SELECTION PARTICLE IN FRONT
+    Selection_box._pos = _otherpos +  glm::vec3(0.f, 0.f, 2.5f);
+    Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
+
+
+    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
+        if (it->second.check_collision(Selection_box)) {
+            if (!_selected_IDs.count(it->first)) {
+                _selected_IDs.emplace(it->first);
+            }
+        } 
     }
 
-    glm::vec3 new_pos = cursor_map_coordinates();
-    Selection_box._pos = _otherpos;
-    Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
+    //SELECTION RESET 
+    if (_states == V_STATES::MULTI_SELECT && (mod == 0) || (mouse_action == GLFW_RELEASE)) {
+        //RESET THE PARTICLE
+        Visualizer::get()->Selection_box._color = glm::vec4(0.f);
+        Visualizer::get()->Selection_box._pos = glm::vec3(INT32_MAX);
+        Visualizer::get()->Selection_box._size = glm::vec2(0.f);
+    
+        //RESET THE MOD, ACTION AND STATE
+        mod = INT_MAX;
+        mouse_action = INT_MAX;
+        _states = V_STATES::DEFAULT;
+        return;
+    }
+
 
 }
 
