@@ -70,7 +70,7 @@ private:
 	
 
 	std::set<std::string> _selected_IDs;
-	Particle Selection_box{glm::vec3(0,0,0), glm::vec2(50,50), glm::vec4(0,0,0,0)};
+	Particle Selection_box{glm::vec3(INT_MAX,INT_MAX,0), glm::vec2(50,50), glm::vec4(0,0,0,0)};
 
 
 	std::string first_link_ID;
