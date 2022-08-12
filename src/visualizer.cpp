@@ -298,8 +298,8 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
             Visualizer::get()->_states = V_STATES::CUTLINE;
 
             //Begin the cut line 
-            Visualizer::get()->arrow_map.insert(std::make_pair("CUTLINE", 
-                SSS::GL::Polyline::Segment(Visualizer::get()->_cur_pos, Visualizer::get()->_cur_pos)));
+            Visualizer::get()->arrow_map.insert(std::make_pair("CUTLINE",
+                SSS::GL::Polyline::Segment(glm::vec3(INT_MAX), glm::vec3(INT_MAX))));
             return;
         }
 
@@ -655,7 +655,8 @@ void Visualizer::cut_link_line()
 {
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(_cur_pos, second_cursor_pos);
+        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(_cur_pos, second_cursor_pos,
+            10.f, hex_to_rgb("#03070e"), SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::ROUND);
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
