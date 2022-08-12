@@ -8,7 +8,8 @@ enum struct V_STATES {
 	DEFAULT = 0,
 	CUTLINE = 1,
 	DRAG_BOX = 2,
-	MULTI_SELECT = 3
+	MULTI_SELECT = 3,
+	CONNECT_LINE = 4
 };
 
 struct VISUALISER_INFO {
@@ -82,7 +83,8 @@ private:
 	bool check_frustrum_render(Box &b);
 	void frustrum_test();
 	void drag_boxes();
-	void line_drag_link();
+	void cut_link_line();
+	void connect_drag_line();
 	void multi_select();
 	//Check if the user clicked on a box and returns its ID
 	std::string clicked_box_ID(std::string &ID);

@@ -172,11 +172,15 @@ void Visualizer::run()
                 multi_select();
                 break;
             }
+        case V_STATES::CUTLINE: {
+                cut_link_line();
+                break;
+            }
+        case V_STATES::CONNECT_LINE: {
+                connect_drag_line();
+                break;
+            }
         }
-
-        
-        line_drag_link();
-        //multi_select_drag();
 
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
@@ -238,7 +242,6 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         std::cout << s << std::endl;
     }
 
-
     //LEFT CLICK
     if (mods == 0 && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         std::string selection;
@@ -259,6 +262,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
             Visualizer::get()->_selected_IDs.emplace(selection);
         }
 
+        //DOUBLE CLICK
         if (Visualizer::get()->double_click_detection(std::chrono::milliseconds(500))) {
             //Double click detected
             LOG_MSG("DOUBLE CLICK");
@@ -283,18 +287,30 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
     }
 
 
-    //SELECTION
-    //if (Visualizer::get()->_states == V_STATES::MULTI_SELECT && (mod_state =! mods) && (action == GLFW_RELEASE)) {
-    //    mod_state = 0;
-    //    std::cout << "oh" << std::endl;
-    //    Visualizer::get()->Selection_box._color = glm::vec4(0.f);
-    //    Visualizer::get()->Selection_box._pos = glm::vec3(INT32_MAX);
-    //    Visualizer::get()->Selection_box._size = glm::vec2(0.f);
+    //RIGHT CLICK
+    if (mods == 0 && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        std::string selection;
+        Visualizer::get()->clicked_box_ID(selection);
+        Visualizer::get()->_cur_pos = Visualizer::get()->cursor_map_coordinates();
 
-    //    return;
-    //}
+        //CUTLINE OPTION
+        if (selection.empty()) {
+            Visualizer::get()->_states = V_STATES::CUTLINE;
 
+            //Begin the cut line 
+            Visualizer::get()->arrow_map.insert(std::make_pair("CUTLINE", 
+                SSS::GL::Polyline::Segment(Visualizer::get()->_cur_pos, Visualizer::get()->_cur_pos)));
+            return;
+        }
 
+        //CONNECT LINE MODE
+        Visualizer::get()->_states = V_STATES::CONNECT_LINE;
+        Visualizer::get()->first_link_ID = selection;
+        
+        return;
+    }
+
+    //MULTISELECTION
     if (mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
         Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f,1.f,1.f,0.3f);
         Visualizer::get()->_otherpos = Visualizer::get()->cursor_map_coordinates();
@@ -302,6 +318,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         return;
     }
 
+    //ADD TO THE SELECTION
     if (mods == GLFW_MOD_CONTROL && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         std::string selection;
         //Add the selected box to the selection
@@ -311,30 +328,17 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
                 Visualizer::get()->_selected_IDs.erase(selection);
                 return;
             }
-            
             Visualizer::get()->_selected_IDs.emplace(selection);
         }
 
         return;
     }
 
+    //RESET TO DEFAULT
     if (action == GLFW_RELEASE && Visualizer::get()->_states == V_STATES::DRAG_BOX) {
         Visualizer::get()->_states = V_STATES::DEFAULT;
     }
 
-    //if (mods == 0 && button == GLFW_MOUSE_BUTTON_RIGHT) {
-    //    if (action == GLFW_PRESS) {
-    //        Visualizer::get()->_states = V_STATES::CUTLINE;
-    //        return;
-    //    }
-
-    //    if (action == GLFW_PRESS) {
-    //        Visualizer::get()->_states = V_STATES::DEFAULT;
-    //        return;
-    //    }
-    //}
-
-    
 }
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
@@ -647,31 +651,11 @@ void Visualizer::drag_boxes()
     _cur_pos = new_pos; //update the position
 }
 
-void Visualizer::line_drag_link()
+void Visualizer::cut_link_line()
 {
-    //TODO
-    static glm::vec3 first_cursor_pos;
-    //CHECK THE MAP FOR A COLLISION WITH A BOX 
-    if (_states == V_STATES::DEFAULT) {
-        if (first_link_ID.empty() && glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-            clicked_box_ID(first_link_ID);
-
-            //CUTLINE OPTION
-            if (first_link_ID.empty()) {
-                _states = V_STATES::CUTLINE;
-
-                //Begin the cut line 
-                first_cursor_pos = cursor_map_coordinates();
-                arrow_map.insert(std::make_pair("CUTLINE", SSS::GL::Polyline::Segment(first_cursor_pos, first_cursor_pos)));
-
-            }
-        }
-    }
-
-
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(first_cursor_pos, second_cursor_pos);
+        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(_cur_pos, second_cursor_pos);
 
         if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
@@ -685,7 +669,7 @@ void Visualizer::line_drag_link()
                     Box *b2 = &_proj.box_map.at(s);
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
-                        first_cursor_pos, second_cursor_pos)) {
+                        _cur_pos, second_cursor_pos)) {
                         cut_lines_selection.emplace_back(std::make_pair(b1->_id, b2->_id));
                     }  
                 }
@@ -700,40 +684,41 @@ void Visualizer::line_drag_link()
             _states = V_STATES::DEFAULT;
         }        
     }
+}
 
+void Visualizer::connect_drag_line()
+{
+    if (!first_link_ID.empty()) {
+        link_box_to_cursor(_proj.box_map.at(first_link_ID));
 
-    if (_states == V_STATES::DEFAULT) {
-        if (!first_link_ID.empty()) {
-            link_box_to_cursor(_proj.box_map.at(first_link_ID));
+        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+            if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
 
-            if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-                if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
+                //First look out if the link between boxes already exists
+                auto it = std::find(_proj.box_map.at(first_link_ID).link_to.begin(), _proj.box_map.at(first_link_ID).link_to.end(), second_link_ID);
 
-                    //First look out if the link between boxes already exists
-                    auto it = std::find(_proj.box_map.at(first_link_ID).link_to.begin(), _proj.box_map.at(first_link_ID).link_to.end(), second_link_ID);
-
-                    if (it != _proj.box_map.at(first_link_ID).link_to.end()) {
-                        //If it already exists delete it
-                        //Erase the arrows connected to the box
-                        //Erase the ID from their 'Link to' and 'Link from' list
-                        arrow_map.erase(first_link_ID + second_link_ID);
-                        _proj.box_map.at(first_link_ID).link_to.erase(second_link_ID);
-                        _proj.box_map.at(second_link_ID).link_from.erase(first_link_ID);
-                    }
-                    else {
-                        //If it doesn't, create the link between the two boxes
-                        link_box(_proj.box_map.at(first_link_ID), _proj.box_map.at(second_link_ID));
-                    }
+                if (it != _proj.box_map.at(first_link_ID).link_to.end()) {
+                    //If it already exists delete it
+                    //Erase the arrows connected to the box
+                    //Erase the ID from their 'Link to' and 'Link from' list
+                    arrow_map.erase(first_link_ID + second_link_ID);
+                    _proj.box_map.at(first_link_ID).link_to.erase(second_link_ID);
+                    _proj.box_map.at(second_link_ID).link_from.erase(first_link_ID);
                 }
-
-                arrow_map.erase(first_link_ID);
-                first_link_ID.clear();
-                second_link_ID.clear();
-                return;
+                else {
+                    //If it doesn't, create the link between the two boxes
+                    link_box(_proj.box_map.at(first_link_ID), _proj.box_map.at(second_link_ID));
+                }
             }
+
+            arrow_map.erase(first_link_ID);
+            first_link_ID.clear();
+            second_link_ID.clear();
+
+            _states == V_STATES::DEFAULT;
+            return;
         }
     }
-
 }
 
 void Visualizer::multi_select()
@@ -767,8 +752,6 @@ void Visualizer::multi_select()
         _states = V_STATES::DEFAULT;
         return;
     }
-
-
 }
 
 std::string Visualizer::clicked_box_ID(std::string& ID)
