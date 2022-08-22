@@ -180,6 +180,10 @@ void Visualizer::run()
                 connect_drag_line();
                 break;
             }
+        case V_STATES::DRAG_SCREEN: {
+                drag_screen();
+                break;
+            }
         }
 
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
@@ -236,12 +240,6 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 {
     Visualizer::get()->mouse_action = action;
 
-    //using namespace std::chrono_literals;
-    static int mod_state;
-    for (std::string s : Visualizer::get()->_selected_IDs) {
-        std::cout << s << std::endl;
-    }
-
     //LEFT CLICK
     if (mods == 0 && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         std::string selection;
@@ -277,9 +275,16 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
             //todo
         }
 
+        if (selection.empty()) {
+            Visualizer::get()->_states = V_STATES::DRAG_SCREEN;
+            Visualizer::get()->_cur_pos = glm::vec3(-Visualizer::get()->c_x, Visualizer::get()->c_y, 0.f);
+            
+            LOG_MSG("DRAG SCREEN MODE");
+            return;
+        }
+
         if (!selection.empty()) {
             Visualizer::get()->_states = V_STATES::DRAG_BOX;
-            LOG_MSG("DRAG BOX MODE");
             return;
         }
 
@@ -332,11 +337,6 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         }
 
         return;
-    }
-
-    //RESET TO DEFAULT
-    if (action == GLFW_RELEASE && Visualizer::get()->_states == V_STATES::DRAG_BOX) {
-        Visualizer::get()->_states = V_STATES::DEFAULT;
     }
 
 }
@@ -649,6 +649,10 @@ void Visualizer::drag_boxes()
         }
     }
     _cur_pos = new_pos; //update the position
+
+    if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+        _states = V_STATES::DEFAULT;
+    }
 }
 
 void Visualizer::cut_link_line()
@@ -681,7 +685,6 @@ void Visualizer::cut_link_line()
             }
 
             cut_lines_selection.clear();
-
             _states = V_STATES::DEFAULT;
         }        
     }
@@ -753,6 +756,21 @@ void Visualizer::multi_select()
         _states = V_STATES::DEFAULT;
         return;
     }
+}
+
+void Visualizer::drag_screen()
+{
+    _otherpos = glm::vec3(-c_x, c_y, 0.f);
+    glm::vec3 delta = _otherpos - _cur_pos;
+    //Move the camera using the cursor position
+    camera->move(delta);
+
+    if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+        _states = V_STATES::DEFAULT;
+    }
+
+    //Update the position
+    _cur_pos = _otherpos;
 }
 
 std::string Visualizer::clicked_box_ID(std::string& ID)
