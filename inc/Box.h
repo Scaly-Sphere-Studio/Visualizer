@@ -7,7 +7,8 @@
 
 struct Particle {
 	Particle();
-	Particle(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col);
+	Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 col);
+	Particle(std::string t, const SSS::TR::Format &fmt, glm::vec3 pos, glm::vec2 s);
 	// ---------- Below data is passed to OpenGL VBO
 	glm::vec3 _pos;
 	glm::vec2 _size;
@@ -18,6 +19,10 @@ struct Particle {
 
 	//Return the coordinates of the center of the box
 	glm::vec3 center();
+	//Check for a collision box/point
+	bool check_collision(Particle p);
+	//Check for a collision with another particle
+	bool check_collision(glm::vec3 const& c_pos);
 };
 
 struct Tags : public Particle {
@@ -36,6 +41,8 @@ public:
 	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
 	~Box();
 	
+	//Update the position with a delta for dragging the boxes
+	void update_pos(glm::vec3 delta);
 	void update();
 
 	void set_selected_col(std::string hex);
@@ -48,20 +55,19 @@ public:
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	//Box rendering
-	//Check for a collision box/point
-	bool check_collision(glm::vec3 const& c_pos);
-	//Check for a collision with another particle
-	bool check_collision(Particle p);
 	
 	//Initialisation of the box and fill the model array
 	void create_box();
 	//Update the positions of all the subboxes 
+	int check_text_selection(glm::vec3 const& c_pos);
 
 	// DATA
 	Text_data _td;   
 
 	std::string _id;
 	std::vector<Particle> model;
+	std::vector<Particle> text_model;
+
 	std::vector<uint16_t> tags;
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
@@ -69,6 +75,26 @@ public:
 	static std::vector<Particle> box_batch;
 	static std::map<uint16_t, Tags> tags_list;
 };
+
+class Selection_square : Particle {
+public:
+
+	//Box rendering
+	Particle model;
+
+	static std::vector<Particle> box_batch;
+};
+
+
+class Text_particle : Particle {
+public:
+	Text_particle(glm::vec3 _pos, glm::vec2 _s, const std::string text, const SSS::TR::Format& fmt);
+	//Box rendering
+	Particle model;
+
+};
+
+
 
 class BoxRenderer : public SSS::GL::Renderer {
 	friend SSS::GL::Window;
@@ -94,14 +120,6 @@ private:
 	SSS::GL::Basic::VBO::Ptr particles_vbo;
 };
 
-class Selection_square : Particle {
-public:
-
-	//Box rendering
-	Particle model;
-
-	static std::vector<Particle> box_batch;
-};
 
 
 static bool sort_box(Particle& a, Particle& b) {

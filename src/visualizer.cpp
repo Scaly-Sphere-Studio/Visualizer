@@ -137,6 +137,16 @@ void Visualizer::run()
     //load
     load();
 
+    ////  Setup Dear ImGui window
+    //IMGUI_CHECKVERSION();
+    //ImGui::CreateContext();
+    //ImGui::GetIO().IniFilename = nullptr;
+
+
+    //SSS::ImGuiH::setContext(window->getGLFWwindow());
+
+
+
     refresh();
     SSS::GL::Context const context(window);
 
@@ -268,6 +278,8 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
             //Replace the selection with the current selected box
             Visualizer::get()->_selected_IDs.clear();
             if (!selection.empty()) {
+                int tex_id = INT32_MAX;
+                tex_id = Visualizer::get()->_proj.box_map.at(selection).check_text_selection(Visualizer::get()->cursor_map_coordinates());
                 Visualizer::get()->_selected_IDs.emplace(selection);
             }
 
@@ -614,6 +626,9 @@ void Visualizer::frustrum_test()
 
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
+        Box::box_batch.insert(Box::box_batch.end(), it->second.text_model.begin(), it->second.text_model.end());
+
+
         //if (check_frustrum_render(boxes[i])) {
         //    debug_box(boxes[i]);
         //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
@@ -719,7 +734,7 @@ void Visualizer::connect_drag_line()
             first_link_ID.clear();
             second_link_ID.clear();
 
-            _states == V_STATES::DEFAULT;
+            _states = V_STATES::DEFAULT;
             return;
         }
     }

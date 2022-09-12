@@ -3,6 +3,63 @@
 std::vector<Particle>Box::box_batch{};
 std::map<uint16_t, Tags>Box::tags_list{};
 
+
+Particle::Particle()
+{
+    _pos = glm::vec3(0);
+    _size = glm::vec2(50.f, 50.f);
+    _color = glm::vec4(0);
+}
+
+Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
+    _pos(pos), _size(s), _color(_col)
+{
+}
+
+Particle::Particle(std::string t, const SSS::TR::Format& fmt, 
+    glm::vec3 pos, glm::vec2 s) :
+    _pos(pos), _size(s), _color(glm::vec4(0))
+{
+    // Create text area & gl texture
+    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    area->setFormat(fmt);
+    area->parseString(t);
+
+    auto const& texture = SSS::GL::Texture::create();
+    texture->setTextAreaID(area->getID());
+    texture->setType(SSS::GL::Texture::Type::Text);
+
+    _sss_tex_id = texture->getID();
+}
+
+bool Particle::check_collision(glm::vec3 const& c_pos)
+{
+    //Check if a point is hovering the box
+    //Point to Box Collision test
+    if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
+        ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
+        return true;
+    }
+    return false;
+}
+
+bool Particle::check_collision(Particle p)
+{
+    glm::vec2 delta = glm::vec3(glm::abs(p.center() - this->center()));
+    glm::vec2 sum = (glm::abs(p._size) + this->_size) / 2.f;
+
+    if (delta.x < sum.x && delta.y < sum.y) {
+        return true;
+    }
+    return false;
+}
+
+glm::vec3 Particle::center()
+{
+    return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
+}
+
+
 Box::Box() { }
 
 Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
@@ -20,6 +77,8 @@ Box::~Box()
 {
     link_to.clear();
     link_from.clear();
+    model.clear();
+    text_model.clear();
 }
 
 
@@ -29,29 +88,6 @@ void Box::set_selected_col(std::string hex)
 
 void Box::set_col(std::string hex)
 {
-}
-
-
-bool Box::check_collision(glm::vec3 const& c_pos)
-{
-    //Check if a point is hovering the box
-    //Point to Box Collision test
-    if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
-        ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
-        return true;
-    }
-    return false;
-}
-
-bool Box::check_collision(Particle p)
-{
-    glm::vec2 delta = glm::vec3(glm::abs(p.center() - this->center()));
-    glm::vec2 sum = (glm::abs(p._size) + this->_size) / 2.f;
-
-    if (delta.x < sum.x && delta.y < sum.y) {
-        return true;
-    }
-    return false;
 }
 
 void Box::create_box()
@@ -65,20 +101,13 @@ void Box::create_box()
     //ID Background
     model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
     
-    // Create text area & gl texture
-    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    auto fmt = area->getFormat();
-    fmt.style.charsize = (int)_size.y / 3;
+    SSS::TR::Format fmt;
+    fmt.style.charsize = (int)_size.y / 6;
     fmt.style.has_outline = true;
-    fmt.style.outline_size = 3;
-    area->setFormat(fmt);
-    area->parseString(_id);
+    fmt.style.outline_size = 2;
 
-    auto const& texture = SSS::GL::Texture::create();
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
-
-    model.emplace_back(_pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size, glm::vec4(0))._sss_tex_id = texture->getID();
+    text_model.emplace_back(_id, fmt, _pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size * glm::vec2(1.f, 0.3f));
+    text_model.emplace_back("bsr", fmt, _pos + glm::vec3(0.f, -_size.y/3.f, 2.f * epsilon), _size * glm::vec2(1.f, 1.f - 0.3f));
 
     //Tags
     if (tags.size() > 0) {
@@ -87,12 +116,22 @@ void Box::create_box()
             model.insert(model.end(), tags_list[tags[i]].model.begin(), tags_list[tags[i]].model.end());
         }
     }
-
-    LOG_MSG(model.size());
-
 }
 
-void Box::update()
+int Box::check_text_selection(glm::vec3 const& c_pos)
+{
+    for (Particle p : text_model) {
+        if (p.check_collision(c_pos) && p._sss_tex_id != UINT32_MAX) {
+            std::cout << p._sss_tex_id << std::endl;
+            SSS::GL::Window::getFirst()->getObjects().textures.at(p._sss_tex_id)->getTextArea()->setFocus(true);
+            return p._sss_tex_id;
+        }
+    }
+
+    return INT32_MAX;
+}
+
+void Box::update_pos(glm::vec3 delta)
 {
     //Numbers of particles for each box
     // Background, id background, numbers of tags, comment,  *2 + info particles
@@ -100,25 +139,22 @@ void Box::update()
     for (size_t i = 0; i < model.size(); i++) {
         model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
     }
+    for (size_t i = 0; i < text_model.size(); i++) {
+        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
+    }
 
 }
 
-glm::vec3 Particle::center()
+void Box::update()
 {
-    return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
+    for (size_t i = 0; i < model.size(); i++) {
+        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
+    }
+    for (size_t i = 0; i < text_model.size(); i++) {
+        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
+    }
 }
 
-Particle::Particle()
-{
-    _pos = glm::vec3{ 0 };
-    _size = glm::vec2{ 50.f, 50.f };
-    _color = glm::vec4{ 0 };
-}
-
-Particle::Particle(glm::vec3 _pos, glm::vec2 s, glm::vec4 _col) :
-    _pos(_pos), _size(s), _color(_col)
-{
-}
 
 BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
     : Renderer(win, id)
@@ -317,4 +353,9 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
 Tags::~Tags()
 {
     model.clear();
+}
+
+Text_particle::Text_particle(glm::vec3 _pos, glm::vec2 _s, const std::string text, const SSS::TR::Format& fmt)
+{
+
 }
