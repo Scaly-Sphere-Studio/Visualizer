@@ -13,13 +13,11 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
 }
 
 Debugger::Debugger(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
-    : SSS::GL::Renderer(win, id)
+    : SSS::GL::Renderer(win, id), vbo(win)
 {
     SSS::GL::Context const context(_window);
 
-    vbo.reset(new SSS::GL::Basic::VBO(_window));
-    
-    vbo->bind();
+    vbo.bind();
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
@@ -134,7 +132,6 @@ void Debugger::render()
     Visualizer::Ptr const& visu = Visualizer::get();
 
     SSS::GL::Context const context(_window);
-    SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
 
     glm::vec3 const cam_pos = camera->getPosition();
     rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
@@ -145,19 +142,19 @@ void Debugger::render()
     //ORIGIN CURSOR
     cross(0, 0, 0, cursor_size);
     circle(0, 0, 0, cursor_size);
-    vbo->edit(
+    vbo.edit(
         debug_batch.size() * sizeof(debug_Vertex),
         debug_batch.data(),
         GL_STATIC_DRAW
     );
 
-    auto const& shader = objects.shaders.at(getShadersID());
+    auto const shader = getShaders();
     glm::mat4 const mvp = camera->getVP();
     shader->use();
     shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
 
     //Render
-    vbo->bind();
+    vbo.bind();
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(debug_batch.size())); // Starting from vertex 0; 3 vertices total -> 1 triangle
 
     debug_batch.clear();

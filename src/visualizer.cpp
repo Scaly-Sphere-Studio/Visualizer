@@ -378,56 +378,26 @@ void Visualizer::setup()
     window->setCallback(glfwSetKeyCallback, key_callback);
     window->setCallback(glfwSetMouseButtonCallback, mouse_callback);
 
-    // SSS/GL objects
-    {
-        //SSS::TR::Area::Ptr const& area = SSS::TR::Area::create(300, 300);
-        //SSS::TR::Format fmt = area->getFormat();
-        //fmt.style.charsize = 50;
-        //area->setFormat(fmt);
-        //area->parseString("Lorem ipsum dolor sit amet.");
+    camera = SSS::GL::Camera::create();
+    camera->setPosition({ 0, 0, 3 });
+    camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-        //auto const& texture = SSS::GL::Texture::create();
-        //auto const& plane = SSS::GL::Plane::create();
-        //texture->setTextAreaID(area->getID());
-        //texture->setType(SSS::GL::Texture::Type::Text);
-        //plane->setTextureID(texture->getID());
-        //plane->scale(glm::vec3(300));
-
-        auto const& renderer = SSS::GL::Renderer::create<SSS::GL::PlaneRenderer>();
-        camera = SSS::GL::Camera::create();
-        camera->setPosition({ 0, 0, 3 });
-        camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
-
-        auto& chunks = renderer->castAs<SSS::GL::PlaneRenderer>().chunks;
-        chunks.emplace_back(camera, true);
-        /*chunks.back().planes.emplace_back(plane);*/
-    }
-
-    // Shaders & Renderers
-    {
-        auto const& line_shader = window->createShaders();
-        line_shader->loadFromFiles("glsl/line.vert", "glsl/line.frag");
-        auto const& line_renderer = window->createRenderer<SSS::GL::LineRenderer>();
-        line_renderer->setShadersID(line_shader->getID());
-        line_renderer->castAs<SSS::GL::LineRenderer>().camera = camera;
-        line_renderer_id = line_renderer->getID();
+    auto& line_renderer = window->createRenderer<SSS::GL::LineRenderer>();
+    line_renderer.setShaders(SSS::GL::Shaders::create("glsl/line.vert", "glsl/line.frag"));
+    line_renderer.camera = camera;
+    line_renderer_id = line_renderer.getID();
     
-        auto const& box_shader = window->createShaders();
-        box_shader->loadFromFiles("glsl/instance.vert", "glsl/instance.frag");
-        auto const& box_renderer = window->createRenderer<BoxRenderer>();
-        box_renderer->setShadersID(box_shader->getID());
-        box_renderer->castAs<BoxRenderer>().camera = camera;
-        box_renderer_id = box_renderer->getID();
+    auto& box_renderer = window->createRenderer<BoxRenderer>();
+    box_renderer.setShaders(SSS::GL::Shaders::create("glsl/instance.vert", "glsl/instance.frag"));
+    box_renderer.camera = camera;
+    box_renderer_id = box_renderer.getID();
     
-        auto const& debug_shader = window->createShaders();
-        debug_shader->loadFromFiles("glsl/triangle.vert", "glsl/triangle.frag");
-        auto const& debug_renderer = window->createRenderer<Debugger>();
-        debug_renderer->setShadersID(debug_shader->getID());
-        debug_renderer->castAs<Debugger>().camera = camera;
-        debug_renderer_id = debug_renderer->getID();
-        // Enable or disable debugger
-        debug_renderer->setActivity(true);
-    }
+    auto& debug_renderer = window->createRenderer<Debugger>();
+    debug_renderer.setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
+    debug_renderer.camera = camera;
+    debug_renderer_id = debug_renderer.getID();
+    // Enable or disable debugger
+    debug_renderer.setActivity(true);
 
 }
 

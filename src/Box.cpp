@@ -21,15 +21,13 @@ Particle::Particle(std::string t, const SSS::TR::Format& fmt,
     _pos(pos), _size(s), _color(glm::vec4(0))
 {
     // Create text area & gl texture
-    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    area->setFormat(fmt);
-    area->parseString(t);
+    auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    area.setFormat(fmt);
+    area.parseString(t);
 
-    auto const& texture = SSS::GL::Texture::create();
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
+    auto& texture = SSS::GL::Texture::create(area);
 
-    _sss_tex_id = texture->getID();
+    _sss_tex_id = texture.getID();
 }
 
 bool Particle::check_collision(glm::vec3 const& c_pos)
@@ -102,9 +100,9 @@ void Box::create_box()
     model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
     
     SSS::TR::Format fmt;
-    fmt.style.charsize = (int)_size.y / 6;
-    fmt.style.has_outline = true;
-    fmt.style.outline_size = 2;
+    fmt.charsize = (int)_size.y / 6;
+    fmt.has_outline = true;
+    fmt.outline_size = 2;
 
     text_model.emplace_back(_id, fmt, _pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size * glm::vec2(1.f, 0.3f));
     text_model.emplace_back("bsr", fmt, _pos + glm::vec3(0.f, -_size.y/3.f, 2.f * epsilon), _size * glm::vec2(1.f, 1.f - 0.3f));
@@ -123,7 +121,7 @@ int Box::check_text_selection(glm::vec3 const& c_pos)
     for (Particle p : text_model) {
         if (p.check_collision(c_pos) && p._sss_tex_id != UINT32_MAX) {
             std::cout << p._sss_tex_id << std::endl;
-            SSS::GL::Window::getFirst()->getObjects().textures.at(p._sss_tex_id)->getTextArea()->setFocus(true);
+            SSS::GL::Window::getFirst()->getTextureMap().at(p._sss_tex_id)->getTextArea()->setFocus(true);
             return p._sss_tex_id;
         }
     }
@@ -157,16 +155,11 @@ void Box::update()
 
 
 BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
-    : Renderer(win, id)
+    : Renderer(win, id), vao(win), billboard_vbo(win), billboard_ibo(win), particles_vbo(win)
 {
     SSS::GL::Context const& context(_window);
 
-    vao.reset(new SSS::GL::Basic::VAO(_window));
-    billboard_vbo.reset(new SSS::GL::Basic::VBO(_window));
-    billboard_ibo.reset(new SSS::GL::Basic::IBO(_window));
-    particles_vbo.reset(new SSS::GL::Basic::VBO(_window));
-
-    vao->bind();
+    vao.bind();
 
     // Static vertices
     {
@@ -177,7 +170,7 @@ BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
             1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
             1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
         };
-        billboard_vbo->edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
+        billboard_vbo.edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
             sizeof(float) * 5, (void*)0);
@@ -189,12 +182,12 @@ BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
             0, 1, 2,    // First triangle
             2, 3, 0     // Second triangle
         };
-        billboard_ibo->edit(sizeof(indices), indices, GL_STATIC_DRAW);
+        billboard_ibo.edit(sizeof(indices), indices, GL_STATIC_DRAW);
     }
 
     // Particles
     {
-        particles_vbo->bind();
+        particles_vbo.bind();
 
         // Size (width / height)
         glEnableVertexAttribArray(1);
@@ -222,7 +215,7 @@ BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
         glVertexAttribDivisor(5, 1);
     }
 
-    vao->unbind();
+    vao.unbind();
 }
 
 void BoxRenderer::render()
@@ -232,14 +225,13 @@ void BoxRenderer::render()
     std::queue<Batch> queue;
     Batch* batch = &queue.emplace();
 
-    SSS::GL::Window::Objects const& objects = _window.lock()->getObjects();
-
+    auto const& textures = _window.lock()->getTextureMap();
     // Process batch queue
     for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
         Particle& box = Box::box_batch[i];
         uint32_t const tex_id = box._sss_tex_id;
         // Skip if no texture needed
-        if (objects.textures.count(tex_id) == 0) {
+        if (textures.count(tex_id) == 0) {
             batch->count++;
             continue;
         }
@@ -276,14 +268,14 @@ void BoxRenderer::render()
     }
 
     // Setup VAO
-    vao->bind();
+    vao.bind();
     if (Box::box_batch.size() > 0) {
-        particles_vbo->edit(sizeof(Particle) * Box::box_batch.size(),
+        particles_vbo.edit(sizeof(Particle) * Box::box_batch.size(),
             Box::box_batch.data(), GL_DYNAMIC_DRAW);
     }
 
     // Setup shader
-    auto const& shader = objects.shaders.at(getShadersID());
+    auto const shader = getShaders();
 
     auto mvp = camera->getVP();
 
@@ -307,14 +299,14 @@ void BoxRenderer::render()
         // Bind needed textures
         for (uint32_t i = 0; i < batch.tex_ids.size(); ++i) {
             glActiveTexture(GL_TEXTURE0 + i);
-            objects.textures.at(batch.tex_ids[i])->bind();
+            textures.at(batch.tex_ids[i])->bind();
         }
         // Draw batch
         glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
             nullptr, batch.count, batch.offset);
     }
 
-    vao->unbind();
+    vao.unbind();
 }
 
 Tags::Tags()
@@ -331,23 +323,21 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
 
 
     // Create text area & gl texture
-    auto const& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    auto fmt = area->getFormat();
-    //fmt.style.charsize = (int)_size.y / 3;
-    fmt.style.charsize = char_size;
-    fmt.style.has_outline = false;
-    fmt.style.outline_size = 2;
-    fmt.color.text.plain = SSS::RGB24(0x000000);
-    area->setFormat(fmt);
-    area->parseString(_name);
+    auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    auto fmt = area.getFormat();
+    //fmt.charsize = (int)_size.y / 3;
+    fmt.charsize = char_size;
+    fmt.has_outline = false;
+    fmt.outline_size = 2;
+    fmt.text_color = 0x000000;
+    area.setFormat(fmt);
+    area.parseString(_name);
 
-    auto const& texture = SSS::GL::Texture::create();
-    texture->setTextAreaID(area->getID());
-    texture->setType(SSS::GL::Texture::Type::Text);
+    auto const& texture = SSS::GL::Texture::create(area);
 
     //Create the model
     model.emplace_back(_pos, _size, glm::vec4(_color));
-    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))._sss_tex_id = texture->getID();
+    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))._sss_tex_id = texture.getID();
 }
 
 Tags::~Tags()

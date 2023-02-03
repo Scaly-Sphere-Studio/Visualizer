@@ -22,7 +22,7 @@ public:
 	virtual void render();
 
 private:
-	SSS::GL::Basic::VBO::Ptr vbo;
+	SSS::GL::Basic::VBO vbo;
 
 	//DEBUG
 	std::vector<debug_Vertex> debug_batch;

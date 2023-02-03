@@ -114,10 +114,10 @@ private:
 		std::vector<uint32_t> tex_ids;
 	};
 
-	SSS::GL::Basic::VAO::Ptr vao;
-	SSS::GL::Basic::VBO::Ptr billboard_vbo;
-	SSS::GL::Basic::IBO::Ptr billboard_ibo;
-	SSS::GL::Basic::VBO::Ptr particles_vbo;
+	SSS::GL::Basic::VAO vao;
+	SSS::GL::Basic::VBO billboard_vbo;
+	SSS::GL::Basic::IBO billboard_ibo;
+	SSS::GL::Basic::VBO particles_vbo;
 };
 
 
