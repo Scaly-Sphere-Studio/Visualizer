@@ -95,9 +95,9 @@ private:
 	// Objects
 	SSS::GL::Camera::Shared camera;
 	// Renderers
-	uint32_t line_renderer_id{ 0 };
-	uint32_t box_renderer_id{ 0 };
-	uint32_t debug_renderer_id{ 0 };
+	SSS::GL::LineRenderer::Shared line_renderer;
+	BoxRenderer::Shared box_renderer;
+	Debugger::Shared debug_renderer;
 
 	SSS::GL::Window::Shared window;
 	double c_x = 0.0, c_y = 0.0;

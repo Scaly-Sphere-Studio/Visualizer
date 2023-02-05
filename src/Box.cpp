@@ -25,9 +25,7 @@ Particle::Particle(std::string t, const SSS::TR::Format& fmt,
     area.setFormat(fmt);
     area.parseString(t);
 
-    auto& texture = SSS::GL::Texture::create(area);
-
-    _sss_tex_id = texture.getID();
+    _sss_texture = SSS::GL::Texture::create(area);
 }
 
 bool Particle::check_collision(glm::vec3 const& c_pos)
@@ -116,17 +114,16 @@ void Box::create_box()
     }
 }
 
-int Box::check_text_selection(glm::vec3 const& c_pos)
+SSS::GL::Texture::Shared Box::check_text_selection(glm::vec3 const& c_pos)
 {
     for (Particle p : text_model) {
-        if (p.check_collision(c_pos) && p._sss_tex_id != UINT32_MAX) {
-            std::cout << p._sss_tex_id << std::endl;
-            SSS::GL::Window::getFirst()->getTextureMap().at(p._sss_tex_id)->getTextArea()->setFocus(true);
-            return p._sss_tex_id;
+        if (p.check_collision(c_pos) && p._sss_texture) {
+            p._sss_texture->getTextArea()->setFocus(true);
+            return p._sss_texture;
         }
     }
 
-    return INT32_MAX;
+    return nullptr;
 }
 
 void Box::update_pos(glm::vec3 delta)
@@ -154,10 +151,10 @@ void Box::update()
 }
 
 
-BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
-    : Renderer(win, id), vao(win), billboard_vbo(win), billboard_ibo(win), particles_vbo(win)
+BoxRenderer::BoxRenderer(SSS::GL::Window::Shared win)
+    : Renderer<BoxRenderer>(win), vao(win), billboard_vbo(win), billboard_ibo(win), particles_vbo(win)
 {
-    SSS::GL::Context const& context(_window);
+    SSS::GL::Context const& context = getContext();
 
     vao.bind();
 
@@ -220,29 +217,27 @@ BoxRenderer::BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id)
 
 void BoxRenderer::render()
 {
-    SSS::GL::Context const& context(_window);
+    SSS::GL::Context const& context = getContext();
 
     std::queue<Batch> queue;
     Batch* batch = &queue.emplace();
 
-    auto const& textures = _window.lock()->getTextureMap();
     // Process batch queue
     for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
         Particle& box = Box::box_batch[i];
-        uint32_t const tex_id = box._sss_tex_id;
         // Skip if no texture needed
-        if (textures.count(tex_id) == 0) {
+        if (!box._sss_texture) {
             batch->count++;
             continue;
         }
         // Check if texture ID is already in batch
         auto const it = std::find(
-            batch->tex_ids.cbegin(),
-            batch->tex_ids.cend(),
-            box._sss_tex_id
+            batch->textures.cbegin(),
+            batch->textures.cend(),
+            box._sss_texture
         );
         // If not found, push texture ID in batch
-        if (it == batch->tex_ids.cend()) {
+        if (it == batch->textures.cend()) {
             // Max number of texture units in the fragment shader
             static uint32_t const max_texture_units = []() {
                 int i;
@@ -250,18 +245,18 @@ void BoxRenderer::render()
                 return static_cast<uint32_t>(i);
             }();
             // If texture IDs are full, create new batch
-            if (batch->tex_ids.size() >= max_texture_units) {
+            if (batch->textures.size() >= max_texture_units) {
                 batch = &queue.emplace();
                 batch->offset = i;
             }
             // Add texture ID to batch and batch ID to particle
-            batch->tex_ids.push_back(box._sss_tex_id);
-            box._glsl_tex_unit = static_cast<GLint>(batch->tex_ids.size() - 1);
+            batch->textures.push_back(box._sss_texture);
+            box._glsl_tex_unit = static_cast<GLint>(batch->textures.size() - 1);
         }
         // Else just add corresponding batch ID
         else {
             box._glsl_tex_unit =
-                static_cast<GLint>(std::distance(batch->tex_ids.cbegin(), it));
+                static_cast<GLint>(std::distance(batch->textures.cbegin(), it));
         }
         // Increment elements count
         batch->count++;
@@ -297,9 +292,9 @@ void BoxRenderer::render()
         Batch const& batch = queue.front();
         shader->setUniform1iv("u_Textures", batch.count, &texture_IDs[0]);
         // Bind needed textures
-        for (uint32_t i = 0; i < batch.tex_ids.size(); ++i) {
+        for (uint32_t i = 0; i < batch.textures.size(); ++i) {
             glActiveTexture(GL_TEXTURE0 + i);
-            textures.at(batch.tex_ids[i])->bind();
+            batch.textures[i]->bind();
         }
         // Draw batch
         glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
@@ -333,11 +328,10 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
     area.setFormat(fmt);
     area.parseString(_name);
 
-    auto const& texture = SSS::GL::Texture::create(area);
-
     //Create the model
     model.emplace_back(_pos, _size, glm::vec4(_color));
-    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))._sss_tex_id = texture.getID();
+    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
+        ._sss_texture = SSS::GL::Texture::create(area);
 }
 
 Tags::~Tags()

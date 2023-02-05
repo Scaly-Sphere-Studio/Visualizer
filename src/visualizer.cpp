@@ -129,7 +129,11 @@ Visualizer::~Visualizer()
 {
     Box::box_batch.clear();
     arrow_map.clear();
-    //_proj.box_map.clear();
+    _proj.box_map.clear();
+    line_renderer.reset();
+    box_renderer.reset();
+    debug_renderer.reset();
+    window.reset();
 }
 
 void Visualizer::run()
@@ -278,8 +282,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
             //Replace the selection with the current selected box
             Visualizer::get()->_selected_IDs.clear();
             if (!selection.empty()) {
-                int tex_id = INT32_MAX;
-                tex_id = Visualizer::get()->_proj.box_map.at(selection).check_text_selection(Visualizer::get()->cursor_map_coordinates());
+                Visualizer::get()->_proj.box_map.at(selection).check_text_selection(Visualizer::get()->cursor_map_coordinates());
                 Visualizer::get()->_selected_IDs.emplace(selection);
             }
 
@@ -382,23 +385,21 @@ void Visualizer::setup()
     camera->setPosition({ 0, 0, 3 });
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-    auto& line_renderer = window->createRenderer<SSS::GL::LineRenderer>();
-    line_renderer.setShaders(SSS::GL::Shaders::create("glsl/line.vert", "glsl/line.frag"));
-    line_renderer.camera = camera;
-    line_renderer_id = line_renderer.getID();
+    line_renderer = SSS::GL::LineRenderer::create();
+    line_renderer->setShaders(SSS::GL::Shaders::create("glsl/line.vert", "glsl/line.frag"));
+    line_renderer->camera = camera;
     
-    auto& box_renderer = window->createRenderer<BoxRenderer>();
-    box_renderer.setShaders(SSS::GL::Shaders::create("glsl/instance.vert", "glsl/instance.frag"));
-    box_renderer.camera = camera;
-    box_renderer_id = box_renderer.getID();
+    box_renderer = BoxRenderer::create();
+    box_renderer->setShaders(SSS::GL::Shaders::create("glsl/instance.vert", "glsl/instance.frag"));
+    box_renderer->camera = camera;
     
-    auto& debug_renderer = window->createRenderer<Debugger>();
-    debug_renderer.setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
-    debug_renderer.camera = camera;
-    debug_renderer_id = debug_renderer.getID();
+    debug_renderer = Debugger::create();
+    debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
+    debug_renderer->camera = camera;
     // Enable or disable debugger
-    debug_renderer.setActivity(true);
+    debug_renderer->setActivity(true);
 
+    window->setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
 
 void Visualizer::input()

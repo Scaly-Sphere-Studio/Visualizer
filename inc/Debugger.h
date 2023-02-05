@@ -8,11 +8,12 @@ struct debug_Vertex {
 	glm::vec3 _col;
 };
 
-class Debugger : public SSS::GL::Renderer {
+class Debugger : public SSS::GL::Renderer<Debugger> {
+	friend SSS::GL::_internal::SharedWindowObject<Debugger>;
 	friend SSS::GL::Window;
 
 private:
-	Debugger(std::weak_ptr<SSS::GL::Window> win, uint32_t id);
+	Debugger(SSS::GL::Window::Shared win);
 
 public:
 	~Debugger();

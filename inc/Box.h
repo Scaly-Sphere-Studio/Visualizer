@@ -15,7 +15,7 @@ struct Particle {
 	glm::vec4 _color;
 	GLuint _glsl_tex_unit{ UINT32_MAX };
 	// ---------- Below data is purely internal and not passed to OpenGL
-	uint32_t _sss_tex_id{ UINT32_MAX };
+	SSS::GL::Texture::Shared _sss_texture;
 
 	//Return the coordinates of the center of the box
 	glm::vec3 center();
@@ -59,7 +59,7 @@ public:
 	//Initialisation of the box and fill the model array
 	void create_box();
 	//Update the positions of all the subboxes 
-	int check_text_selection(glm::vec3 const& c_pos);
+	SSS::GL::Texture::Shared check_text_selection(glm::vec3 const& c_pos);
 
 	// DATA
 	Text_data _td;   
@@ -96,11 +96,12 @@ public:
 
 
 
-class BoxRenderer : public SSS::GL::Renderer {
+class BoxRenderer : public SSS::GL::Renderer<BoxRenderer> {
+	friend SSS::GL::_internal::SharedWindowObject<BoxRenderer>;
 	friend SSS::GL::Window;
 
 private:
-	BoxRenderer(std::weak_ptr<SSS::GL::Window> win, uint32_t id);
+	BoxRenderer(SSS::GL::Window::Shared win);
 
 public:
 	SSS::GL::Camera::Shared camera;
@@ -111,7 +112,7 @@ private:
 	struct Batch {
 		GLuint offset{ 0 };
 		GLuint count{ 0 };
-		std::vector<uint32_t> tex_ids;
+		std::vector<SSS::GL::Texture::Shared> textures;
 	};
 
 	SSS::GL::Basic::VAO vao;
