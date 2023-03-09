@@ -2,31 +2,23 @@
 
 std::vector<Particle>Box::box_batch{};
 std::map<uint16_t, Tags>Box::tags_list{};
-
+glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
 Particle::Particle()
 {
     _pos = glm::vec3(0);
     _size = glm::vec2(50.f, 50.f);
     _color = glm::vec4(0);
+
+    translation = glm::vec3(20,0,0);
 }
 
 Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
     _pos(pos), _size(s), _color(_col)
 {
+    translation = glm::vec3(-20,0,0);
 }
 
-Particle::Particle(std::string t, const SSS::TR::Format& fmt, 
-    glm::vec3 pos, glm::vec2 s) :
-    _pos(pos), _size(s), _color(glm::vec4(0))
-{
-    // Create text area & gl texture
-    auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    area.setFormat(fmt);
-    area.parseString(t);
-
-    _sss_texture = SSS::GL::Texture::create(area);
-}
 
 bool Particle::check_collision(glm::vec3 const& c_pos)
 {
@@ -66,6 +58,7 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
     _color = hex_to_rgb(hex);
     _id = hex;
 
+
     create_box();
 }
 
@@ -88,28 +81,42 @@ void Box::set_col(std::string hex)
 
 void Box::create_box()
 {
+    _size = glm::vec2(_size.x,0);
+    
+    //prt.emplace_back(new Particle(glm::vec3(0, 0, 0), glm::vec2(250, 250), glm::vec4(0.98, 0.8, 0.1, 1)));
+
     //Brightning the color
     glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
 
     //Create the model
     //Background
-    model.emplace_back(_pos, _size, glm::vec4(_color));
+    //model.emplace_back(_pos, _size, glm::vec4(_color));
+    // reverse order, background last.
+    // First ID text and background
+    text_frame("identifiant", *this, this->_color);
+    // second text
+    text_frame("texte", *this);
+    // comments
+    text_frame("commentaire", *this);
+    // tags
+    text_frame("tags", *this);
+    // background
+    model.emplace_back(glm::vec3(0), _size, _color + factor).translation = this->_pos;
     //ID Background
-    model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
+    //model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
     
-    SSS::TR::Format fmt;
-    fmt.charsize = (int)_size.y / 6;
-    fmt.has_outline = true;
-    fmt.outline_size = 2;
+    //SSS::TR::Format fmt;
+    //fmt.charsize = (int)_size.y / 6;
+    //fmt.has_outline = true;
+    //fmt.outline_size = 2;
 
-    text_model.emplace_back(_id, fmt, _pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size * glm::vec2(1.f, 0.3f));
-    text_model.emplace_back("bsr", fmt, _pos + glm::vec3(0.f, -_size.y/3.f, 2.f * epsilon), _size * glm::vec2(1.f, 1.f - 0.3f));
-
+    //prt.emplace_back(ptr_p);
+    
     //Tags
     if (tags.size() > 0) {
         model.reserve(tags.size() * 2);
         for (size_t i = 0; i < tags.size(); ++i) {
-            model.insert(model.end(), tags_list[tags[i]].model.begin(), tags_list[tags[i]].model.end());
+            model.insert(model.end(), tags_list[tags[i]]._model.begin(), tags_list[tags[i]]._model.end());
         }
     }
 }
@@ -143,12 +150,20 @@ void Box::update_pos(glm::vec3 delta)
 void Box::update()
 {
     for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
-    }
-    for (size_t i = 0; i < text_model.size(); i++) {
-        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
+        model[i].translation = _pos;
     }
 }
+
+#define PARTICLE_VERTICES       0
+#define PARTICLE_SIZE           1
+#define PARTICLE_COLOR          2
+#define PARTICLE_POSITION       3
+#define PARTICLE_UV             4
+#define ID_TEXTURE              5
+//Transformations
+#define PARTICLE_TRANSLATE      6
+#define PARTICLE_SCALE          7
+#define PARTICLE_ROTATE         8
 
 
 BoxRenderer::BoxRenderer()
@@ -167,11 +182,12 @@ BoxRenderer::BoxRenderer()
             1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
         };
         billboard_vbo.edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+        glEnableVertexAttribArray(PARTICLE_VERTICES);
+        glVertexAttribPointer(PARTICLE_VERTICES, 3, GL_FLOAT, GL_FALSE,
             sizeof(float) * 5, (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE,
+        
+        glEnableVertexAttribArray(PARTICLE_UV);
+        glVertexAttribPointer(PARTICLE_UV, 2, GL_FLOAT, GL_FALSE,
             sizeof(float) * 5, (void*)(sizeof(float) * 3));
 
         constexpr GLuint indices[] = {
@@ -186,31 +202,50 @@ BoxRenderer::BoxRenderer()
         particles_vbo.bind();
 
         // Size (width / height)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+        glEnableVertexAttribArray(PARTICLE_SIZE);
+        glVertexAttribPointer(PARTICLE_SIZE, 2, GL_FLOAT, GL_FALSE,
             sizeof(Particle), (void*)(sizeof(glm::vec3)));
-        glVertexAttribDivisor(1, 1);
+        glVertexAttribDivisor(PARTICLE_SIZE, 1);
 
         // Color
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
+        glEnableVertexAttribArray(PARTICLE_COLOR);
+        glVertexAttribPointer(PARTICLE_COLOR, 4, GL_FLOAT, GL_FALSE,
             sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
         );
-        glVertexAttribDivisor(2, 1);
+        glVertexAttribDivisor(PARTICLE_COLOR, 1);
 
         // Position
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+        glEnableVertexAttribArray(PARTICLE_POSITION);
+        glVertexAttribPointer(PARTICLE_POSITION, 3, GL_FLOAT, GL_FALSE,
             sizeof(Particle), (void*)0);
-        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(PARTICLE_POSITION, 1);
 
         // Texture unit
-        glEnableVertexAttribArray(5);
-        glVertexAttribIPointer(5, 1, GL_UNSIGNED_INT,
+        glEnableVertexAttribArray(ID_TEXTURE);
+        glVertexAttribIPointer(ID_TEXTURE, 1, GL_UNSIGNED_INT,
             sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
-        glVertexAttribDivisor(5, 1);
-    }
+        glVertexAttribDivisor(ID_TEXTURE, 1);
+        
+        //TODO
+        // Transformations
+        //// Translation
+        glEnableVertexAttribArray(PARTICLE_TRANSLATE);
+        glVertexAttribPointer(PARTICLE_TRANSLATE, 3, GL_FLOAT, GL_FALSE,
+            sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4) + sizeof(GLuint)));
+        glVertexAttribDivisor(PARTICLE_TRANSLATE, 1);
 
+        //// Rotate
+        //glEnableVertexAttribArray(ID_TEXTURE);
+        //glVertexAttribIPointer(ID_TEXTURE, 1, GL_FLOAT,
+        //    sizeof(Particle), (void*)(2 * sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)+ sizeof(GL_UNSIGNED_INT) + sizeof(GL_FLOAT)));
+        //glVertexAttribDivisor(ID_TEXTURE, 1);
+
+        //// Scale
+        //glEnableVertexAttribArray(PARTICLE_SCALE);
+        //glVertexAttribIPointer(PARTICLE_SCALE, 1, GL_FLOAT,
+        //    sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
+        //glVertexAttribDivisor(PARTICLE_SCALE, 1);
+    }
     vao.unbind();
 }
 
@@ -303,6 +338,7 @@ void BoxRenderer::render()
 
 Tags::Tags()
 {
+    _weight = 1;
 }
 
 Tags::Tags(std::string _name, std::string hex, uint32_t weight)
@@ -312,6 +348,7 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
     //Center the box around the cursor
     _pos = { 0.0f, 0.0f, 0.0f };
     _color = hex_to_rgb(hex);
+    _weight = weight;
 
 
     // Create text area & gl texture
@@ -326,17 +363,46 @@ Tags::Tags(std::string _name, std::string hex, uint32_t weight)
     area.parseString(_name);
 
     //Create the model
-    model.emplace_back(_pos, _size, glm::vec4(_color));
-    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
+    _model.emplace_back(_pos, _size, glm::vec4(_color));
+    _model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
         ._sss_texture = SSS::GL::Texture::create(area);
 }
 
 Tags::~Tags()
 {
-    model.clear();
+    _model.clear();
 }
 
-Text_particle::Text_particle(glm::vec3 _pos, glm::vec2 _s, const std::string text, const SSS::TR::Format& fmt)
+void text_frame(std::string s, Box& b, glm::vec4 c)
 {
+    int char_size = 19;
+    glm::vec2 size{ b._size.x, char_size + 20 };
+    glm::vec3 pos = glm::vec3(b.curs_pos, BACKGROUND_COLOR_LAYER);
 
+    // Create text area & gl texture
+    auto& area = SSS::TR::Area::create((int)b._size.x +20, char_size+20);
+    auto fmt = area.getFormat();
+    fmt.charsize = char_size;
+    fmt.text_color = 0xffffff;
+    area.setFormat(fmt);
+    area.parseString(s);
+    
+    
+    //Create the model
+    Particle p;
+    p._pos = pos;
+    p._size = size;
+    p.translation = b._pos;
+
+    if (c.a <= (0 + epsilon)) {
+        p._color = c;
+        b.model.emplace_back(p);
+    }
+
+    p._pos.z = TXT_LAYER;
+    b.model.emplace_back(p)
+        ._sss_texture = SSS::GL::Texture::create(area);
+
+    b._size += glm::vec2{0, size.y};
+    b.curs_pos -= glm::vec2{0, size.y};
 }

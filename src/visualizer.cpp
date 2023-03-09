@@ -12,6 +12,7 @@ static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
     return Z;
 }
 
+
 static std::array<float, 3> CubicRoots(float a, float b, float c, float d)
 {
 
@@ -594,9 +595,19 @@ void Visualizer::frustrum_test()
     //    //}
     //}
 
+    
+
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
         Box::box_batch.insert(Box::box_batch.end(), it->second.text_model.begin(), it->second.text_model.end());
+
+        //for (Particle* p : it->second.prt) {
+        //    Box::box_batch.insert(Box::box_batch.end(), *p);
+        //}
+        //for (std::shared_ptr<Particle> p : it->second.prt) {
+        //    Box::box_batch.insert(Box::box_batch.end(), *p.get());
+        //}
+
 
 
         //if (check_frustrum_render(boxes[i])) {

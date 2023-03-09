@@ -5,18 +5,36 @@
 
 #define epsilon 1.0f / static_cast<float>(RAND_MAX * 100.0f)
 
+#define BACKGROUND_LAYER		0
+#define BACKGROUND_COLOR_LAYER	epsilon
+#define INFO_TEX_LAYER			2*epsilon
+#define UNDER_TXT_LAYER			3*epsilon
+#define TXT_LAYER				4*epsilon
+
+
+struct GUI_Layout {
+	int32_t _ID;
+
+	SSS::TR::Format _fmt;
+	glm::vec2 span;
+};
+
 struct Particle {
 	Particle();
 	Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 col);
-	Particle(std::string t, const SSS::TR::Format &fmt, glm::vec3 pos, glm::vec2 s);
 	// ---------- Below data is passed to OpenGL VBO
 	glm::vec3 _pos;
 	glm::vec2 _size;
 	glm::vec4 _color;
 	GLuint _glsl_tex_unit{ UINT32_MAX };
+	// ---------- Transformations
+	// float angle;
+	glm::vec3 translation;
+	// float scale;
+
 	// ---------- Below data is purely internal and not passed to OpenGL
 	SSS::GL::Texture::Shared _sss_texture;
-
+	
 	//Return the coordinates of the center of the box
 	glm::vec3 center();
 	//Check for a collision box/point
@@ -29,9 +47,9 @@ struct Tags : public Particle {
 	Tags();
 	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
 	~Tags();
-	std::string name;
-	std::vector<Particle> model;
-	uint32_t weight;
+	std::string _name;
+	std::vector<Particle> _model;
+	uint32_t _weight;
 };
 
 
@@ -52,6 +70,9 @@ public:
 	bool _render = true;
 	bool _hovered = false;
 	bool _clicked = false;
+
+	bool _show_comment = false;
+	bool _show_tags = false;
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
 	//Box rendering
@@ -60,6 +81,12 @@ public:
 	void create_box();
 	//Update the positions of all the subboxes 
 	SSS::GL::Texture::Shared check_text_selection(glm::vec3 const& c_pos);
+
+	//transformation
+	//translation
+	//rotation
+	//... etc
+
 
 	// DATA
 	Text_data _td;   
@@ -74,7 +101,14 @@ public:
 	
 	static std::vector<Particle> box_batch;
 	static std::map<uint16_t, Tags> tags_list;
+
+	// DEFAULT VALUES
+	static glm::vec2 minsize;
+	glm::vec2 curs_pos = glm::vec2(0,0);
+
 };
+
+void text_frame(std::string s, Box& b, glm::vec4 c = glm::vec4{ 0,0,0,0 });
 
 class Selection_square : Particle {
 public:
@@ -84,16 +118,6 @@ public:
 
 	static std::vector<Particle> box_batch;
 };
-
-
-class Text_particle : Particle {
-public:
-	Text_particle(glm::vec3 _pos, glm::vec2 _s, const std::string text, const SSS::TR::Format& fmt);
-	//Box rendering
-	Particle model;
-
-};
-
 
 
 class BoxRenderer : public SSS::GL::Renderer<BoxRenderer> {
