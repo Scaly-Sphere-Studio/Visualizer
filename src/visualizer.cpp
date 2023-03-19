@@ -404,7 +404,7 @@ void Visualizer::setup()
 
 void Visualizer::input()
 {
-    SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
+    auto const& inputs = window->getKeyInputs();
     //INPUT CAMERA
     constexpr float speed = 10.0f;
     if (inputs[GLFW_KEY_DOWN]) {
@@ -713,7 +713,7 @@ void Visualizer::connect_drag_line()
 
 void Visualizer::multi_select()
 {
-    SSS::GL::Window::KeyInputs const& inputs = window->getKeyInputs();
+    auto const& inputs = window->getKeyInputs();
 
     glm::vec3 new_pos = cursor_map_coordinates();
     //MAKE THE SELECTION PARTICLE IN FRONT
