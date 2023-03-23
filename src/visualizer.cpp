@@ -142,6 +142,14 @@ void Visualizer::run()
     //load
     load();
 
+    //  Setup Dear ImGui window
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::GetIO().IniFilename = nullptr;
+
+    //  Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window->getGLFWwindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
     ////  Setup Dear ImGui window
     //IMGUI_CHECKVERSION();
     //ImGui::CreateContext();
@@ -168,7 +176,6 @@ void Visualizer::run()
         SSS::GL::pollEverything();
         glfwGetCursorPos(window->getGLFWwindow(), &c_x, &c_y);
         input();
-        
         
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -204,8 +211,8 @@ void Visualizer::run()
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
-        // Draw with Renderers
-        window->drawObjects();
+        menu_bar();
+
         window->printFrame();
         Box::box_batch.clear();
     }
@@ -878,6 +885,52 @@ void Visualizer::load()
 {
     LOG_MSG("LOADED");
     parse_info_data_project_from_json("data.json");
+}
+
+void Visualizer::menu_bar()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGuiWindowFlags window_flags = 0;
+    window_flags |= ImGuiWindowFlags_MenuBar;
+    window_flags |= ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoResize;
+    window_flags |= ImGuiWindowFlags_NoTitleBar;
+    window_flags |= ImGuiWindowFlags_NoDecoration;
+    window_flags |= ImGuiWindowFlags_NoBackground;
+
+
+    ImGui::Begin("MENUBAR", NULL, window_flags);
+    ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+    ImGui::SetWindowSize(ImVec2(_info._w, 0), ImGuiCond_Always);
+
+    ImGui::PushItemWidth(ImGui::GetFontSize());
+
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("Menu"))
+        {
+            //SAVE CURRENT PROGRESSION
+            if (ImGui::MenuItem("Save"))
+            {
+                SSS::log_msg("FILE SAVED");
+                save();
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+
+    // Draw with Renderers
+    window->drawObjects();
+
+    // Render dear imgui into screen
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void to_json(nlohmann::json& j, const VISUALISER_INFO& t)
