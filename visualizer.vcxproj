@@ -33,6 +33,8 @@
     <ClInclude Include="inc\backend.hpp" />
     <ClInclude Include="inc\backend_json.h" />
     <ClInclude Include="inc\data.hpp" />
+    <ClInclude Include="inc\imgui_impl_glfw.h" />
+    <ClInclude Include="inc\imgui_impl_opengl3.h" />
     <ClInclude Include="inc\rng.h" />
     <ClInclude Include="inc\Text_data.h" />
     <ClInclude Include="inc\_includes.hpp" />

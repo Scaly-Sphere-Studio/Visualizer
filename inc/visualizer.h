@@ -51,6 +51,8 @@ private:
 	void save();
 	void load();
 
+	//GUI
+	void menu_bar();
 
 	/* [BOX METHODS] */
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
