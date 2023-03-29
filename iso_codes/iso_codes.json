@@ -1,0 +1,738 @@
+[
+    {
+        "CODE": "abk",
+        "FULLNAME": "аҧсуа бызшәа, аҧсшәа"
+    },
+    {
+        "CODE": "aar",
+        "FULLNAME": "Afaraf"
+    },
+    {
+        "CODE": "afr",
+        "FULLNAME": "Afrikaans"
+    },
+    {
+        "CODE": "aka",
+        "FULLNAME": "Akan"
+    },
+    {
+        "CODE": "sqi",
+        "FULLNAME": "Shqip"
+    },
+    {
+        "CODE": "amh",
+        "FULLNAME": "አማርኛ"
+    },
+    {
+        "CODE": "ara",
+        "FULLNAME": "العربية"
+    },
+    {
+        "CODE": "arg",
+        "FULLNAME": "aragonés"
+    },
+    {
+        "CODE": "hye",
+        "FULLNAME": "Հայերեն"
+    },
+    {
+        "CODE": "asm",
+        "FULLNAME": "অসমীয়া"
+    },
+    {
+        "CODE": "ava",
+        "FULLNAME": "авар мацӀ, магӀарул мацӀ"
+    },
+    {
+        "CODE": "ave",
+        "FULLNAME": "avesta"
+    },
+    {
+        "CODE": "aym",
+        "FULLNAME": "aymar aru"
+    },
+    {
+        "CODE": "aze",
+        "FULLNAME": "azərbaycan dili, تۆرکجه"
+    },
+    {
+        "CODE": "bam",
+        "FULLNAME": "bamanankan"
+    },
+    {
+        "CODE": "bak",
+        "FULLNAME": "башҡорт теле"
+    },
+    {
+        "CODE": "eus",
+        "FULLNAME": "euskara, euskera"
+    },
+    {
+        "CODE": "bel",
+        "FULLNAME": "беларуская мова"
+    },
+    {
+        "CODE": "ben",
+        "FULLNAME": "বাংলা"
+    },
+    {
+        "CODE": "bih",
+        "FULLNAME": "भोजपुरी"
+    },
+    {
+        "CODE": "bis",
+        "FULLNAME": "Bislama"
+    },
+    {
+        "CODE": "bos",
+        "FULLNAME": "bosanski jezik"
+    },
+    {
+        "CODE": "bre",
+        "FULLNAME": "Brezhoneg"
+    },
+    {
+        "CODE": "bul",
+        "FULLNAME": "български език"
+    },
+    {
+        "CODE": "mya",
+        "FULLNAME": "ဗမာစာ"
+    },
+    {
+        "CODE": "cat",
+        "FULLNAME": "català, valencià"
+    },
+    {
+        "CODE": "cha",
+        "FULLNAME": "Chamoru"
+    },
+    {
+        "CODE": "che",
+        "FULLNAME": "нохчийн мотт"
+    },
+    {
+        "CODE": "nya",
+        "FULLNAME": "chiCheŵa, chinyanja"
+    },
+    {
+        "CODE": "zho",
+        "FULLNAME": "中文 (Zhōngwén), 汉语, 漢語"
+    },
+    {
+        "CODE": "chv",
+        "FULLNAME": "чӑваш чӗлхи"
+    },
+    {
+        "CODE": "cor",
+        "FULLNAME": "Kernewek"
+    },
+    {
+        "CODE": "cos",
+        "FULLNAME": "corsu, lingua corsa"
+    },
+    {
+        "CODE": "cre",
+        "FULLNAME": "ᓀᐦᐃᔭᐍᐏᐣ"
+    },
+    {
+        "CODE": "hrv",
+        "FULLNAME": "hrvatski jezik"
+    },
+    {
+        "CODE": "ces",
+        "FULLNAME": "čeština, český jazyk"
+    },
+    {
+        "CODE": "dan",
+        "FULLNAME": "dansk"
+    },
+    {
+        "CODE": "div",
+        "FULLNAME": "ދިވެހި"
+    },
+    {
+        "CODE": "nld",
+        "FULLNAME": "Nederlands, Vlaams"
+    },
+    {
+        "CODE": "dzo",
+        "FULLNAME": "རྫོང་ཁ"
+    },
+    {
+        "CODE": "eng",
+        "FULLNAME": "English"
+    },
+    {
+        "CODE": "epo",
+        "FULLNAME": "Esperanto"
+    },
+    {
+        "CODE": "est",
+        "FULLNAME": "eesti, eesti keel"
+    },
+    {
+        "CODE": "ewe",
+        "FULLNAME": "Eʋegbe"
+    },
+    {
+        "CODE": "fao",
+        "FULLNAME": "føroyskt"
+    },
+    {
+        "CODE": "fij",
+        "FULLNAME": "vosa Vakaviti"
+    },
+    {
+        "CODE": "fin",
+        "FULLNAME": "suomi, suomen kieli"
+    },
+    {
+        "CODE": "fra",
+        "FULLNAME": "Français"
+    },
+    {
+        "CODE": "ful",
+        "FULLNAME": "Fulfulde, Pulaar, Pular"
+    },
+    {
+        "CODE": "glg",
+        "FULLNAME": "Galego"
+    },
+    {
+        "CODE": "kat",
+        "FULLNAME": "ქართული"
+    },
+    {
+        "CODE": "deu",
+        "FULLNAME": "Deutsch"
+    },
+    {
+        "CODE": "ell",
+        "FULLNAME": "ελληνικά"
+    },
+    {
+        "CODE": "grn",
+        "FULLNAME": "Avañe'ẽ"
+    },
+    {
+        "CODE": "guj",
+        "FULLNAME": "ગુજરાતી"
+    },
+    {
+        "CODE": "hat",
+        "FULLNAME": "Kreyòl ayisyen"
+    },
+    {
+        "CODE": "hau",
+        "FULLNAME": "(Hausa) هَوُسَ"
+    },
+    {
+        "CODE": "heb",
+        "FULLNAME": "עברית"
+    },
+    {
+        "CODE": "her",
+        "FULLNAME": "Otjiherero"
+    },
+    {
+        "CODE": "hin",
+        "FULLNAME": "हिन्दी, हिंदी"
+    },
+    {
+        "CODE": "hmo",
+        "FULLNAME": "Hiri Motu"
+    },
+    {
+        "CODE": "hun",
+        "FULLNAME": "magyar"
+    },
+    {
+        "CODE": "ina",
+        "FULLNAME": "Interlingua"
+    },
+    {
+        "CODE": "ind",
+        "FULLNAME": "Bahasa Indonesia"
+    },
+    {
+        "CODE": "ile",
+        "FULLNAME": "(originally:) Occidental, (after WWII:) Interlingue"
+    },
+    {
+        "CODE": "gle",
+        "FULLNAME": "Gaeilge"
+    },
+    {
+        "CODE": "ibo",
+        "FULLNAME": "Asụsụ Igbo"
+    },
+    {
+        "CODE": "ipk",
+        "FULLNAME": "Iñupiaq, Iñupiatun"
+    },
+    {
+        "CODE": "ido",
+        "FULLNAME": "Ido"
+    },
+    {
+        "CODE": "isl",
+        "FULLNAME": "Íslenska"
+    },
+    {
+        "CODE": "ita",
+        "FULLNAME": "Italiano"
+    },
+    {
+        "CODE": "iku",
+        "FULLNAME": "ᐃᓄᒃᑎᑐᑦ"
+    },
+    {
+        "CODE": "jpn",
+        "FULLNAME": "日本語 (にほんご)"
+    },
+    {
+        "CODE": "jav",
+        "FULLNAME": "ꦧꦱꦗꦮ, Basa Jawa"
+    },
+    {
+        "CODE": "kal",
+        "FULLNAME": "kalaallisut, kalaallit oqaasii"
+    },
+    {
+        "CODE": "kan",
+        "FULLNAME": "ಕನ್ನಡ"
+    },
+    {
+        "CODE": "kau",
+        "FULLNAME": "Kanuri"
+    },
+    {
+        "CODE": "kas",
+        "FULLNAME": "कश्मीरी, كشميري‎"
+    },
+    {
+        "CODE": "kaz",
+        "FULLNAME": "қазақ тілі"
+    },
+    {
+        "CODE": "khm",
+        "FULLNAME": "ខ្មែរ, ខេមរភាសា, ភាសាខ្មែរ"
+    },
+    {
+        "CODE": "kik",
+        "FULLNAME": "Gĩkũyũ"
+    },
+    {
+        "CODE": "kin",
+        "FULLNAME": "Ikinyarwanda"
+    },
+    {
+        "CODE": "kir",
+        "FULLNAME": "Кыргызча, Кыргыз тили"
+    },
+    {
+        "CODE": "kom",
+        "FULLNAME": "коми кыв"
+    },
+    {
+        "CODE": "kon",
+        "FULLNAME": "Kikongo"
+    },
+    {
+        "CODE": "kor",
+        "FULLNAME": "한국어"
+    },
+    {
+        "CODE": "kur",
+        "FULLNAME": "Kurdî, کوردی‎"
+    },
+    {
+        "CODE": "kua",
+        "FULLNAME": "Kuanyama"
+    },
+    {
+        "CODE": "lat",
+        "FULLNAME": "latine, lingua latina"
+    },
+    {
+        "CODE": "ltz",
+        "FULLNAME": "Lëtzebuergesch"
+    },
+    {
+        "CODE": "lug",
+        "FULLNAME": "Luganda"
+    },
+    {
+        "CODE": "lim",
+        "FULLNAME": "Limburgs"
+    },
+    {
+        "CODE": "lin",
+        "FULLNAME": "Lingála"
+    },
+    {
+        "CODE": "lao",
+        "FULLNAME": "ພາສາລາວ"
+    },
+    {
+        "CODE": "lit",
+        "FULLNAME": "lietuvių kalba"
+    },
+    {
+        "CODE": "lub",
+        "FULLNAME": "Kiluba"
+    },
+    {
+        "CODE": "lav",
+        "FULLNAME": "latviešu valoda"
+    },
+    {
+        "CODE": "glv",
+        "FULLNAME": "Gaelg, Gailck"
+    },
+    {
+        "CODE": "mkd",
+        "FULLNAME": "македонски јазик"
+    },
+    {
+        "CODE": "mlg",
+        "FULLNAME": "fiteny malagasy"
+    },
+    {
+        "CODE": "msa",
+        "FULLNAME": "Bahasa Melayu, بهاس ملايو‎"
+    },
+    {
+        "CODE": "mal",
+        "FULLNAME": "മലയാളം"
+    },
+    {
+        "CODE": "mlt",
+        "FULLNAME": "Malti"
+    },
+    {
+        "CODE": "mri",
+        "FULLNAME": "te reo Māori"
+    },
+    {
+        "CODE": "mar",
+        "FULLNAME": "मराठी"
+    },
+    {
+        "CODE": "mah",
+        "FULLNAME": "Kajin M̧ajeļ"
+    },
+    {
+        "CODE": "mon",
+        "FULLNAME": "Монгол хэл"
+    },
+    {
+        "CODE": "nau",
+        "FULLNAME": "Dorerin Naoero"
+    },
+    {
+        "CODE": "nav",
+        "FULLNAME": "Diné bizaad"
+    },
+    {
+        "CODE": "nde",
+        "FULLNAME": "isiNdebele"
+    },
+    {
+        "CODE": "nep",
+        "FULLNAME": "नेपाली"
+    },
+    {
+        "CODE": "ndo",
+        "FULLNAME": "Owambo"
+    },
+    {
+        "CODE": "nob",
+        "FULLNAME": "Norsk Bokmål"
+    },
+    {
+        "CODE": "nno",
+        "FULLNAME": "Norsk Nynorsk"
+    },
+    {
+        "CODE": "nor",
+        "FULLNAME": "Norsk"
+    },
+    {
+        "CODE": "iii",
+        "FULLNAME": "ꆈꌠ꒿ Nuosuhxop"
+    },
+    {
+        "CODE": "nbl",
+        "FULLNAME": "isiNdebele"
+    },
+    {
+        "CODE": "oci",
+        "FULLNAME": "occitan, lenga d'òc"
+    },
+    {
+        "CODE": "oji",
+        "FULLNAME": "ᐊᓂᔑᓈᐯᒧᐎᓐ"
+    },
+    {
+        "CODE": "chu",
+        "FULLNAME": "ѩзыкъ словѣньскъ"
+    },
+    {
+        "CODE": "orm",
+        "FULLNAME": "Afaan Oromoo"
+    },
+    {
+        "CODE": "ori",
+        "FULLNAME": "ଓଡ଼ିଆ"
+    },
+    {
+        "CODE": "oss",
+        "FULLNAME": "ирон æвзаг"
+    },
+    {
+        "CODE": "pan",
+        "FULLNAME": "ਪੰਜਾਬੀ, پنجابی‎"
+    },
+    {
+        "CODE": "pli",
+        "FULLNAME": "पालि, पाळि"
+    },
+    {
+        "CODE": "fas",
+        "FULLNAME": "فارسی"
+    },
+    {
+        "CODE": "pol",
+        "FULLNAME": "język polski, polszczyzna"
+    },
+    {
+        "CODE": "pus",
+        "FULLNAME": "پښتو"
+    },
+    {
+        "CODE": "por",
+        "FULLNAME": "Português"
+    },
+    {
+        "CODE": "que",
+        "FULLNAME": "Runa Simi, Kichwa"
+    },
+    {
+        "CODE": "roh",
+        "FULLNAME": "Rumantsch Grischun"
+    },
+    {
+        "CODE": "run",
+        "FULLNAME": "Ikirundi"
+    },
+    {
+        "CODE": "ron",
+        "FULLNAME": "Română, Moldovenească"
+    },
+    {
+        "CODE": "rus",
+        "FULLNAME": "русский"
+    },
+    {
+        "CODE": "san",
+        "FULLNAME": "संस्कृतम्, 𑌸𑌂𑌸𑍍𑌕𑍃𑌤𑌮𑍍"
+    },
+    {
+        "CODE": "srd",
+        "FULLNAME": "sardu"
+    },
+    {
+        "CODE": "snd",
+        "FULLNAME": "सिन्धी, سنڌي، سندھی‎"
+    },
+    {
+        "CODE": "sme",
+        "FULLNAME": "Davvisámegiella"
+    },
+    {
+        "CODE": "smo",
+        "FULLNAME": "gagana fa'a Samoa"
+    },
+    {
+        "CODE": "sag",
+        "FULLNAME": "yângâ tî sängö"
+    },
+    {
+        "CODE": "srp",
+        "FULLNAME": "српски језик"
+    },
+    {
+        "CODE": "gla",
+        "FULLNAME": "Gàidhlig"
+    },
+    {
+        "CODE": "sna",
+        "FULLNAME": "chiShona"
+    },
+    {
+        "CODE": "sin",
+        "FULLNAME": "සිංහල"
+    },
+    {
+        "CODE": "slk",
+        "FULLNAME": "Slovenčina, Slovenský jazyk"
+    },
+    {
+        "CODE": "slv",
+        "FULLNAME": "Slovenski jezik, Slovenščina"
+    },
+    {
+        "CODE": "som",
+        "FULLNAME": "Soomaaliga, af Soomaali"
+    },
+    {
+        "CODE": "sot",
+        "FULLNAME": "Sesotho"
+    },
+    {
+        "CODE": "spa",
+        "FULLNAME": "Español"
+    },
+    {
+        "CODE": "sun",
+        "FULLNAME": "Basa Sunda"
+    },
+    {
+        "CODE": "swa",
+        "FULLNAME": "Kiswahili"
+    },
+    {
+        "CODE": "ssw",
+        "FULLNAME": "SiSwati"
+    },
+    {
+        "CODE": "swe",
+        "FULLNAME": "Svenska"
+    },
+    {
+        "CODE": "tam",
+        "FULLNAME": "தமிழ்"
+    },
+    {
+        "CODE": "tel",
+        "FULLNAME": "తెలుగు"
+    },
+    {
+        "CODE": "tgk",
+        "FULLNAME": "тоҷикӣ, toçikī, تاجیکی‎"
+    },
+    {
+        "CODE": "tha",
+        "FULLNAME": "ไทย"
+    },
+    {
+        "CODE": "tir",
+        "FULLNAME": "ትግርኛ"
+    },
+    {
+        "CODE": "bod",
+        "FULLNAME": "བོད་ཡིག"
+    },
+    {
+        "CODE": "tuk",
+        "FULLNAME": "Türkmen, Түркмен"
+    },
+    {
+        "CODE": "tgl",
+        "FULLNAME": "Wikang Tagalog"
+    },
+    {
+        "CODE": "tsn",
+        "FULLNAME": "Setswana"
+    },
+    {
+        "CODE": "ton",
+        "FULLNAME": "Faka Tonga"
+    },
+    {
+        "CODE": "tur",
+        "FULLNAME": "Türkçe"
+    },
+    {
+        "CODE": "tso",
+        "FULLNAME": "Xitsonga"
+    },
+    {
+        "CODE": "tat",
+        "FULLNAME": "татар теле, tatar tele"
+    },
+    {
+        "CODE": "twi",
+        "FULLNAME": "Twi"
+    },
+    {
+        "CODE": "tah",
+        "FULLNAME": "Reo Tahiti"
+    },
+    {
+        "CODE": "uig",
+        "FULLNAME": "ئۇيغۇرچە‎, Uyghurche"
+    },
+    {
+        "CODE": "ukr",
+        "FULLNAME": "Українська"
+    },
+    {
+        "CODE": "urd",
+        "FULLNAME": "اردو"
+    },
+    {
+        "CODE": "uzb",
+        "FULLNAME": "Oʻzbek, Ўзбек, أۇزبېك‎"
+    },
+    {
+        "CODE": "ven",
+        "FULLNAME": "Tshivenḓa"
+    },
+    {
+        "CODE": "vie",
+        "FULLNAME": "Tiếng Việt"
+    },
+    {
+        "CODE": "vol",
+        "FULLNAME": "Volapük"
+    },
+    {
+        "CODE": "wln",
+        "FULLNAME": "Walon"
+    },
+    {
+        "CODE": "cym",
+        "FULLNAME": "Cymraeg"
+    },
+    {
+        "CODE": "wol",
+        "FULLNAME": "Wollof"
+    },
+    {
+        "CODE": "fry",
+        "FULLNAME": "Frysk"
+    },
+    {
+        "CODE": "xho",
+        "FULLNAME": "isiXhosa"
+    },
+    {
+        "CODE": "yid",
+        "FULLNAME": "ייִדיש"
+    },
+    {
+        "CODE": "yor",
+        "FULLNAME": "Yorùbá"
+    },
+    {
+        "CODE": "zha",
+        "FULLNAME": "Saɯ cueŋƅ, Saw cuengh"
+    },
+    {
+        "CODE": "zul",
+        "FULLNAME": "isiZulu"
+    }
+]
