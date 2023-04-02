@@ -118,6 +118,16 @@ Visualizer::Visualizer()
     //TODO Check if the data exists
     parse_info_data_visualizer_from_json("save.json");
     setup();
+
+    // FIRST SETUP OPERATION
+    // Fill the languages ISO code map 
+    std::string iso_file = "iso_codes/iso.json";
+    if (check_folder_exists(iso_file)) {
+        iso_map = retrieve_iso_codes(iso_file);
+        SSS::log_msg("ISO File found");
+    }
+
+    start = std::chrono::steady_clock::now();
 }
 
 Visualizer::Ptr const& Visualizer::get()
@@ -336,7 +346,8 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 
     //MULTISELECTION
     if (mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
-        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f, 1.f, 1.f, 0.3f);
+        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f,1.f,1.f,0.3f);
+        Visualizer::get()->Selection_box.translation = glm::vec3(0.f,0.f,2.5f);
         Visualizer::get()->_otherpos = Visualizer::get()->cursor_map_coordinates();
         Visualizer::get()->_states = V_STATES::MULTI_SELECT;
         return;
@@ -376,10 +387,27 @@ void Visualizer::setup()
     SSS::GL::Window& window = SSS::GL::Window::create(args);
     glfwwindow = window.getGLFWwindow();
 
-    window.setVSYNC(true);
-    window.setCallback(glfwSetWindowSizeCallback, resize_callback);
-    window.setCallback(glfwSetKeyCallback, key_callback);
-    window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
+    GUI_Layout layout;
+    //ID FORMAT
+    layout._fmt.charsize = 13;
+    layout._fmt.text_color = 0x000000;
+    layout._marginh = 4;
+    layout._marginv = 5;
+    Box::layout_map.insert(std::make_pair("ID", layout));
+    //TEXT FORMAT
+    layout._fmt.charsize = 19;
+    layout._fmt.text_color = 0xffffff;
+    layout._marginh = 0;
+    layout._marginv = 10;
+    Box::layout_map.insert(std::make_pair("TEXT", layout));
+
+
+    SSS::GL::Context const context(window);
+
+    window->setVSYNC(true);
+    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window->setCallback(glfwSetKeyCallback, key_callback);
+    window->setCallback(glfwSetMouseButtonCallback, mouse_callback);
 
     camera = SSS::GL::Camera::create();
     camera->setPosition({ 0, 0, 3 });
@@ -399,7 +427,8 @@ void Visualizer::setup()
     // Enable or disable debugger
     debug_renderer->setActivity(true);
 
-    window.setRenderers({ line_renderer, box_renderer, debug_renderer });
+    //window->setRenderers({ line_renderer, box_renderer, debug_renderer });
+    window->setRenderers({ line_renderer, box_renderer });
 }
 
 void Visualizer::input()
@@ -436,7 +465,7 @@ void Visualizer::refresh()
 void Visualizer::link_box(Box& a, Box& b)
 {
 
-    glm::vec3 offset{ 0.f, 400.f, 0.f };
+    glm::vec3 offset{ 0.f, std::abs(a._pos.y - b._pos.y)/2.f, 0.f };
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
     Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
@@ -445,13 +474,19 @@ void Visualizer::link_box(Box& a, Box& b)
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
-
-    auto seg = SSS::GL::Polyline::Bezier(
-        a.center(), a.center() - offset,
-        b.center() + offset, b.center(),
-        Thk_grdt, Col_grdt,
-        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
-    );
+    
+    std::shared_ptr<SSS::GL::Polyline> seg;
+    if (std::abs(a.center().x - b.center().x) < 5.0f) {
+        seg = SSS::GL::Polyline::Segment(a.center(), b.center(), Thk_grdt, Col_grdt);
+    }
+    else {
+        seg = SSS::GL::Polyline::Bezier(
+            a.center(), a.center() - offset,
+            b.center() + offset, b.center(),
+            Thk_grdt, Col_grdt,
+            SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
+        );
+    }
 
     if (arrow_map.count(a._id + b._id)) {
         arrow_map.at(a._id + b._id) = seg;
@@ -485,7 +520,7 @@ void Visualizer::link_box(Box& a)
 
 void Visualizer::link_box_to_cursor(Box& b)
 {
-    glm::vec3 c_pos = cursor_map_coordinates();
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0,0,3);
 
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
@@ -497,8 +532,8 @@ void Visualizer::link_box_to_cursor(Box& b)
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = SSS::GL::Polyline::Bezier(
-        b.center(), b.center() - glm::vec3(0, 800, 0),
-        c_pos + glm::vec3(0, 0, 0), c_pos,
+        b.center()+glm::vec3(0,0,5), b.center() - glm::vec3(0, 400, 0),
+        c_pos, c_pos,
         Thk_grdt, Col_grdt,
         SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
     );
@@ -527,6 +562,12 @@ void Visualizer::push_box(std::string boxID)
     glm::vec3 position = cursor_map_coordinates();
     _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{ 150,75 }, boxID)));
     _proj.box_map.at(boxID)._id = boxID;
+}
+
+void Visualizer::push_box(glm::vec3 pos, const Text_data& td)
+{
+    _proj.box_map.insert(std::make_pair(td.text_ID, Box(pos, glm::vec2{ 150,75 }, rand_color())));
+    _proj.box_map.at(td.text_ID)._id = td.text_ID;
 }
 
 void Visualizer::pop_box(std::string ID)
@@ -584,36 +625,9 @@ glm::vec3 Visualizer::cursor_map_coordinates()
 
 void Visualizer::frustrum_test()
 {
-
-
-    //for (int i = 0; i < boxes._size(); i++) {
-    //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
-    //    debug_box(boxes[i]);
-    //    //if (check_frustrum_render(boxes[i])) {
-    //    //    debug_box(boxes[i]);
-    //    //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
-    //    //}
-    //}
-
     
-
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
         Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
-        Box::box_batch.insert(Box::box_batch.end(), it->second.text_model.begin(), it->second.text_model.end());
-
-        //for (Particle* p : it->second.prt) {
-        //    Box::box_batch.insert(Box::box_batch.end(), *p);
-        //}
-        //for (std::shared_ptr<Particle> p : it->second.prt) {
-        //    Box::box_batch.insert(Box::box_batch.end(), *p.get());
-        //}
-
-
-
-        //if (check_frustrum_render(boxes[i])) {
-        //    debug_box(boxes[i]);
-        //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
-        //}
     }
     Box::box_batch.emplace_back(Selection_box);
 
@@ -727,7 +741,7 @@ void Visualizer::multi_select()
 
     glm::vec3 new_pos = cursor_map_coordinates();
     //MAKE THE SELECTION PARTICLE IN FRONT
-    Selection_box._pos = _otherpos + glm::vec3(0.f, 0.f, 2.5f);
+    Selection_box._pos = _otherpos +  glm::vec3(0.f, 0.f, 0.f);
     Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
 
 
@@ -743,9 +757,9 @@ void Visualizer::multi_select()
     if (_states == V_STATES::MULTI_SELECT && (mod == 0) || (mouse_action == GLFW_RELEASE)) {
         //RESET THE PARTICLE
         Visualizer::get()->Selection_box._color = glm::vec4(0.f);
-        Visualizer::get()->Selection_box._pos = glm::vec3(INT32_MAX);
-        Visualizer::get()->Selection_box._size = glm::vec2(0.f);
-
+        Visualizer::get()->Selection_box._size  = glm::vec2(0.f);
+        Visualizer::get()->Selection_box._pos   = glm::vec3(INT32_MAX);
+    
         //RESET THE MOD, ACTION AND STATE
         mod = INT_MAX;
         mouse_action = INT_MAX;
@@ -875,8 +889,32 @@ void Visualizer::save()
 
 void Visualizer::load()
 {
-    LOG_MSG("LOADED");
+    //LOAD THE PROJECT INFORMATIONS : LANGUAGE, LAST LOADED LANGUAGE...
+    _ti.parse_info_data_from_json("project/bohemian/bohemian.ini");
+    _fl = _ti.fl;
+    //LOAD THE TEXT DATA FROM TRANSLATOR
+    _mt.parse_traduction_data_from_json("project/bohemian/bohemian_eng.json");
+    //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
     parse_info_data_project_from_json("data.json");
+    window->setTitle("VIZUALIZER - " + _proj.project_name);
+
+    //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
+    float i = 0;
+    for (const Text_data& td : _mt.text_data) {
+        if (!_proj.box_map.count(td.text_ID)) {
+            push_box(glm::vec3(i*5.0f,-i*5.0f, i * 10.f * epsilon),td);
+            i += 1.f;
+        }
+
+        _proj.box_map[td.text_ID].set_text_data(td);
+    }
+
+    for (auto pb : _proj.box_map) {
+        pb.second._pos.z = rand_float();
+        pb.second.update();
+    }
+
+    LOG_MSG("LOADED");
 }
 
 void Visualizer::menu_bar()
@@ -913,8 +951,14 @@ void Visualizer::menu_bar()
 
             ImGui::EndMenu();
         }
+
+        language_selector();
+        mode_selector();
+        
         ImGui::EndMenuBar();
     }
+
+    
 
     // Draw with Renderers
     window->drawObjects();
@@ -923,6 +967,17 @@ void Visualizer::menu_bar()
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+
+std::string Visualizer::lang_file_name(std::string& lang)
+{
+    std::string ext = project_path();
+    ext += "/" + _project_name + "_";
+    ext += lang;
+    ext += ".json";
+
+    return ext;
 }
 
 void to_json(nlohmann::json& j, const VISUALISER_INFO& t)
@@ -943,16 +998,95 @@ void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 void to_json(nlohmann::json& j, const PROJECT_DATA& t)
 {
     j = nlohmann::json{
-        {"BOX", t.box_map}
+        {"BOX", t.box_map},
+        {"PROJECT_NAME", t.project_name}
     };
 }
 
 void from_json(const nlohmann::json& j, PROJECT_DATA& t)
 {
     j.at("BOX").get_to(t.box_map);
+    j.at("PROJECT_NAME").get_to(t.project_name);
 }
 
 PROJECT_DATA::~PROJECT_DATA()
 {
     box_map.clear();
+}
+
+
+void Visualizer::language_selector()
+{
+    ImGui::Text("        Mode ");
+    int width = 150;
+    ImGui::SetNextItemWidth(width);
+
+    //initialize to the first item of the iso languages list
+    static std::string item_current_idx = _ti.mother_language;
+    //reviewed option for the first slider
+    const char* combo_preview_value = iso_map[item_current_idx].c_str();
+    static std::string iterator = "";
+
+    if (ImGui::BeginCombo("##MODE SELECTOR", combo_preview_value))
+    {
+        for (auto& m : _ti.trad_languages)
+        {
+            iterator = m.first;
+            const bool is_selected = (item_current_idx == iterator);
+
+            if (ImGui::Selectable(iso_map[m.first].c_str(), is_selected))
+            {
+
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+                //TODO LOAD THE SPECIFIC FILE
+            }
+        }
+
+        ImGui::EndCombo();
+    }    
+}
+
+void Visualizer::mode_selector()
+{
+    ImGui::Text("        Language ");
+    int width = 150;
+    ImGui::SetNextItemWidth(width);
+
+    //initialize to the first item of the iso languages list
+    static std::string item_current_idx = _ti.mother_language;
+    //reviewed option for the first slider
+    const char* combo_preview_value = iso_map[item_current_idx].c_str();
+    static std::string iterator = "";
+
+    if (ImGui::BeginCombo("##first_Language", combo_preview_value))
+    {
+        for (auto& m : _ti.trad_languages)
+        {
+            iterator = m.first;
+            const bool is_selected = (item_current_idx == iterator);
+
+            if (ImGui::Selectable(iso_map[m.first].c_str(), is_selected))
+            {
+
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+                //TODO LOAD THE SPECIFIC FILE
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+}
+
+std::string Visualizer::project_path()
+{
+    std::string file_path = _translation_folder_path;
+    file_path += "/" + _project_name;
+
+    return file_path;
 }

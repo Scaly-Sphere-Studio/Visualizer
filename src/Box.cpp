@@ -2,6 +2,7 @@
 
 std::vector<Particle>Box::box_batch{};
 std::map<uint16_t, Tags>Box::tags_list{};
+std::map<std::string, GUI_Layout> Box::layout_map{};
 glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
 Particle::Particle()
@@ -10,13 +11,13 @@ Particle::Particle()
     _size = glm::vec2(50.f, 50.f);
     _color = glm::vec4(0);
 
-    translation = glm::vec3(20,0,0);
+    translation = glm::vec3(0,0,0);
 }
 
 Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
     _pos(pos), _size(s), _color(_col)
 {
-    translation = glm::vec3(-20,0,0);
+    translation = glm::vec3(0, 0, 0);
 }
 
 
@@ -54,10 +55,9 @@ Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
 {
     _size = s;
     //Center the box around the cursor
-    _pos = pos + glm::vec3{ -_size.x / 2.0f , _size.y / 2.0f, rand_float() };
+    _pos = pos;
     _color = hex_to_rgb(hex);
     _id = hex;
-
 
     create_box();
 }
@@ -67,7 +67,6 @@ Box::~Box()
     link_to.clear();
     link_from.clear();
     model.clear();
-    text_model.clear();
 }
 
 
@@ -77,6 +76,14 @@ void Box::set_selected_col(std::string hex)
 
 void Box::set_col(std::string hex)
 {
+}
+
+void Box::set_text_data(const Text_data& td)
+{
+    _td = td;
+    model.clear();
+    curs_pos = glm::vec2(0, 0);
+    create_box();
 }
 
 void Box::create_box()
@@ -89,17 +96,17 @@ void Box::create_box()
     glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
 
     //Create the model
-    //Background
-    //model.emplace_back(_pos, _size, glm::vec4(_color));
     // reverse order, background last.
     // First ID text and background
-    text_frame("identifiant", *this, this->_color);
+    text_frame(this->_td.text_ID, Box::layout_map["ID"], * this, this->_color);
     // second text
-    text_frame("texte", *this);
+    text_frame(this->_td.text, Box::layout_map["TEXT"], *this);
     // comments
-    text_frame("commentaire", *this);
+    if(!this->_td.comment.empty())  
+        text_frame("commentaire", Box::layout_map["TEXT"], *this);
     // tags
-    text_frame("tags", *this);
+    if(!this->tags.empty())
+        text_frame("tags", Box::layout_map["TEXT"], *this);
     // background
     model.emplace_back(glm::vec3(0), _size, _color + factor).translation = this->_pos;
     //ID Background
@@ -119,38 +126,27 @@ void Box::create_box()
             model.insert(model.end(), tags_list[tags[i]]._model.begin(), tags_list[tags[i]]._model.end());
         }
     }
+
+    this->update();
 }
 
 SSS::GL::Texture::Shared Box::check_text_selection(glm::vec3 const& c_pos)
 {
-    for (Particle p : text_model) {
-        if (p.check_collision(c_pos) && p._sss_texture) {
-            p._sss_texture->getTextArea()->setFocus(true);
-            return p._sss_texture;
-        }
-    }
+    //for (Particle p : text_model) {
+    //    if (p.check_collision(c_pos) && p._sss_texture) {
+    //        p._sss_texture->getTextArea()->setFocus(true);
+    //        return p._sss_texture;
+    //    }
+    //}
 
     return nullptr;
-}
-
-void Box::update_pos(glm::vec3 delta)
-{
-    //Numbers of particles for each box
-    // Background, id background, numbers of tags, comment,  *2 + info particles
-
-    for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
-    }
-    for (size_t i = 0; i < text_model.size(); i++) {
-        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
-    }
-
 }
 
 void Box::update()
 {
     for (size_t i = 0; i < model.size(); i++) {
         model[i].translation = _pos;
+        model[i].translation.z += model[i]._pos.z;
     }
 }
 
@@ -373,20 +369,20 @@ Tags::~Tags()
     _model.clear();
 }
 
-void text_frame(std::string s, Box& b, glm::vec4 c)
+void text_frame(std::string s, const GUI_Layout& layout, Box& b, glm::vec4 c)
 {
-    int char_size = 19;
-    glm::vec2 size{ b._size.x, char_size + 20 };
     glm::vec3 pos = glm::vec3(b.curs_pos, BACKGROUND_COLOR_LAYER);
 
     // Create text area & gl texture
-    auto& area = SSS::TR::Area::create((int)b._size.x +20, char_size+20);
-    auto fmt = area.getFormat();
-    fmt.charsize = char_size;
-    fmt.text_color = 0xffffff;
-    area.setFormat(fmt);
-    area.parseString(s);
-    
+    auto& area = SSS::TR::Area::create(s);
+    //auto fmt = area.getFormat();
+    area.setFormat(layout._fmt);
+    area.setMarginH(layout._marginh);
+    area.setMarginV(layout._marginv);
+    int x, y;
+    area.getDimensions(x, y);
+    glm::vec2 size = glm::vec2{x,y};
+
     
     //Create the model
     Particle p;
@@ -403,6 +399,7 @@ void text_frame(std::string s, Box& b, glm::vec4 c)
     b.model.emplace_back(p)
         ._sss_texture = SSS::GL::Texture::create(area);
 
-    b._size += glm::vec2{0, size.y};
+    b._size.x = std::max(b._size.x, size.x);
+    b._size.y += size.y;
     b.curs_pos -= glm::vec2{0, size.y};
 }
