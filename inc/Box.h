@@ -16,7 +16,7 @@ struct GUI_Layout {
 	int32_t _ID;
 
 	SSS::TR::Format _fmt;
-	glm::vec2 span;
+	int _marginh = 0, _marginv = 0;
 };
 
 struct Particle {
@@ -60,11 +60,11 @@ public:
 	~Box();
 	
 	//Update the position with a delta for dragging the boxes
-	void update_pos(glm::vec3 delta);
 	void update();
 
 	void set_selected_col(std::string hex);
 	void set_col(std::string hex);
+	void set_text_data(const Text_data& td);
 
 	//STATES 
 	bool _render = true;
@@ -93,7 +93,6 @@ public:
 
 	std::string _id;
 	std::vector<Particle> model;
-	std::vector<Particle> text_model;
 
 	std::vector<uint16_t> tags;
 	std::set<std::string> link_to;
@@ -101,6 +100,7 @@ public:
 	
 	static std::vector<Particle> box_batch;
 	static std::map<uint16_t, Tags> tags_list;
+	static std::map<std::string, GUI_Layout> layout_map;
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
@@ -108,7 +108,7 @@ public:
 
 };
 
-void text_frame(std::string s, Box& b, glm::vec4 c = glm::vec4{ 0,0,0,0 });
+void text_frame(std::string s, const GUI_Layout& lyt, Box& b, glm::vec4 c = glm::vec4{ 0,0,0,0 });
 
 class Selection_square : Particle {
 public:
@@ -149,5 +149,5 @@ private:
 
 static bool sort_box(Particle& a, Particle& b) {
 
-	return a._pos.z < b._pos.z;
+	return a.translation.z < b.translation.z;
 }

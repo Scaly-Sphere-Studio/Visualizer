@@ -43,7 +43,7 @@ std::string absolute_path(const std::string &path);
 //Create a new file to hold the traduction
 void create_traduction_file(const std::string& path, const uint16_t language, const Traduction_data& mother);
 void gen_info_traduction_file(const std::string& path);
-
+std::map<std::string, std::string> retrieve_iso_codes(const std::string path);
 void create_files(const std::string name, Traduction_data& data);
 
 std::map<std::string, std::string> retrieve_iso_codes(const std::string path);

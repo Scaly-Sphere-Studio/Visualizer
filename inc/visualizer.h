@@ -21,6 +21,7 @@ struct VISUALISER_INFO {
 struct PROJECT_DATA {
 	~PROJECT_DATA();
 	std::unordered_map<std::string, Box> box_map;
+	std::string project_name;
 };
 
 class Visualizer {
@@ -53,6 +54,10 @@ private:
 
 	//GUI
 	void menu_bar();
+	void language_selector();
+	void mode_selector();
+	std::string project_path();
+	std::string lang_file_name(std::string& lang);
 
 	/* [BOX METHODS] */
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
@@ -65,6 +70,7 @@ private:
 	void pop_link(Box& a, Box& b);
 	//Add a new box at the current cursor position
 	void push_box(std::string boxID);
+	void push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
 	//Translate the screen cursor position from input to the world coordinates
@@ -119,6 +125,27 @@ private:
 
 	//Check if a double click is detected in a selected time interval
 	bool double_click_detection(std::chrono::milliseconds timestamp);
+
+	//BACKEND INFORMATIONS
+	std::map<std::string, std::string> iso_map;
+	std::vector<std::string> _translated;
+	
+	//Selected language for the edit mode
+	std::string _fl;
+	//Informations about current project
+	Trad_info _ti;
+	Traduction_data _mt;
+
+	//File and project management
+	std::string _translation_folder_path = "translation";
+	std::string _project_name = "bohemian";
+	void autosave();
+
+	//Chrono for the autosave
+	std::chrono::steady_clock::time_point start;
+	std::chrono::steady_clock::time_point end;
+
+	//INTERFACE
 };
 
 //JSON CONVERTION
