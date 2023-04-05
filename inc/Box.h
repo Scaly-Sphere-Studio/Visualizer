@@ -13,7 +13,7 @@
 
 
 struct GUI_Layout {
-	int32_t _ID;
+	int32_t _ID = 0;
 
 	SSS::TR::Format _fmt;
 	int _marginh = 0, _marginv = 0;
@@ -108,7 +108,8 @@ public:
 
 };
 
-void text_frame(std::string s, const GUI_Layout& lyt, Box& b, glm::vec4 c = glm::vec4{ 0,0,0,0 });
+void text_frame(std::string s, const GUI_Layout& lyt, Box& b, int flag = 0);
+void background_frame(Box& b);
 
 class Selection_square : Particle {
 public:

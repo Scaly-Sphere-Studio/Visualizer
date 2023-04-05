@@ -23,9 +23,8 @@ glm::vec4 hex_to_rgb(std::string hex);
 std::string rgb_to_hex(glm::vec3 rgb, bool head = 1);
 glm::vec4 hsl_to_rgb(glm::vec3 hsl);
 glm::vec4 rgb_to_hsl(glm::vec3 rgb);
-
+uint32_t rgb_to_int32t(glm::vec4 rgb);
 
 float rand_float();
 std::string rand_color();
-
-
+glm::vec4 rand_pastel_color();

@@ -59,19 +59,17 @@ glm::vec4 hsl_to_rgb(glm::vec3 hsl)
     const float C = hsl.y * (1.f - std::abs(2.f * hsl.z - 1.f));
     const float X = C * (1.f - std::abs(std::fmod(hsl.x / 60.0f, 2.0f) - 1.f));
     const float m = hsl.z - C / 2.0f ;
-    
+
     const unsigned int res = static_cast<int>(std::floor(hsl.x / 60.0f));
 
     switch (res) {
-        case 0: return { C + m, X + m, m, 1.f };
         case 1: return { X + m ,C + m, m, 1.f };
         case 2: return { m, C + m, X + m, 1.f };
         case 3: return { m, X + m, C + m, 1.f };
         case 4: return { X + m, m, C + m, 1.f };
         case 5: return { C + m, m, X + m, 1.f };
+        default: return { C + m, X + m, m, 1.f };
     }
-
-    return { 0.f, 0.f, 0.f, 0.f };
 }
 
 glm::vec4 rgb_to_hsl(glm::vec3 rgb)
@@ -95,6 +93,7 @@ glm::vec4 rgb_to_hsl(glm::vec3 rgb)
 
     if (cmax == rgb.r) {
         h = 60.f * std::fmod(((rgb.g - rgb.b) / delta), 6.f);
+        if (h < 0) { h += 360.f; }
     }
 
     if (cmax == rgb.g) {
@@ -106,6 +105,12 @@ glm::vec4 rgb_to_hsl(glm::vec3 rgb)
     }
 
     return glm::vec4{ h, s, l, 1.0f };
+}
+
+uint32_t rgb_to_int32t(glm::vec4 rgb)
+{
+    rgb *= 255;
+    return SSS::RGB24(std::roundl(rgb.r), std::roundl(rgb.g), std::roundl(rgb.b)).rgb;
 }
 
 std::string rand_string() {
@@ -120,5 +125,12 @@ float rand_float()
 std::string rand_color()
 {
     return rgb_to_hex(glm::vec3(rand_float(), rand_float(), rand_float()));
+}
+
+glm::vec4 rand_pastel_color()
+{
+    return hsl_to_rgb(glm::vec3(360.f * rand_float() , 
+                        0.25f + 0.7f * rand_float(), 
+                        0.85f + 0.1f * rand_float()));
 }
 

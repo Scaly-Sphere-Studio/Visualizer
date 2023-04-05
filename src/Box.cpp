@@ -1,5 +1,8 @@
 #include "Box.h"
 
+#define FLAG_ID                 0
+#define FLAG_TEXT               1
+
 std::vector<Particle>Box::box_batch{};
 std::map<uint16_t, Tags>Box::tags_list{};
 std::map<std::string, GUI_Layout> Box::layout_map{};
@@ -89,8 +92,6 @@ void Box::set_text_data(const Text_data& td)
 void Box::create_box()
 {
     _size = glm::vec2(_size.x,0);
-    
-    //prt.emplace_back(new Particle(glm::vec3(0, 0, 0), glm::vec2(250, 250), glm::vec4(0.98, 0.8, 0.1, 1)));
 
     //Brightning the color
     glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
@@ -98,27 +99,18 @@ void Box::create_box()
     //Create the model
     // reverse order, background last.
     // First ID text and background
-    text_frame(this->_td.text_ID, Box::layout_map["ID"], * this, this->_color);
-    // second text
-    text_frame(this->_td.text, Box::layout_map["TEXT"], *this);
-    // comments
+    text_frame(this->_td.text_ID, Box::layout_map["ID"], * this, FLAG_ID);
+    // Text
+    text_frame(this->_td.text, Box::layout_map["TEXT"], *this, FLAG_TEXT);
+    // Comment text
     if(!this->_td.comment.empty())  
-        text_frame("commentaire", Box::layout_map["TEXT"], *this);
+        text_frame("commentaire", Box::layout_map["TEXT"], *this, FLAG_TEXT);
     // tags
     if(!this->tags.empty())
-        text_frame("tags", Box::layout_map["TEXT"], *this);
+        text_frame("tags", Box::layout_map["TEXT"], *this, FLAG_TEXT);
     // background
-    model.emplace_back(glm::vec3(0), _size, _color + factor).translation = this->_pos;
-    //ID Background
-    //model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
-    
-    //SSS::TR::Format fmt;
-    //fmt.charsize = (int)_size.y / 6;
-    //fmt.has_outline = true;
-    //fmt.outline_size = 2;
-
-    //prt.emplace_back(ptr_p);
-    
+    background_frame(*this);
+        
     //Tags
     if (tags.size() > 0) {
         model.reserve(tags.size() * 2);
@@ -369,14 +361,21 @@ Tags::~Tags()
     _model.clear();
 }
 
-void text_frame(std::string s, const GUI_Layout& layout, Box& b, glm::vec4 c)
+void text_frame(std::string s, const GUI_Layout& layout, Box& b, int flag)
 {
     glm::vec3 pos = glm::vec3(b.curs_pos, BACKGROUND_COLOR_LAYER);
+    SSS::TR::Format fmt = layout._fmt;
+    glm::vec4 c = rgb_to_hsl(b._color);
+    c.b = 0.3;
+    c = hsl_to_rgb(c);
+
+    if (flag == FLAG_ID) {
+        fmt.text_color = rgb_to_int32t(c);
+    }
 
     // Create text area & gl texture
     auto& area = SSS::TR::Area::create(s);
-    //auto fmt = area.getFormat();
-    area.setFormat(layout._fmt);
+    area.setFormat(fmt);
     area.setMarginH(layout._marginh);
     area.setMarginV(layout._marginv);
     int x, y;
@@ -389,12 +388,6 @@ void text_frame(std::string s, const GUI_Layout& layout, Box& b, glm::vec4 c)
     p._pos = pos;
     p._size = size;
     p.translation = b._pos;
-
-    if (c.a <= (0 + epsilon)) {
-        p._color = c;
-        b.model.emplace_back(p);
-    }
-
     p._pos.z = TXT_LAYER;
     b.model.emplace_back(p)
         ._sss_texture = SSS::GL::Texture::create(area);
@@ -402,4 +395,25 @@ void text_frame(std::string s, const GUI_Layout& layout, Box& b, glm::vec4 c)
     b._size.x = std::max(b._size.x, size.x);
     b._size.y += size.y;
     b.curs_pos -= glm::vec2{0, size.y};
+}
+
+void background_frame(Box& b)
+{
+    // Create text area & gl texture
+    auto& area = SSS::TR::Area::create("0");
+    //auto fmt = area.getFormat();
+    area.setFormat(Box::layout_map["ID"]._fmt);
+    area.setMarginH(Box::layout_map["ID"]._marginh);
+    area.setMarginV(Box::layout_map["ID"]._marginv);
+    int x, y;
+    area.getDimensions(x, y);
+    glm::vec2 size = glm::vec2{ x,y };
+    
+    b.model.emplace_back(glm::vec3(0, 0, BACKGROUND_LAYER), b._size, b._color).translation = b._pos;
+
+    glm::vec4 scol = rgb_to_hsl(b._color);
+    scol.b -= 0.15;
+    b.model.emplace_back(glm::vec3(0, 0, BACKGROUND_COLOR_LAYER)
+        , glm::vec2(b._size.x, static_cast<float>(y - 3))
+        , hsl_to_rgb(scol)).translation = b._pos;
 }

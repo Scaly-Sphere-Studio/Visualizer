@@ -233,7 +233,7 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 
     //INPUTS BOX
     if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
-        Visualizer::get()->push_box(rand_color());
+        Visualizer::get()->push_box(rgb_to_hex(rand_pastel_color()));
     }
 
     //TEST SUPPRESSION
@@ -396,7 +396,7 @@ void Visualizer::setup()
     Box::layout_map.insert(std::make_pair("ID", layout));
     //TEXT FORMAT
     layout._fmt.charsize = 19;
-    layout._fmt.text_color = 0xffffff;
+    layout._fmt.text_color = 0x111111;
     layout._marginh = 0;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
@@ -909,10 +909,6 @@ void Visualizer::load()
         _proj.box_map[td.text_ID].set_text_data(td);
     }
 
-    for (auto pb : _proj.box_map) {
-        pb.second._pos.z = rand_float();
-        pb.second.update();
-    }
 
     LOG_MSG("LOADED");
 }
