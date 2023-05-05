@@ -156,10 +156,6 @@ void Visualizer::run()
 
     SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
 
-    ////  Setup Dear ImGui window
-    //IMGUI_CHECKVERSION();
-    //ImGui::CreateContext();
-    //ImGui::GetIO().IniFilename = nullptr;
 
 
     //SSS::ImGuiH::setContext(glfwwindow);
@@ -217,6 +213,7 @@ void Visualizer::run()
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
         std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
 
+        window->drawObjects();
         menu_bar();
 
         window->printFrame();
@@ -911,9 +908,8 @@ void Visualizer::load()
 
 void Visualizer::menu_bar()
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+    if (!SSS::ImGuiH::newFrame())
+        return;
 
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_MenuBar;
@@ -924,41 +920,36 @@ void Visualizer::menu_bar()
     window_flags |= ImGuiWindowFlags_NoBackground;
 
 
-    ImGui::Begin("MENUBAR", NULL, window_flags);
-    ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-    ImGui::SetWindowSize(ImVec2(_info._w, 0), ImGuiCond_Always);
-
-    ImGui::PushItemWidth(ImGui::GetFontSize());
-
-    if (ImGui::BeginMenuBar())
+    if (ImGui::Begin("MENUBAR", NULL, window_flags))
     {
-        if (ImGui::BeginMenu("Menu"))
+        ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+        ImGui::SetWindowSize(ImVec2(_info._w, 0), ImGuiCond_Always);
+
+        ImGui::PushItemWidth(ImGui::GetFontSize());
+
+        if (ImGui::BeginMenuBar())
         {
-            //SAVE CURRENT PROGRESSION
-            if (ImGui::MenuItem("Save"))
+            if (ImGui::BeginMenu("Menu"))
             {
-                SSS::log_msg("FILE SAVED");
-                save();
+                //SAVE CURRENT PROGRESSION
+                if (ImGui::MenuItem("Save"))
+                {
+                    SSS::log_msg("FILE SAVED");
+                    save();
+                }
+
+                ImGui::EndMenu();
             }
 
-            ImGui::EndMenu();
-        }
-
-        language_selector();
-        mode_selector();
+            language_selector();
+            mode_selector();
         
-        ImGui::EndMenuBar();
+            ImGui::EndMenuBar();
+        }
+        ImGui::End();
     }
 
-    
-
-    // Draw with Renderers
-    window->drawObjects();
-
-    // Render dear imgui into screen
-    ImGui::End();
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    SSS::ImGuiH::render();
 }
 
 
