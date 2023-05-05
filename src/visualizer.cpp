@@ -144,7 +144,7 @@ Visualizer::~Visualizer()
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
-    window.reset();
+    window->close();
 }
 
 void Visualizer::run()
@@ -171,7 +171,6 @@ void Visualizer::run()
 
 
     refresh();
-    SSS::GL::Context const context(window);
 
     clear_color = hex_to_rgb("#4d5f83");
 
@@ -186,9 +185,6 @@ void Visualizer::run()
         SSS::GL::pollEverything();
         glfwGetCursorPos(window->getGLFWwindow(), &c_x, &c_y);
         input();
-        
-        glClear(GL_COLOR_BUFFER_BIT);
-
 
         //Gen batch trough the frustrum
         //FRUSTRUM 
@@ -388,9 +384,12 @@ void Visualizer::setup()
     args.title = "VISUALIZER";
     args.w = static_cast<int>(_info._w);
     args.h = static_cast<int>(_info._h);
-    window = SSS::GL::Window::create(args);
+    window = &SSS::GL::Window::create(args);
     if (!window) {
         SSS::throw_exc("Couldn't create a window");
+    }
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        SSS::throw_exc("Failed to initialize GLAD");
     }
 
     GUI_Layout layout;
@@ -406,9 +405,6 @@ void Visualizer::setup()
     layout._marginh = 0;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
-
-
-    SSS::GL::Context const context(window);
 
     window->setVSYNC(true);
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
@@ -431,10 +427,9 @@ void Visualizer::setup()
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
     debug_renderer->camera = camera;
     // Enable or disable debugger
-    debug_renderer->setActivity(true);
+    debug_renderer->setActivity(false);
 
-    //window->setRenderers({ line_renderer, box_renderer, debug_renderer });
-    window->setRenderers({ line_renderer, box_renderer });
+    window->setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
 
 void Visualizer::input()

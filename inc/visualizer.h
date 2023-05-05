@@ -107,7 +107,7 @@ private:
 	BoxRenderer::Shared box_renderer;
 	Debugger::Shared debug_renderer;
 
-	SSS::GL::Window::Shared window;
+	SSS::GL::Window* window;
 	double c_x = 0.0, c_y = 0.0;
 	int mod = INT_MAX;
 	int mouse_action = INT_MAX;
