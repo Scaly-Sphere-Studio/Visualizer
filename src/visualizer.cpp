@@ -401,9 +401,6 @@ void Visualizer::setup()
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
 
-
-    SSS::GL::Context const context(window);
-
     window->setVSYNC(true);
     window->setCallback(glfwSetWindowSizeCallback, resize_callback);
     window->setCallback(glfwSetKeyCallback, key_callback);
@@ -425,10 +422,9 @@ void Visualizer::setup()
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
     debug_renderer->camera = camera;
     // Enable or disable debugger
-    debug_renderer->setActivity(true);
+    debug_renderer->setActivity(false);
 
-    //window->setRenderers({ line_renderer, box_renderer, debug_renderer });
-    window->setRenderers({ line_renderer, box_renderer });
+    window->setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
 
 void Visualizer::input()

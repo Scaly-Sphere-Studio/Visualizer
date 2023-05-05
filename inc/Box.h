@@ -123,7 +123,6 @@ public:
 
 class BoxRenderer : public SSS::GL::Renderer<BoxRenderer> {
 	friend SSS::GL::Basic::SharedBase<BoxRenderer>;
-	friend SSS::GL::Window;
 
 private:
 	BoxRenderer();

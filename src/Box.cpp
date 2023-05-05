@@ -157,19 +157,26 @@ void Box::update()
 BoxRenderer::BoxRenderer()
     : Renderer<BoxRenderer>(), vao(), billboard_vbo(), billboard_ibo(), particles_vbo()
 {
+    constexpr GLfloat vertices[] = {
+        // Position         // Texture UV
+        0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
+        0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
+        1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
+        1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
+    };
+    billboard_vbo.edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    vao.bind();
+    constexpr GLuint indices[] = {
+        0, 1, 2,    // First triangle
+        2, 3, 0     // Second triangle
+    };
+    billboard_ibo.edit(sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Static vertices
-    {
-        constexpr GLfloat vertices[] = {
-            // Position         // Texture UV
-            0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
-            0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
-            1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
-            1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
-        };
-        billboard_vbo.edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
+    vao.setup([this]() {
+        
+        billboard_vbo.bind();
+        billboard_ibo.bind();
+        // Static vertices (billboard)
         glEnableVertexAttribArray(PARTICLE_VERTICES);
         glVertexAttribPointer(PARTICLE_VERTICES, 3, GL_FLOAT, GL_FALSE,
             sizeof(float) * 5, (void*)0);
@@ -178,15 +185,7 @@ BoxRenderer::BoxRenderer()
         glVertexAttribPointer(PARTICLE_UV, 2, GL_FLOAT, GL_FALSE,
             sizeof(float) * 5, (void*)(sizeof(float) * 3));
 
-        constexpr GLuint indices[] = {
-            0, 1, 2,    // First triangle
-            2, 3, 0     // Second triangle
-        };
-        billboard_ibo.edit(sizeof(indices), indices, GL_STATIC_DRAW);
-    }
-
-    // Particles
-    {
+        // Particles
         particles_vbo.bind();
 
         // Size (width / height)
@@ -233,7 +232,7 @@ BoxRenderer::BoxRenderer()
         //glVertexAttribIPointer(PARTICLE_SCALE, 1, GL_FLOAT,
         //    sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
         //glVertexAttribDivisor(PARTICLE_SCALE, 1);
-    }
+    });
     vao.unbind();
 }
 
