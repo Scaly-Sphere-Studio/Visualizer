@@ -133,7 +133,6 @@ Visualizer::~Visualizer()
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
-    window.reset();
 }
 
 void Visualizer::run()
@@ -141,18 +140,19 @@ void Visualizer::run()
     //load
     load();
 
+    SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
+
     ////  Setup Dear ImGui window
     //IMGUI_CHECKVERSION();
     //ImGui::CreateContext();
     //ImGui::GetIO().IniFilename = nullptr;
 
 
-    //SSS::ImGuiH::setContext(window->getGLFWwindow());
+    //SSS::ImGuiH::setContext(glfwwindow);
 
 
 
     refresh();
-    SSS::GL::Context const context(window);
 
     clear_color = hex_to_rgb("#4d5f83");
 
@@ -165,10 +165,10 @@ void Visualizer::run()
     // Main loop
     while (!window->shouldClose()) {
         SSS::GL::pollEverything();
-        glfwGetCursorPos(window->getGLFWwindow(), &c_x, &c_y);
+        glfwGetCursorPos(glfwwindow, &c_x, &c_y);
         input();
-        
-        
+
+
         glClear(GL_COLOR_BUFFER_BIT);
 
 
@@ -179,25 +179,25 @@ void Visualizer::run()
         //Collision test
         switch (_states) {
         case V_STATES::DRAG_BOX: {
-                drag_boxes();
-                break;
-            }
+            drag_boxes();
+            break;
+        }
         case V_STATES::MULTI_SELECT: {
-                multi_select();
-                break;
-            }
+            multi_select();
+            break;
+        }
         case V_STATES::CUTLINE: {
-                cut_link_line();
-                break;
-            }
+            cut_link_line();
+            break;
+        }
         case V_STATES::CONNECT_LINE: {
-                connect_drag_line();
-                break;
-            }
+            connect_drag_line();
+            break;
+        }
         case V_STATES::DRAG_SCREEN: {
-                drag_screen();
-                break;
-            }
+            drag_screen();
+            break;
+        }
         }
 
         //Sort every frame for now, until I have a real frustrum calling that sort before selecting
@@ -232,13 +232,13 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
     }
 
     if (key == GLFW_KEY_KP_0 || key == GLFW_KEY_ESCAPE) {
-        glfwSetWindowShouldClose(Visualizer::get()->window->getGLFWwindow(), true);
+        glfwSetWindowShouldClose(window, true);
     }
 
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S && action == GLFW_PRESS) {
         Visualizer::get()->save();
     }
-    
+
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_Q && action == GLFW_PRESS) {
         //Select all
         Visualizer::get()->_selected_IDs.clear();
@@ -260,7 +260,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         Visualizer::get()->clicked_box_ID(selection);
         Visualizer::get()->_cur_pos = Visualizer::get()->cursor_map_coordinates();
 
-        if (Visualizer::get()->_selected_IDs.size() < 2 && !selection.empty() ) {
+        if (Visualizer::get()->_selected_IDs.size() < 2 && !selection.empty()) {
             //Create a selection or switch the two IDs
 
             for (std::string s : Visualizer::get()->_selected_IDs) {
@@ -278,7 +278,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         if (Visualizer::get()->double_click_detection(std::chrono::milliseconds(500))) {
             //Double click detected
             LOG_MSG("DOUBLE CLICK");
-            
+
             //Replace the selection with the current selected box
             Visualizer::get()->_selected_IDs.clear();
             if (!selection.empty()) {
@@ -293,7 +293,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         if (selection.empty()) {
             Visualizer::get()->_states = V_STATES::DRAG_SCREEN;
             Visualizer::get()->_cur_pos = glm::vec3(-Visualizer::get()->c_x, Visualizer::get()->c_y, 0.f);
-            
+
             LOG_MSG("DRAG SCREEN MODE");
             return;
         }
@@ -326,13 +326,13 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
         //CONNECT LINE MODE
         Visualizer::get()->_states = V_STATES::CONNECT_LINE;
         Visualizer::get()->first_link_ID = selection;
-        
+
         return;
     }
 
     //MULTISELECTION
     if (mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
-        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f,1.f,1.f,0.3f);
+        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f, 1.f, 1.f, 0.3f);
         Visualizer::get()->_otherpos = Visualizer::get()->cursor_map_coordinates();
         Visualizer::get()->_states = V_STATES::MULTI_SELECT;
         return;
@@ -369,17 +369,13 @@ void Visualizer::setup()
     args.title = "VISUALIZER";
     args.w = static_cast<int>(_info._w);
     args.h = static_cast<int>(_info._h);
-    window = SSS::GL::Window::create(args);
-    if (!window) {
-        SSS::throw_exc("Couldn't create a window");
-    }
+    SSS::GL::Window& window = SSS::GL::Window::create(args);
+    glfwwindow = window.getGLFWwindow();
 
-    SSS::GL::Context const context(window);
-
-    window->setVSYNC(true);
-    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
-    window->setCallback(glfwSetKeyCallback, key_callback);
-    window->setCallback(glfwSetMouseButtonCallback, mouse_callback);
+    window.setVSYNC(true);
+    window.setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window.setCallback(glfwSetKeyCallback, key_callback);
+    window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
 
     camera = SSS::GL::Camera::create();
     camera->setPosition({ 0, 0, 3 });
@@ -388,23 +384,23 @@ void Visualizer::setup()
     line_renderer = SSS::GL::LineRenderer::create();
     line_renderer->setShaders(SSS::GL::Shaders::create("glsl/line.vert", "glsl/line.frag"));
     line_renderer->camera = camera;
-    
+
     box_renderer = BoxRenderer::create();
     box_renderer->setShaders(SSS::GL::Shaders::create("glsl/instance.vert", "glsl/instance.frag"));
     box_renderer->camera = camera;
-    
+
     debug_renderer = Debugger::create();
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
     debug_renderer->camera = camera;
     // Enable or disable debugger
     debug_renderer->setActivity(true);
 
-    window->setRenderers({ line_renderer, box_renderer, debug_renderer });
+    window.setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
 
 void Visualizer::input()
 {
-    auto const& inputs = window->getKeyInputs();
+    auto const& inputs = SSS::GL::Window::get(glfwwindow)->getKeyInputs();
     //INPUT CAMERA
     constexpr float speed = 10.0f;
     if (inputs[GLFW_KEY_DOWN]) {
@@ -516,7 +512,7 @@ void Visualizer::link_box_to_cursor(Box& b)
 void Visualizer::pop_link(Box& a, Box& b)
 {
     arrow_map.erase(a._id + b._id);
-    a.link_to.erase(b._id);  
+    a.link_to.erase(b._id);
     b.link_from.erase(a._id);
 }
 
@@ -525,13 +521,13 @@ void Visualizer::pop_link(Box& a, Box& b)
 void Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
-    _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{150,75}, boxID)));
+    _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{ 150,75 }, boxID)));
     _proj.box_map.at(boxID)._id = boxID;
 }
 
 void Visualizer::pop_box(std::string ID)
 {
-    if (!_selected_IDs.empty() ){
+    if (!_selected_IDs.empty()) {
         //Clear the connected arrows and remove the ID from the ID lists 
 
         //Erase the arrows connected to the box
@@ -553,14 +549,14 @@ void Visualizer::pop_box(std::string ID)
         //Clear the box from the map
         _proj.box_map.erase(ID);
     }
-   
+
     //Erase the selection
     //last_selected_ID.clear();
     //current_selected_ID.clear();
 }
 
 
-bool Visualizer::check_frustrum_render(Box &b)
+bool Visualizer::check_frustrum_render(Box& b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
     glm::vec3 const cam_pos = camera->getPosition();
@@ -584,7 +580,7 @@ glm::vec3 Visualizer::cursor_map_coordinates()
 
 void Visualizer::frustrum_test()
 {
-    
+
 
     //for (int i = 0; i < boxes._size(); i++) {
     //    Box::box_batch.insert(Box::box_batch.end(), boxes[i].model.begin(), boxes[i].model.end());
@@ -623,7 +619,7 @@ void Visualizer::drag_boxes()
 
     //DRAG BOX
     static glm::vec3 delta;
-    
+
     glm::vec3 new_pos = cursor_map_coordinates();
     delta = new_pos - _cur_pos;
     //Update only if the box has moved
@@ -636,7 +632,7 @@ void Visualizer::drag_boxes()
     }
     _cur_pos = new_pos; //update the position
 
-    if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+    if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         _states = V_STATES::DEFAULT;
     }
 }
@@ -648,21 +644,21 @@ void Visualizer::cut_link_line()
         arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(_cur_pos, second_cursor_pos,
             10.f, hex_to_rgb("#03070e"), SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::ROUND);
 
-        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+        if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");
             static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
             for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-                Box *b1 = &it->second;
+                Box* b1 = &it->second;
                 glm::vec3 offset{ 0, 400, 0 }; //TODO
 
                 for (std::string s : b1->link_to) {
-                    Box *b2 = &_proj.box_map.at(s);
+                    Box* b2 = &_proj.box_map.at(s);
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         _cur_pos, second_cursor_pos)) {
                         cut_lines_selection.emplace_back(std::make_pair(b1->_id, b2->_id));
-                    }  
+                    }
                 }
             }
 
@@ -672,7 +668,7 @@ void Visualizer::cut_link_line()
 
             cut_lines_selection.clear();
             _states = V_STATES::DEFAULT;
-        }        
+        }
     }
 }
 
@@ -681,7 +677,7 @@ void Visualizer::connect_drag_line()
     if (!first_link_ID.empty()) {
         link_box_to_cursor(_proj.box_map.at(first_link_ID));
 
-        if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
+        if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
 
                 //First look out if the link between boxes already exists
@@ -713,11 +709,11 @@ void Visualizer::connect_drag_line()
 
 void Visualizer::multi_select()
 {
-    auto const& inputs = window->getKeyInputs();
+    auto const& inputs = SSS::GL::Window::get(glfwwindow)->getKeyInputs();
 
     glm::vec3 new_pos = cursor_map_coordinates();
     //MAKE THE SELECTION PARTICLE IN FRONT
-    Selection_box._pos = _otherpos +  glm::vec3(0.f, 0.f, 2.5f);
+    Selection_box._pos = _otherpos + glm::vec3(0.f, 0.f, 2.5f);
     Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
 
 
@@ -726,7 +722,7 @@ void Visualizer::multi_select()
             if (!_selected_IDs.count(it->first)) {
                 _selected_IDs.emplace(it->first);
             }
-        } 
+        }
     }
 
     //SELECTION RESET 
@@ -735,7 +731,7 @@ void Visualizer::multi_select()
         Visualizer::get()->Selection_box._color = glm::vec4(0.f);
         Visualizer::get()->Selection_box._pos = glm::vec3(INT32_MAX);
         Visualizer::get()->Selection_box._size = glm::vec2(0.f);
-    
+
         //RESET THE MOD, ACTION AND STATE
         mod = INT_MAX;
         mouse_action = INT_MAX;
@@ -751,7 +747,7 @@ void Visualizer::drag_screen()
     //Move the camera using the cursor position
     camera->move(delta);
 
-    if (glfwGetMouseButton(window->getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+    if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         _states = V_STATES::DEFAULT;
     }
 

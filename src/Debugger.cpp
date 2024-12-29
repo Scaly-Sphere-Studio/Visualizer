@@ -12,11 +12,9 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
     _col = col;
 }
 
-Debugger::Debugger(SSS::GL::Window::Shared win)
-    : SSS::GL::Renderer<Debugger>(win), vbo(win)
+Debugger::Debugger()
+    : SSS::GL::Renderer<Debugger>(), vbo()
 {
-    SSS::GL::Context const context = getContext();
-
     vbo.bind();
 
     glEnableVertexAttribArray(0);
@@ -130,8 +128,6 @@ void Debugger::render()
     if (!isActive()) return;
 
     Visualizer::Ptr const& visu = Visualizer::get();
-
-    SSS::GL::Context const context = getContext();
 
     glm::vec3 const cam_pos = camera->getPosition();
     rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);

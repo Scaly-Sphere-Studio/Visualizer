@@ -151,10 +151,9 @@ void Box::update()
 }
 
 
-BoxRenderer::BoxRenderer(SSS::GL::Window::Shared win)
-    : Renderer<BoxRenderer>(win), vao(win), billboard_vbo(win), billboard_ibo(win), particles_vbo(win)
+BoxRenderer::BoxRenderer()
+    : Renderer<BoxRenderer>(), vao(), billboard_vbo(), billboard_ibo(), particles_vbo()
 {
-    SSS::GL::Context const& context = getContext();
 
     vao.bind();
 
@@ -217,8 +216,6 @@ BoxRenderer::BoxRenderer(SSS::GL::Window::Shared win)
 
 void BoxRenderer::render()
 {
-    SSS::GL::Context const& context = getContext();
-
     std::queue<Batch> queue;
     Batch* batch = &queue.emplace();
 

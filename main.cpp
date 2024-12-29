@@ -6,6 +6,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 int main(void) try
 {
+	SSS_GL_EXPOSE_OPENGL
 	Visualizer::Ptr const& v = Visualizer::get();
 	v->run();
 }

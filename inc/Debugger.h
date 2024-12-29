@@ -13,7 +13,7 @@ class Debugger : public SSS::GL::Renderer<Debugger> {
 	friend SSS::GL::Window;
 
 private:
-	Debugger(SSS::GL::Window::Shared win);
+	Debugger();
 
 public:
 	~Debugger();
