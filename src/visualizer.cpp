@@ -133,6 +133,9 @@ Visualizer::~Visualizer()
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
+    auto win = SSS::GL::Window::get(glfwwindow);
+    if (win)
+        win->close();
 }
 
 void Visualizer::run()
