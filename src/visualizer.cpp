@@ -155,10 +155,7 @@ void Visualizer::run()
     load();
 
     SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
-
-
-
-    //SSS::ImGuiH::setContext(glfwwindow);
+    SSS::ImGuiH::setContext(glfwwindow);
 
 
 
@@ -398,10 +395,10 @@ void Visualizer::setup()
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
 
-    window->setVSYNC(true);
-    window->setCallback(glfwSetWindowSizeCallback, resize_callback);
-    window->setCallback(glfwSetKeyCallback, key_callback);
-    window->setCallback(glfwSetMouseButtonCallback, mouse_callback);
+    window.setVSYNC(true);
+    window.setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window.setCallback(glfwSetKeyCallback, key_callback);
+    window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
 
     camera = SSS::GL::Camera::create();
     camera->setPosition({ 0, 0, 3 });
@@ -421,7 +418,7 @@ void Visualizer::setup()
     // Enable or disable debugger
     debug_renderer->setActivity(false);
 
-    window->setRenderers({ line_renderer, box_renderer, debug_renderer });
+    window.setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
 
 void Visualizer::input()
@@ -889,7 +886,7 @@ void Visualizer::load()
     _mt.parse_traduction_data_from_json("project/bohemian/bohemian_eng.json");
     //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
     parse_info_data_project_from_json("data.json");
-    window->setTitle("VIZUALIZER - " + _proj.project_name);
+    SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
 
     //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
     float i = 0;
