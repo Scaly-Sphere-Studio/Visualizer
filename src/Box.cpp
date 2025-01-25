@@ -51,6 +51,16 @@ glm::vec3 Particle::center()
     return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
 }
 
+glm::vec2 Particle::center2D()
+{
+    return glm::vec2(center());
+}
+
+glm::vec3 Particle::centerZ0()
+{
+    return glm::vec3(center2D(), 0);
+}
+
 
 Box::Box() { }
 
@@ -257,14 +267,8 @@ void BoxRenderer::render()
         );
         // If not found, push texture ID in batch
         if (it == batch->textures.cend()) {
-            // Max number of texture units in the fragment shader
-            static uint32_t const max_texture_units = []() {
-                int i;
-                glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i);
-                return static_cast<uint32_t>(i);
-            }();
             // If texture IDs are full, create new batch
-            if (batch->textures.size() >= max_texture_units) {
+            if (batch->textures.size() >= SSS::GL::Window::maxGLSLTextureUnits()) {
                 batch = &queue.emplace();
                 batch->offset = i;
             }

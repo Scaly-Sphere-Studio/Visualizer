@@ -3,13 +3,13 @@
 #include "commons.h"
 #include "Text_data.h"
 
-#define epsilon 1.0f / static_cast<float>(RAND_MAX * 100.0f)
+#define epsilon 0.1f
 
-#define BACKGROUND_LAYER		0
-#define BACKGROUND_COLOR_LAYER	epsilon
-#define INFO_TEX_LAYER			2*epsilon
-#define UNDER_TXT_LAYER			3*epsilon
-#define TXT_LAYER				4*epsilon
+#define BACKGROUND_LAYER		1
+#define BACKGROUND_COLOR_LAYER	BACKGROUND_LAYER + 1*epsilon
+#define INFO_TEX_LAYER			BACKGROUND_LAYER + 2*epsilon
+#define UNDER_TXT_LAYER			BACKGROUND_LAYER + 3*epsilon
+#define TXT_LAYER				BACKGROUND_LAYER + 4*epsilon
 
 
 struct GUI_Layout {
@@ -37,6 +37,8 @@ struct Particle {
 	
 	//Return the coordinates of the center of the box
 	glm::vec3 center();
+	glm::vec2 center2D();
+	glm::vec3 centerZ0();
 	//Check for a collision box/point
 	bool check_collision(Particle p);
 	//Check for a collision with another particle

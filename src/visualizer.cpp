@@ -163,10 +163,7 @@ void Visualizer::run()
 
     clear_color = hex_to_rgb("#4d5f83");
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
 
     // Main loop
@@ -174,9 +171,6 @@ void Visualizer::run()
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
         input();
-
-
-        glClear(GL_COLOR_BUFFER_BIT);
 
 
         //Gen batch trough the frustrum
@@ -365,6 +359,12 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 
 }
 
+void Visualizer::scroll_callback(GLFWwindow* window, double x, double y)
+{
+    SSS::GL::Camera::Shared camera = get()->camera;
+    camera->setZoom(camera->getZoom()*(10.f+y)/10.f);
+}
+
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
     Ptr const& visu = get();
@@ -399,13 +399,14 @@ void Visualizer::setup()
     window.setCallback(glfwSetWindowSizeCallback, resize_callback);
     window.setCallback(glfwSetKeyCallback, key_callback);
     window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
+    window.setCallback(glfwSetScrollCallback, scroll_callback);
 
     camera = SSS::GL::Camera::create();
-    camera->setPosition({ 0, 0, 3 });
+    camera->setPosition({ 0, 0, 100 });
+    camera->setZFar(200.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
     line_renderer = SSS::GL::LineRenderer::create();
-    line_renderer->setShaders(SSS::GL::Shaders::create("glsl/line.vert", "glsl/line.frag"));
     line_renderer->camera = camera;
 
     box_renderer = BoxRenderer::create();
@@ -427,19 +428,19 @@ void Visualizer::input()
     //INPUT CAMERA
     constexpr float speed = 10.0f;
     if (inputs[GLFW_KEY_DOWN]) {
-        camera->move(glm::vec3(0.0f, -speed, 0.0f));
+        camera->move(glm::vec3(0.0f, -speed / camera->getZoom(), 0.0f));
     }
 
     if (inputs[GLFW_KEY_RIGHT]) {
-        camera->move(glm::vec3(speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(speed / camera->getZoom(), 0.0f, 0.0f));
     }
 
     if (inputs[GLFW_KEY_UP]) {
-        camera->move(glm::vec3(0.0f, speed, 0.0f));
+        camera->move(glm::vec3(0.0f, speed / camera->getZoom(), 0.0f));
     }
 
     if (inputs[GLFW_KEY_LEFT]) {
-        camera->move(glm::vec3(-speed, 0.0f, 0.0f));
+        camera->move(glm::vec3(-speed / camera->getZoom(), 0.0f, 0.0f));
     }
 }
 
@@ -467,12 +468,12 @@ void Visualizer::link_box(Box& a, Box& b)
     
     std::shared_ptr<SSS::GL::Polyline> seg;
     if (std::abs(a.center().x - b.center().x) < 5.0f) {
-        seg = SSS::GL::Polyline::Segment(a.center(), b.center(), Thk_grdt, Col_grdt);
+        seg = SSS::GL::Polyline::Segment(a.centerZ0(), b.centerZ0(), Thk_grdt, Col_grdt);
     }
     else {
         seg = SSS::GL::Polyline::Bezier(
-            a.center(), a.center() - offset,
-            b.center() + offset, b.center(),
+            a.centerZ0(), a.centerZ0() - offset,
+            b.centerZ0() + offset, b.centerZ0(),
             Thk_grdt, Col_grdt,
             SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
         );
@@ -522,7 +523,7 @@ void Visualizer::link_box_to_cursor(Box& b)
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = SSS::GL::Polyline::Bezier(
-        b.center()+glm::vec3(0,0,5), b.center() - glm::vec3(0, 400, 0),
+        b.centerZ0()+glm::vec3(0,0,5), b.centerZ0() - glm::vec3(0, 400, -5),
         c_pos, c_pos,
         Thk_grdt, Col_grdt,
         SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
@@ -607,10 +608,13 @@ bool Visualizer::check_frustrum_render(Box& b)
     return false;
 }
 
+// TODO: exporter dans GL::Window
 glm::vec3 Visualizer::cursor_map_coordinates()
 {
-    glm::vec3 const cam_pos = camera->getPosition();
-    return glm::vec3{ (c_x - _info._w / 2) + cam_pos.x, (_info._h / 2 - c_y) + cam_pos.y, 0.0 };
+    float const zoom = camera->getZoom();
+    return glm::vec3(glm::vec2(glm::inverse(camera->getView()) *
+        glm::vec4((c_x - _info._w / 2.f) / zoom, (_info._h / 2.f - c_y) / zoom, 0, 1)
+    ), 0);
 }
 
 void Visualizer::frustrum_test()
@@ -659,7 +663,9 @@ void Visualizer::cut_link_line()
 {
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(_cur_pos, second_cursor_pos,
+        arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(
+            { _cur_pos.x, _cur_pos.y, 10.f },
+            second_cursor_pos,
             10.f, hex_to_rgb("#03070e"), SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::ROUND);
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
@@ -763,7 +769,7 @@ void Visualizer::drag_screen()
     _otherpos = glm::vec3(-c_x, c_y, 0.f);
     glm::vec3 delta = _otherpos - _cur_pos;
     //Move the camera using the cursor position
-    camera->move(delta);
+    camera->move(delta / camera->getZoom());
 
     if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         _states = V_STATES::DEFAULT;

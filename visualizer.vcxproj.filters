@@ -85,12 +85,6 @@
     <None Include="glsl\instance.vert">
       <Filter>Fichiers glsl</Filter>
     </None>
-    <None Include="glsl\line.frag">
-      <Filter>Fichiers glsl</Filter>
-    </None>
-    <None Include="glsl\line.vert">
-      <Filter>Fichiers glsl</Filter>
-    </None>
     <None Include="glsl\triangle.frag">
       <Filter>Fichiers glsl</Filter>
     </None>

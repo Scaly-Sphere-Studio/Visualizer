@@ -45,6 +45,7 @@ private:
 	static void resize_callback(GLFWwindow* win, int w, int h);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouse_callback(GLFWwindow* window, int button, int action, int mods);
+	static void scroll_callback(GLFWwindow* window, double x, double y);
 
 	void setup();
 	void input();

@@ -44,8 +44,6 @@
   <ItemGroup>
     <None Include="glsl\instance.frag" />
     <None Include="glsl\instance.vert" />
-    <None Include="glsl\line.frag" />
-    <None Include="glsl\line.vert" />
     <None Include="glsl\triangle.frag" />
     <None Include="glsl\triangle.vert" />
   </ItemGroup>
