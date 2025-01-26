@@ -3,6 +3,8 @@
 #define FLAG_ID                 0
 #define FLAG_TEXT               1
 
+#define TEXT_MAX_WIDTH          600
+
 std::vector<Particle>Box::box_batch{};
 std::map<uint16_t, Tags>Box::tags_list{};
 std::map<std::string, GUI_Layout> Box::layout_map{};
@@ -109,15 +111,15 @@ void Box::create_box()
     //Create the model
     // reverse order, background last.
     // First ID text and background
-    text_frame(this->_td.text_ID, Box::layout_map["ID"], * this, FLAG_ID);
+    text_frame(_td.text_ID, Box::layout_map["ID"], * this, FLAG_ID);
     // Text
-    text_frame(this->_td.text, Box::layout_map["TEXT"], *this, FLAG_TEXT);
+    text_frame(_td.text, Box::layout_map["TEXT"], *this, FLAG_TEXT);
     // Comment text
-    if(!this->_td.comment.empty())  
-        text_frame("commentaire", Box::layout_map["TEXT"], *this, FLAG_TEXT);
+    if(!_td.comment.empty())  
+        text_frame(_td.comment, Box::layout_map["COMMENT"], *this, FLAG_TEXT);
     // tags
-    if(!this->tags.empty())
-        text_frame("tags", Box::layout_map["TEXT"], *this, FLAG_TEXT);
+    if(!tags.empty())
+        text_frame("TODO: tags", Box::layout_map["TEXT"], *this, FLAG_TEXT);
     // background
     background_frame(*this);
         
@@ -129,7 +131,7 @@ void Box::create_box()
         }
     }
 
-    this->update();
+    update();
 }
 
 SSS::GL::Texture::Shared Box::check_text_selection(glm::vec3 const& c_pos)
@@ -377,12 +379,10 @@ void text_frame(std::string s, const GUI_Layout& layout, Box& b, int flag)
     }
 
     // Create text area & gl texture
-    auto& area = SSS::TR::Area::create(s);
-    area.setFormat(fmt);
-    area.setMarginH(layout._marginh);
-    area.setMarginV(layout._marginv);
-    int x, y;
-    area.getDimensions(x, y);
+    auto& area = SSS::TR::Area::create(s, fmt);
+    area.setMargins(layout._marginv, layout._marginh);
+    area.setWrappingMaxWidth(TEXT_MAX_WIDTH);
+    auto [x, y] = area.getDimensions();
     glm::vec2 size = glm::vec2{x,y};
 
     

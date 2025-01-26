@@ -391,9 +391,14 @@ void Visualizer::setup()
     //TEXT FORMAT
     layout._fmt.charsize = 19;
     layout._fmt.text_color = 0x111111;
-    layout._marginh = 0;
+    layout._marginh = 2;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
+    //TEXT FORMAT
+    layout._fmt.charsize = 16;
+    layout._fmt.font = "Ariali.ttf";
+    layout._fmt.text_color = 0x333333;
+    Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
     window.setVSYNC(true);
     window.setCallback(glfwSetWindowSizeCallback, resize_callback);
