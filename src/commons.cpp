@@ -109,8 +109,13 @@ glm::vec4 rgb_to_hsl(glm::vec3 rgb)
 
 uint32_t rgb_to_int32t(glm::vec4 rgb)
 {
-    rgb *= 255;
-    return SSS::RGB24(std::roundl(rgb.r), std::roundl(rgb.g), std::roundl(rgb.b)).rgb;
+    rgb *= 255.f;
+    return SSS::RGBA32(
+        static_cast<uint8_t>(std::roundl(rgb.r)),
+        static_cast<uint8_t>(std::roundl(rgb.g)),
+        static_cast<uint8_t>(std::roundl(rgb.b)),
+        static_cast<uint8_t>(std::roundl(rgb.a))
+    ).rgba;
 }
 
 std::string rand_string() {

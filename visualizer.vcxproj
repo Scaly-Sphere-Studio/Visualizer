@@ -42,8 +42,6 @@
     <ClInclude Include="inc\visualizer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="glsl\instance.frag" />
-    <None Include="glsl\instance.vert" />
     <None Include="glsl\triangle.frag" />
     <None Include="glsl\triangle.vert" />
   </ItemGroup>

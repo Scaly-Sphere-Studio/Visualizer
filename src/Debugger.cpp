@@ -129,6 +129,8 @@ void Debugger::render()
 
     Visualizer::Ptr const& visu = Visualizer::get();
 
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     glm::vec3 const cam_pos = camera->getPosition();
     rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
     for (auto it = visu->_proj.box_map.begin(); it != visu->_proj.box_map.end(); it++) {

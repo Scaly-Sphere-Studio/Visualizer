@@ -59,7 +59,7 @@ void create_traduction_file(std::string& path, uint16_t language, Traduction_dat
 {
 	//TODO ???
 	Traduction_data t;
-	t.language = language;
+	t.language = std::to_string(language);
 	if (mother.magnitude == 1) {
 		//text copied from the mother language file
 		t.magnitude = 0;

@@ -105,7 +105,7 @@ private:
 	SSS::GL::Camera::Shared camera;
 	// Renderers
 	SSS::GL::LineRenderer::Shared line_renderer;
-	BoxRenderer::Shared box_renderer;
+	SSS::GL::PlaneRenderer::Shared box_renderer;
 	Debugger::Shared debug_renderer;
 
 	GLFWwindow* glfwwindow{ nullptr };

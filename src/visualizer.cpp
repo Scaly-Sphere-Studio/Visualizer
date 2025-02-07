@@ -138,7 +138,6 @@ Visualizer::Ptr const& Visualizer::get()
 
 Visualizer::~Visualizer()
 {
-    Box::box_batch.clear();
     arrow_map.clear();
     _proj.box_map.clear();
     line_renderer.reset();
@@ -201,14 +200,10 @@ void Visualizer::run()
         }
         }
 
-        //Sort every frame for now, until I have a real frustrum calling that sort before selecting
-        std::sort(Box::box_batch.begin(), Box::box_batch.end(), sort_box);
-
         window->drawObjects();
         menu_bar();
 
         window->printFrame();
-        Box::box_batch.clear();
     }
 
 }
@@ -321,7 +316,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 
             //Begin the cut line 
             Visualizer::get()->arrow_map.insert(std::make_pair("CUTLINE",
-                SSS::GL::Polyline::Segment(glm::vec3(INT_MAX), glm::vec3(INT_MAX))));
+                SSS::GL::Polyline::Segment(glm::vec3(FLT_MAX), glm::vec3(FLT_MAX))));
             return;
         }
 
@@ -362,7 +357,15 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 void Visualizer::scroll_callback(GLFWwindow* window, double x, double y)
 {
     SSS::GL::Camera::Shared camera = get()->camera;
-    camera->setZoom(camera->getZoom()*(10.f+y)/10.f);
+    float zoom = camera->getZoom();
+    float const coeff = 1.f + std::abs(static_cast<float>(y)) * 0.05f;
+    if (y > 0.f)
+        zoom *= coeff;
+    else
+        zoom /= coeff;
+    if (std::abs(zoom - 1.f) < 0.045f)
+        zoom = 1.f;
+    camera->setZoom(zoom);
 }
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
@@ -407,22 +410,21 @@ void Visualizer::setup()
     window.setCallback(glfwSetScrollCallback, scroll_callback);
 
     camera = SSS::GL::Camera::create();
-    camera->setPosition({ 0, 0, 100 });
-    camera->setZFar(200.f);
+    camera->setPosition({ 0, 0, 20.f });
+    camera->setZFar(40.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
     line_renderer = SSS::GL::LineRenderer::create();
     line_renderer->camera = camera;
 
-    box_renderer = BoxRenderer::create();
-    box_renderer->setShaders(SSS::GL::Shaders::create("glsl/instance.vert", "glsl/instance.frag"));
+    box_renderer = SSS::GL::PlaneRenderer::create();
     box_renderer->camera = camera;
 
     debug_renderer = Debugger::create();
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
     debug_renderer->camera = camera;
     // Enable or disable debugger
-    debug_renderer->setActivity(false);
+    //debug_renderer->setActivity(false);
 
     window.setRenderers({ line_renderer, box_renderer, debug_renderer });
 }
@@ -624,12 +626,13 @@ glm::vec3 Visualizer::cursor_map_coordinates()
 
 void Visualizer::frustrum_test()
 {
-    
-    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-        Box::box_batch.insert(Box::box_batch.end(), it->second.model.begin(), it->second.model.end());
+    auto& planes = box_renderer->planes;
+    planes.clear();
+    for (auto [id, box] : _proj.box_map) {
+        planes.insert(planes.end(), box.model.cbegin(), box.model.cend());
     }
-    Box::box_batch.emplace_back(Selection_box);
-
+    std::sort(planes.begin(), planes.end(), sortPlanes);
+    //planes.emplace_back(Selection_box);
 }
 
 void Visualizer::drag_boxes()
@@ -669,7 +672,7 @@ void Visualizer::cut_link_line()
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
         arrow_map.at("CUTLINE") = SSS::GL::Polyline::Segment(
-            { _cur_pos.x, _cur_pos.y, 10.f },
+            { _cur_pos.x, _cur_pos.y, 5.f },
             second_cursor_pos,
             10.f, hex_to_rgb("#03070e"), SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::ROUND);
 
@@ -757,9 +760,9 @@ void Visualizer::multi_select()
     //SELECTION RESET 
     if (_states == V_STATES::MULTI_SELECT && (mod == 0) || (mouse_action == GLFW_RELEASE)) {
         //RESET THE PARTICLE
-        Visualizer::get()->Selection_box._color = glm::vec4(0.f);
-        Visualizer::get()->Selection_box._size  = glm::vec2(0.f);
-        Visualizer::get()->Selection_box._pos   = glm::vec3(INT32_MAX);
+        Selection_box._color = glm::vec4(0.f);
+        Selection_box._size  = glm::vec2(0.f);
+        Selection_box._pos   = glm::vec3(FLT_MAX);
     
         //RESET THE MOD, ACTION AND STATE
         mod = INT_MAX;
@@ -1009,7 +1012,7 @@ PROJECT_DATA::~PROJECT_DATA()
 void Visualizer::language_selector()
 {
     ImGui::Text("        Mode ");
-    int width = 150;
+    float width = 150.f;
     ImGui::SetNextItemWidth(width);
 
     //initialize to the first item of the iso languages list
@@ -1043,7 +1046,7 @@ void Visualizer::language_selector()
 void Visualizer::mode_selector()
 {
     ImGui::Text("        Language ");
-    int width = 150;
+    float width = 150.f;
     ImGui::SetNextItemWidth(width);
 
     //initialize to the first item of the iso languages list
