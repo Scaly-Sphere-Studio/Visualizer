@@ -424,9 +424,9 @@ void Visualizer::setup()
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
     debug_renderer->camera = camera;
     // Enable or disable debugger
-    //debug_renderer->setActivity(false);
+    debug_renderer->setActivity(false);
 
-    window.setRenderers({ line_renderer, box_renderer, debug_renderer });
+    window.setRenderers({ box_renderer, line_renderer, debug_renderer });
 }
 
 void Visualizer::input()
@@ -449,6 +449,11 @@ void Visualizer::input()
     if (inputs[GLFW_KEY_LEFT]) {
         camera->move(glm::vec3(-speed / camera->getZoom(), 0.0f, 0.0f));
     }
+
+    if (inputs[GLFW_KEY_SPACE].is_pressed()) {
+        camera->rotate(glm::vec2(0, 180));
+        camera->setPosition(camera->getPosition() * glm::vec3(1, 1, -1));
+    }
 }
 
 void Visualizer::refresh()
@@ -466,8 +471,7 @@ void Visualizer::link_box(Box& a, Box& b)
     glm::vec3 offset{ 0.f, std::abs(a._pos.y - b._pos.y)/2.f, 0.f };
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
-    Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
+
 
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
@@ -475,9 +479,14 @@ void Visualizer::link_box(Box& a, Box& b)
     
     std::shared_ptr<SSS::GL::Polyline> seg;
     if (std::abs(a.center().x - b.center().x) < 5.0f) {
+        Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
         seg = SSS::GL::Polyline::Segment(a.centerZ0(), b.centerZ0(), Thk_grdt, Col_grdt);
     }
     else {
+        // Couleurs inversées pour Bezier ?
+        Col_grdt.push(std::make_pair(0.f, glm::vec4(b._color)));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4(a._color)));
         seg = SSS::GL::Polyline::Bezier(
             a.centerZ0(), a.centerZ0() - offset,
             b.centerZ0() + offset, b.centerZ0(),
@@ -518,19 +527,19 @@ void Visualizer::link_box(Box& a)
 
 void Visualizer::link_box_to_cursor(Box& b)
 {
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0,0,3);
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0,0,5);
 
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.f, glm::vec4(b._color)));
-    Col_grdt.push(std::make_pair(1.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
 
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = SSS::GL::Polyline::Bezier(
-        b.centerZ0()+glm::vec3(0,0,5), b.centerZ0() - glm::vec3(0, 400, -5),
+        b.centerZ0()+glm::vec3(0,0,5), b.centerZ0() + glm::vec3(0, -400, 5),
         c_pos, c_pos,
         Thk_grdt, Col_grdt,
         SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE

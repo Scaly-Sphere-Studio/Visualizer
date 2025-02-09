@@ -64,7 +64,15 @@ glm::vec3 Particle::centerZ0()
 
 
 glm::mat4 BoxPlane::_getTranslationMat4() const {
-    return glm::translate(ModelBase::_getTranslationMat4(), _offset);
+    glm::vec3 offset = _offset;
+    auto texture = getTexture();
+    if (texture) {
+        auto const [w, h] = getTexture()->getCurrentDimensions();
+        float const x = static_cast<float>(w) / 2.f;
+        float const y = static_cast<float>(-h) / 2.f;
+        offset += glm::vec3(x, y, 0);
+    }
+    return glm::translate(ModelBase::_getTranslationMat4(), offset);
 }
 
 void BoxPlane::setOffset(glm::vec3 offset) {
@@ -127,7 +135,6 @@ void Box::create_box()
 
     for (BoxPlane::Shared& p : model) {
         p->getTexture()->getTextArea()->setWidth(static_cast<int>(_size.x));
-        p->setOffset(p->getOffset() += glm::vec3(_size.x / 2.f, 0, 0));
     }
         
     //Tags
@@ -239,7 +246,7 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, float layer, int
     //Create the model
     auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
     plane->translate(_pos);
-    plane->setOffset(glm::vec3(0, curs_pos.y - static_cast<float>(y) / 2.f, layer));
+    plane->setOffset(glm::vec3(0, curs_pos.y, layer));
     plane->scale(static_cast<float>(std::min(x, y)));
     model.emplace_back(plane);
 
