@@ -20,7 +20,7 @@ struct VISUALISER_INFO {
 
 struct PROJECT_DATA {
 	~PROJECT_DATA();
-	std::unordered_map<std::string, Box> box_map;
+	std::unordered_map<std::string, Box::Shared> box_map;
 	std::string project_name;
 };
 
@@ -30,8 +30,7 @@ class Visualizer {
 public:
 	// Make constructor public for JSON operations
 	Visualizer();
-	using Ptr = std::unique_ptr<Visualizer>;
-	static Ptr const& get();
+	static Visualizer& get();
 	~Visualizer();
 
 	void run();
@@ -63,8 +62,10 @@ private:
 	/* [BOX METHODS] */
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
 	void link_box(Box& a, Box& b);
+public:
 	//Update all the arrow linked to this box
 	void link_box(Box& a);
+private:
 	//Create a link from the box to the position of the cursor
 	void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
@@ -74,12 +75,13 @@ private:
 	void push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
+	inline void pop_box(Box& box) { pop_box(box._id); };
 	//Translate the screen cursor position from input to the world coordinates
 	glm::vec3 cursor_map_coordinates();
 
-	
 
-	std::set<std::string> _selected_IDs;
+
+	std::set<Box::Shared> _selectedBoxes;
 	Particle Selection_box{glm::vec3(INT_MAX,INT_MAX,0), glm::vec2(50,50), glm::vec4(0,0,0,0)};
 
 
@@ -97,8 +99,8 @@ private:
 	void connect_drag_line();
 	void multi_select();
 	void drag_screen();
-	//Check if the user clicked on a box and returns its ID
-	std::string clicked_box_ID(std::string &ID);
+	// Returns hovered Box or nullptr
+	Box::Shared get_hovered_box();
 
 	/* [RENDERER DATA] */
 	// Objects

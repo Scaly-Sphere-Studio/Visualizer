@@ -3,14 +3,7 @@
 #include "commons.h"
 #include "Text_data.h"
 
-auto constexpr epsilon = .2f;
-
-auto constexpr BACKGROUND_LAYER		= 0.f;
-auto constexpr ID_TEXT_LAYER		= BACKGROUND_LAYER + 4.f*epsilon;
-auto constexpr MAIN_TEXT_LAYER		= BACKGROUND_LAYER + 3.f*epsilon;
-auto constexpr COMMENT_TEXT_LAYER	= BACKGROUND_LAYER + 2.f*epsilon;
-auto constexpr TAGS_TEXT_LAYER		= BACKGROUND_LAYER + 1.f*epsilon;
-
+auto constexpr BOX_LAYER = 2.f;
 
 struct GUI_Layout {
 	int32_t _ID = 0;
@@ -67,23 +60,43 @@ struct Tags : public Particle {
 };
 
 
-class Box : public Particle {
-public:
+class Box : public SSS::GL::Basic::SharedBase<Box> {
+	friend class SharedBase;
+
+private:
 	Box() = default;
-	Box(glm::vec3 _pos, glm::vec2 _s, std::string hex = "000000");
+public:
 	~Box();
 
-	//Update the position with a delta for dragging the boxes
-	void update();
+	using SharedBase::Shared;
+	using SharedBase::create;
 
-	void set_selected_col(std::string hex);
-	void set_col(std::string hex);
+private:
+	glm::vec2 _size;
+	glm::vec3 _pos;
+	glm::vec4 _color;
+
+public:
+	inline glm::vec2 getSize() const noexcept { return _size; };
+	inline glm::vec3 getPos() const noexcept { return _pos; };
+	inline glm::vec4 getColor() const noexcept { return _color; };
+
+	glm::vec3 center() const;
+
+	//inline void setSize(glm::vec2 s) {};
+	void setPos(glm::vec3 pos);
+	inline void setZ(float z) { /*setPos(glm::vec3(_pos.x, _pos.y, z));*/ };
+	void setColor(glm::vec4 color);
+	inline void setColor(std::string hex) { setColor(hex_to_rgb(hex)); };
+
+	//void setSelectedCol(std::string hex);
+
 	void set_text_data(const Text_data& td);
 
 	//STATES 
-	bool _render = true;
-	bool _hovered = false;
-	bool _clicked = false;
+	bool isHovered() const noexcept;
+	bool isClicked() const noexcept;
+	bool isHeld() const noexcept;
 
 	bool _show_comment = false;
 	bool _show_tags = false;
@@ -94,17 +107,10 @@ public:
 	//Initialisation of the box and fill the model array
 	void create_box();
 private:
-	void _create_part(std::string s, const GUI_Layout& lyt, float layer, int flag = 0);
+	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
+	void _size_update();
 
 public:
-	//Update the positions of all the subboxes 
-	SSS::GL::Texture::Shared check_text_selection(glm::vec3 const& c_pos);
-
-	//transformation
-	//translation
-	//rotation
-	//... etc
-
 
 	// DATA
 	Text_data _td;   
@@ -121,8 +127,6 @@ public:
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
-	glm::vec2 curs_pos = glm::vec2(0,0);
-
 };
 
 class Selection_square : Particle {

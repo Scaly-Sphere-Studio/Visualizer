@@ -53,9 +53,9 @@ void to_json(nlohmann::json& j, const Box& t)
 {
     j = nlohmann::json{
     {"ID", t._id},
-    {"COLOR", t._color},
-    {"POSITION", t._pos},
-    {"SIZE", t._size},
+    {"COLOR", t.getColor()},
+    {"POSITION", t.getPos()},
+    {"SIZE", t.getSize()},
     {"TAGS", t.tags},
     {"LINK_TO", t.link_to},
     {"LINK_FROM", t.link_from},
@@ -65,13 +65,24 @@ void to_json(nlohmann::json& j, const Box& t)
 void from_json(const nlohmann::json& j, Box& t)
 {
     j.at("ID").get_to(t._id);
-    j.at("COLOR").get_to(t._color);
-    j.at("POSITION").get_to(t._pos);
-    j.at("SIZE").get_to(t._size);
+    t.setColor(j.at("COLOR").get<glm::vec4>());
+    t.setPos(j.at("POSITION"));
+    //t.setSize(j.at("SIZE"));
     j.at("TAGS").get_to(t.tags);
     j.at("LINK_TO").get_to(t.link_to);
     j.at("LINK_FROM").get_to(t.link_from);
 
 
     t.create_box();
+}
+
+void to_json(nlohmann::json& j, Box::Shared const& t)
+{
+    to_json(j, *t);
+}
+
+void from_json(const nlohmann::json& j, Box::Shared& t)
+{
+    t = Box::create();
+    from_json(j, *t);
 }

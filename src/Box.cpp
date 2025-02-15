@@ -1,4 +1,5 @@
 #include "Box.h"
+#include "visualizer.h"
 
 #define FLAG_ID                 0
 #define FLAG_TEXT               1
@@ -80,17 +81,6 @@ void BoxPlane::setOffset(glm::vec3 offset) {
     _computeModelMat4();
 }
 
-Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
-{
-    _size = s;
-    //Center the box around the cursor
-    _pos = pos;
-    _color = hex_to_rgb(hex);
-    _id = hex;
-
-    create_box();
-}
-
 Box::~Box()
 {
     link_to.clear();
@@ -99,13 +89,33 @@ Box::~Box()
 }
 
 
-void Box::set_selected_col(std::string hex)
+glm::vec3 Box::center() const
 {
+    return _pos + glm::vec3(_size.x / 2.f, _size.y / -2.f, 0);
 }
 
-void Box::set_col(std::string hex)
+void Box::setPos(glm::vec3 pos)
 {
+    _pos = pos;
+    for (auto& plane : model) {
+        plane->setTranslation(_pos);
+    }
 }
+
+void Box::setColor(glm::vec4 color)
+{
+    _color = color;
+    for (auto& plane : model) {
+        auto texture = plane->getTexture();
+        if (!texture)
+            continue;
+        auto area = texture->getTextArea();
+        if (!area)
+            continue;
+        area->setClearColor(rgb_to_int32t(_color));
+    }
+}
+
 
 void Box::set_text_data(const Text_data& td)
 {
@@ -113,30 +123,45 @@ void Box::set_text_data(const Text_data& td)
     create_box();
 }
 
+bool Box::isHovered() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isHovered(); });
+}
+
+bool Box::isClicked() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isClicked(); });
+}
+
+bool Box::isHeld() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isHeld(); });
+}
+
 void Box::create_box()
 {
     _size.y = 0;
-    curs_pos = glm::vec2(0);
     model.clear();
 
     //Brightning the color
     glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
 
     // Create the model
-    _create_part(_td.text_ID, Box::layout_map["ID"], ID_TEXT_LAYER, FLAG_ID);
+    _create_part(_td.text_ID, Box::layout_map["ID"], FLAG_ID);
     // Text
-    _create_part(_td.text, Box::layout_map["TEXT"], MAIN_TEXT_LAYER, FLAG_TEXT);
+    _create_part(_td.text, Box::layout_map["TEXT"], FLAG_TEXT);
     // Comment text
     if (!_td.comment.empty())
-        _create_part(_td.comment, Box::layout_map["COMMENT"], COMMENT_TEXT_LAYER, FLAG_TEXT);
+        _create_part(_td.comment, Box::layout_map["COMMENT"], FLAG_TEXT);
     // tags
     if (!tags.empty())
-        _create_part("TODO: tags", Box::layout_map["TEXT"], TAGS_TEXT_LAYER, FLAG_TEXT);
+        _create_part("TODO: tags", Box::layout_map["TEXT"], FLAG_TEXT);
 
-    for (BoxPlane::Shared& p : model) {
-        p->getTexture()->getTextArea()->setWidth(static_cast<int>(_size.x));
-    }
-        
+    _size_update();
+
     //Tags
     if (tags.size() > 0) {
         model.reserve(tags.size() * 2);
@@ -145,26 +170,7 @@ void Box::create_box()
         }
     }
 
-    update();
-}
-
-SSS::GL::Texture::Shared Box::check_text_selection(glm::vec3 const& c_pos)
-{
-    //for (Particle p : text_model) {
-    //    if (p.check_collision(c_pos) && p._sss_texture) {
-    //        p._sss_texture->getTextArea()->setFocus(true);
-    //        return p._sss_texture;
-    //    }
-    //}
-
-    return nullptr;
-}
-
-void Box::update()
-{
-    for (auto& plane : model) {
-        plane->setTranslation(_pos);
-    }
+    setPos(_pos);
 }
 
 #define PARTICLE_VERTICES       0
@@ -216,10 +222,11 @@ Tags::~Tags()
     _model.clear();
 }
 
-void Box::_create_part(std::string s, const GUI_Layout& layout, float layer, int flag)
+void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
 {
     SSS::TR::Format fmt = layout._fmt;
     auto& area = SSS::TR::Area::create();
+    auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
 
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = rgb_to_hsl(_color),
@@ -235,22 +242,63 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, float layer, int
     }
     else {
         area.setClearColor(rgb_to_int32t(_color));
+        area.setFocusable(true);
+        area.setWrapping(true);
+        plane->setTextureSizeCallback([this](auto& plane) {
+            _size_update();
+        });
+        // Reset minWidth if needed (avoid avoid boxes that are too wide after deleting text)
+        plane->setTextureCallback([this](auto& plane) {
+            auto area = plane.getTextArea();
+            if (area && area->isFocused()) {
+                for (auto p : model) {
+                    auto area = p->getTextArea();
+                    if (!area) continue;
+                    if (area->getUsedWidth() == _size.x)
+                        return;
+                }
+                _size_update();
+            }
+        });
     }
 
     area.setMargins(layout._marginv, layout._marginh);
     area.setWrappingMaxWidth(TEXT_MAX_WIDTH);
     area.setFormat(fmt);
     area.parseString(s);
-    auto [x, y] = area.getDimensions();
 
     //Create the model
-    auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
     plane->translate(_pos);
-    plane->setOffset(glm::vec3(0, curs_pos.y, layer));
-    plane->scale(static_cast<float>(std::min(x, y)));
+    
+    plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
     model.emplace_back(plane);
-
-    _size.x = std::max(_size.x, static_cast<float>(x));
-    _size.y += y;
-    curs_pos.y -= y;
 }
+
+void Box::_size_update() try
+{
+    glm::vec2 const old_size = _size;
+    _size = glm::vec2(0);
+    for (BoxPlane::Shared& p : model) {
+        p->setOffset(glm::vec3(0, -_size.y, BOX_LAYER));
+        auto [w, h] = p->getTexture()->getCurrentDimensions();
+        p->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
+        if (auto area = p->getTextArea(); area)
+            w = area->getUsedWidth();
+        _size.x = std::max(static_cast<float>(w), _size.x);
+        _size.y += static_cast<float>(h);
+    }
+    // Set min width
+    if (_size == old_size)
+        return;
+    if (_size.x != old_size.x) {
+        int w = static_cast<int>(_size.x);
+        if (TEXT_MAX_WIDTH - static_cast<int>(_size.x) < 10)
+            w = TEXT_MAX_WIDTH;
+        for (BoxPlane::Shared& p : model) {
+            if (auto area = p->getTextArea(); area)
+                area->setWrappingMinWidth(w);
+        }
+    }
+    Visualizer::get().link_box(*this);
+}
+CATCH_AND_LOG_METHOD_EXC;

@@ -130,10 +130,10 @@ Visualizer::Visualizer()
     start = std::chrono::steady_clock::now();
 }
 
-Visualizer::Ptr const& Visualizer::get()
+Visualizer& Visualizer::get()
 {
-    static Ptr const singleton(new Visualizer());
-    return singleton;
+    static auto const singleton(new Visualizer());
+    return *singleton;
 }
 
 Visualizer::~Visualizer()
@@ -211,21 +211,21 @@ void Visualizer::run()
 
 void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-
-    Visualizer::get()->mod = mods;
+    Visualizer& visu = get();
+    visu.mod = mods;
 
     //INPUTS BOX
     if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
-        Visualizer::get()->push_box(rgb_to_hex(rand_pastel_color()));
+        visu.push_box(rgb_to_hex(rand_pastel_color()));
     }
 
     //TEST SUPPRESSION
     if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
 
-        for (std::string s : Visualizer::get()->_selected_IDs) {
-            Visualizer::get()->pop_box(s);
+        for (Box::Shared b : visu._selectedBoxes) {
+            visu.pop_box(*b);
         }
-        Visualizer::get()->_selected_IDs.clear();
+        visu._selectedBoxes.clear();
     }
 
     if (key == GLFW_KEY_KP_0 || key == GLFW_KEY_ESCAPE) {
@@ -233,14 +233,14 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
     }
 
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S && action == GLFW_PRESS) {
-        Visualizer::get()->save();
+        visu.save();
     }
 
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_Q && action == GLFW_PRESS) {
         //Select all
-        Visualizer::get()->_selected_IDs.clear();
-        for (auto it = Visualizer::get()->_proj.box_map.begin(); it != Visualizer::get()->_proj.box_map.end(); ++it) {
-            Visualizer::get()->_selected_IDs.emplace(it->first);
+        visu._selectedBoxes.clear();
+        for (auto [id, b] : visu._proj.box_map) {
+            visu._selectedBoxes.emplace(b);
         }
     }
 
@@ -249,54 +249,37 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    Visualizer::get()->mouse_action = action;
+    get().mouse_action = action;
 
     //LEFT CLICK
     if (mods == 0 && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        std::string selection;
-        Visualizer::get()->clicked_box_ID(selection);
-        Visualizer::get()->_cur_pos = Visualizer::get()->cursor_map_coordinates();
+        auto box = get().get_hovered_box();
+        get()._cur_pos = get().cursor_map_coordinates();
 
-        if (Visualizer::get()->_selected_IDs.size() < 2 && !selection.empty()) {
+        if (get()._selectedBoxes.size() < 2 && box) {
             //Create a selection or switch the two IDs
 
-            for (std::string s : Visualizer::get()->_selected_IDs) {
+            for (Box::Shared b : get()._selectedBoxes) {
                 //Reset the Z offset for priority 
-                if (s != selection) {
-                    Visualizer::get()->_proj.box_map.at(s)._pos.z = rand_float();
-                    Visualizer::get()->_proj.box_map.at(s).update();
+                if (box != b) {
+                    b->setZ(0);
                 }
             }
-            Visualizer::get()->_selected_IDs.clear();
-            Visualizer::get()->_selected_IDs.emplace(selection);
+            get()._selectedBoxes.clear();
+            get()._selectedBoxes.emplace(box);
         }
 
-        //DOUBLE CLICK
-        if (Visualizer::get()->double_click_detection(std::chrono::milliseconds(500))) {
-            //Double click detected
-            LOG_MSG("DOUBLE CLICK");
-
-            //Replace the selection with the current selected box
-            Visualizer::get()->_selected_IDs.clear();
-            if (!selection.empty()) {
-                Visualizer::get()->_proj.box_map.at(selection).check_text_selection(Visualizer::get()->cursor_map_coordinates());
-                Visualizer::get()->_selected_IDs.emplace(selection);
-            }
-
-            //If a box is selected, check if a text area is selected and put it in update mode
-            //todo
-        }
-
-        if (selection.empty()) {
-            Visualizer::get()->_states = V_STATES::DRAG_SCREEN;
-            Visualizer::get()->_cur_pos = glm::vec3(-Visualizer::get()->c_x, Visualizer::get()->c_y, 0.f);
+        if (!box) {
+            get()._states = V_STATES::DRAG_SCREEN;
+            get()._cur_pos = glm::vec3(-get().c_x, get().c_y, 0.f);
+            get()._selectedBoxes.clear();
 
             LOG_MSG("DRAG SCREEN MODE");
             return;
         }
 
-        if (!selection.empty()) {
-            Visualizer::get()->_states = V_STATES::DRAG_BOX;
+        if (box) {
+            get()._states = V_STATES::DRAG_BOX;
             return;
         }
 
@@ -306,47 +289,45 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 
     //RIGHT CLICK
     if (mods == 0 && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        std::string selection;
-        Visualizer::get()->clicked_box_ID(selection);
-        Visualizer::get()->_cur_pos = Visualizer::get()->cursor_map_coordinates();
+        auto box = get().get_hovered_box();
+        get()._cur_pos = get().cursor_map_coordinates();
 
         //CUTLINE OPTION
-        if (selection.empty()) {
-            Visualizer::get()->_states = V_STATES::CUTLINE;
+        if (!box) {
+            get()._states = V_STATES::CUTLINE;
 
             //Begin the cut line 
-            Visualizer::get()->arrow_map.insert(std::make_pair("CUTLINE",
+            get().arrow_map.insert(std::make_pair("CUTLINE",
                 SSS::GL::Polyline::Segment(glm::vec3(FLT_MAX), glm::vec3(FLT_MAX))));
             return;
         }
 
         //CONNECT LINE MODE
-        Visualizer::get()->_states = V_STATES::CONNECT_LINE;
-        Visualizer::get()->first_link_ID = selection;
+        get()._states = V_STATES::CONNECT_LINE;
+        get().first_link_ID = box->_id;
 
         return;
     }
 
     //MULTISELECTION
     if (mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
-        Visualizer::get()->Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f,1.f,1.f,0.3f);
-        Visualizer::get()->Selection_box.translation = glm::vec3(0.f,0.f,2.5f);
-        Visualizer::get()->_otherpos = Visualizer::get()->cursor_map_coordinates();
-        Visualizer::get()->_states = V_STATES::MULTI_SELECT;
+        get().Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f, 1.f, 1.f, 0.3f);
+        get().Selection_box.translation = glm::vec3(0.f, 0.f, 2.5f);
+        get()._otherpos = get().cursor_map_coordinates();
+        get()._states = V_STATES::MULTI_SELECT;
         return;
     }
 
     //ADD TO THE SELECTION
     if (mods == GLFW_MOD_CONTROL && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        std::string selection;
-        //Add the selected box to the selection
-        Visualizer::get()->clicked_box_ID(selection);
-        if (!selection.empty()) {
-            if (Visualizer::get()->_selected_IDs.find(selection) != Visualizer::get()->_selected_IDs.end()) {
-                Visualizer::get()->_selected_IDs.erase(selection);
-                return;
+        auto box = get().get_hovered_box();
+        if (box) {
+            if (get()._selectedBoxes.contains(box)) {
+                get()._selectedBoxes.erase(box);
             }
-            Visualizer::get()->_selected_IDs.emplace(selection);
+            else {
+                get()._selectedBoxes.emplace(box);
+            }
         }
 
         return;
@@ -356,7 +337,7 @@ void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int 
 
 void Visualizer::scroll_callback(GLFWwindow* window, double x, double y)
 {
-    SSS::GL::Camera::Shared camera = get()->camera;
+    SSS::GL::Camera::Shared camera = get().camera;
     float zoom = camera->getZoom();
     float const coeff = 1.f + std::abs(static_cast<float>(y)) * 0.05f;
     if (y > 0.f)
@@ -370,9 +351,8 @@ void Visualizer::scroll_callback(GLFWwindow* window, double x, double y)
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
-    Ptr const& visu = get();
-    visu->_info._w = static_cast<float>(w);
-    visu->_info._h = static_cast<float>(h);
+    get()._info._w = static_cast<float>(w);
+    get()._info._h = static_cast<float>(h);
 }
 
 void Visualizer::setup()
@@ -431,7 +411,8 @@ void Visualizer::setup()
 
 void Visualizer::input()
 {
-    auto const& inputs = SSS::GL::Window::get(glfwwindow)->getKeyInputs();
+    auto window = SSS::GL::Window::get(glfwwindow);
+    auto const& inputs = window->getKeyInputs();
     //INPUT CAMERA
     constexpr float speed = 10.0f;
     if (inputs[GLFW_KEY_DOWN]) {
@@ -454,12 +435,17 @@ void Visualizer::input()
         camera->rotate(glm::vec2(0, 180));
         camera->setPosition(camera->getPosition() * glm::vec3(1, 1, -1));
     }
+    // Text
+    auto const& clicks = window->getClickInputs();
+    if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed(2)) {
+        window->placeHoveredTextAreaCursor();
+    }
 }
 
 void Visualizer::refresh()
 {
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-        link_box(it->second);
+        link_box(*it->second);
     }
 }
 
@@ -468,7 +454,7 @@ void Visualizer::refresh()
 void Visualizer::link_box(Box& a, Box& b)
 {
 
-    glm::vec3 offset{ 0.f, std::abs(a._pos.y - b._pos.y)/2.f, 0.f };
+    glm::vec3 offset{ 0.f, std::abs(a.getPos().y - b.getPos().y) / 2.f, 0.f };
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
 
@@ -476,26 +462,26 @@ void Visualizer::link_box(Box& a, Box& b)
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
-    
+
     std::shared_ptr<SSS::GL::Polyline> seg;
     if (std::abs(a.center().x - b.center().x) < 5.0f) {
-        Col_grdt.push(std::make_pair(0.f, glm::vec4(a._color)));
-        Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
-        seg = SSS::GL::Polyline::Segment(a.centerZ0(), b.centerZ0(), Thk_grdt, Col_grdt);
+        Col_grdt.push(std::make_pair(0.f, a.getColor()));
+        Col_grdt.push(std::make_pair(1.f, b.getColor()));
+        seg = SSS::GL::Polyline::Segment(a.center(), b.center(), Thk_grdt, Col_grdt);
     }
     else {
         // Couleurs inversées pour Bezier ?
-        Col_grdt.push(std::make_pair(0.f, glm::vec4(b._color)));
-        Col_grdt.push(std::make_pair(1.f, glm::vec4(a._color)));
+        Col_grdt.push(std::make_pair(0.f, b.getColor()));
+        Col_grdt.push(std::make_pair(1.f, a.getColor()));
         seg = SSS::GL::Polyline::Bezier(
-            a.centerZ0(), a.centerZ0() - offset,
-            b.centerZ0() + offset, b.centerZ0(),
+            a.center(), a.center() - offset,
+            b.center() + offset, b.center(),
             Thk_grdt, Col_grdt,
             SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
         );
     }
 
-    if (arrow_map.count(a._id + b._id)) {
+    if (arrow_map.contains(a._id + b._id)) {
         arrow_map.at(a._id + b._id) = seg;
         return;
     }
@@ -518,34 +504,34 @@ void Visualizer::link_box(Box& a, Box& b)
 void Visualizer::link_box(Box& a)
 {
     for (std::string lt : a.link_to) {
-        link_box(a, _proj.box_map.at(lt));
+        link_box(a, *_proj.box_map.at(lt));
     }
     for (std::string lf : a.link_from) {
-        link_box(_proj.box_map.at(lf), a);
+        link_box(*_proj.box_map.at(lf), a);
     }
 }
 
 void Visualizer::link_box_to_cursor(Box& b)
 {
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0,0,5);
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
 
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
     Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-    Col_grdt.push(std::make_pair(1.f, glm::vec4(b._color)));
+    Col_grdt.push(std::make_pair(1.f, b.getColor()));
 
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
     Thk_grdt.push(std::make_pair(1.f, 25.f));
 
     auto seg = SSS::GL::Polyline::Bezier(
-        b.centerZ0()+glm::vec3(0,0,5), b.centerZ0() + glm::vec3(0, -400, 5),
+        b.center() + glm::vec3(0, 0, 5), b.center() + glm::vec3(0, -400, 5),
         c_pos, c_pos,
         Thk_grdt, Col_grdt,
         SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
     );
 
-    if (arrow_map.count(first_link_ID)) {
+    if (arrow_map.contains(first_link_ID)) {
         arrow_map.at(b._id) = seg;
         return;
     }
@@ -567,35 +553,41 @@ void Visualizer::pop_link(Box& a, Box& b)
 void Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
-    _proj.box_map.insert(std::make_pair(boxID, Box(position, glm::vec2{ 150,75 }, boxID)));
-    _proj.box_map.at(boxID)._id = boxID;
+    Box& b = *_proj.box_map[boxID];
+    b.setPos(position);
+    b.setColor(boxID);
+    b._id = boxID;
+    b.create_box();
 }
 
 void Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
-    _proj.box_map.insert(std::make_pair(td.text_ID, Box(pos, glm::vec2{ 150,75 }, rand_color())));
-    _proj.box_map.at(td.text_ID)._id = td.text_ID;
+    Box& b = *_proj.box_map[td.text_ID];
+    b.setPos(pos);
+    b.setColor(rand_color());
+    b._id = td.text_ID;
+    b.set_text_data(td);
 }
 
 void Visualizer::pop_box(std::string ID)
 {
-    if (!_selected_IDs.empty()) {
+    if (!_selectedBoxes.empty()) {
         //Clear the connected arrows and remove the ID from the ID lists 
 
         //Erase the arrows connected to the box
         //Erase the ID from their 'Link to' list
-        for (std::string f_ID : _proj.box_map.at(ID).link_from) {
+        for (std::string f_ID : _proj.box_map.at(ID)->link_from) {
             arrow_map.erase(f_ID + ID);
-            _proj.box_map.at(f_ID).link_to.erase(ID);
+            _proj.box_map.at(f_ID)->link_to.erase(ID);
         }
 
         //Clear all the arrows connected to other boxes
 
         //Erase the arrows that connect to other boxes
         //Erase the ID from their 'link from' list
-        for (std::string l_ID : _proj.box_map.at(ID).link_to) {
+        for (std::string l_ID : _proj.box_map.at(ID)->link_to) {
             arrow_map.erase(ID + l_ID);
-            _proj.box_map.at(l_ID).link_from.erase(ID);
+            _proj.box_map.at(l_ID)->link_from.erase(ID);
         }
 
         //Clear the box from the map
@@ -612,10 +604,10 @@ bool Visualizer::check_frustrum_render(Box& b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
     glm::vec3 const cam_pos = camera->getPosition();
-    float const dx = glm::abs(cam_pos.x - b._pos.x);
-    float const dxmax = (b._size.x + _info._w) * 0.5f;
-    float const dy = glm::abs(cam_pos.y - b._pos.y);
-    float const dymax = (b._size.y + _info._h) * 0.5f;
+    float const dx = glm::abs(cam_pos.x - b.getPos().x);
+    float const dxmax = (b.getSize().x + _info._w) * 0.5f;
+    float const dy = glm::abs(cam_pos.y - b.getPos().y);
+    float const dymax = (b.getSize().y + _info._h) * 0.5f;
 
 
     if ((dx < dxmax) && (dy < dymax)) {
@@ -638,7 +630,7 @@ void Visualizer::frustrum_test()
     auto& planes = box_renderer->planes;
     planes.clear();
     for (auto [id, box] : _proj.box_map) {
-        planes.insert(planes.end(), box.model.cbegin(), box.model.cend());
+        planes.insert(planes.end(), box->model.cbegin(), box->model.cend());
     }
     std::sort(planes.begin(), planes.end(), sortPlanes);
     //planes.emplace_back(Selection_box);
@@ -647,29 +639,24 @@ void Visualizer::frustrum_test()
 void Visualizer::drag_boxes()
 {
     //SI LA SELECTION EST DE 1 LE METTRE EN PRIO
-    if (_selected_IDs.size() == 1) {
-        for (std::string s : _selected_IDs) {
-            _proj.box_map.at(s)._clicked = true;
-            _proj.box_map.at(s)._pos.z = 2;
-            _proj.box_map.at(s).update();
-        }
+    if (_selectedBoxes.size() == 1) {
+        (*_selectedBoxes.cbegin())->setZ(2);
     }
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
 
     //DRAG BOX
     static glm::vec3 delta;
 
-    glm::vec3 new_pos = cursor_map_coordinates();
+    glm::vec3 const new_pos = cursor_map_coordinates();
     delta = new_pos - _cur_pos;
     //Update only if the box has moved
     if (new_pos != _cur_pos) {
-        for (std::string s : _selected_IDs) {
-            _proj.box_map.at(s)._pos += glm::vec3{ delta.x, delta.y, 0 };
-            _proj.box_map.at(s).update();
-            link_box(_proj.box_map.at(s));
+        for (Box::Shared b : _selectedBoxes) {
+            b->setPos(b->getPos() + glm::vec3{ delta.x, delta.y, 0 });
+            link_box(*b);
         }
+        _cur_pos = new_pos;
     }
-    _cur_pos = new_pos; //update the position
 
     if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
         _states = V_STATES::DEFAULT;
@@ -690,11 +677,11 @@ void Visualizer::cut_link_line()
             static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
             for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-                Box* b1 = &it->second;
+                Box::Shared b1 = it->second;
                 glm::vec3 offset{ 0, 400, 0 }; //TODO
 
                 for (std::string s : b1->link_to) {
-                    Box* b2 = &_proj.box_map.at(s);
+                    Box::Shared b2 = _proj.box_map.at(s);
                     if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         _cur_pos, second_cursor_pos)) {
@@ -704,7 +691,7 @@ void Visualizer::cut_link_line()
             }
 
             for (size_t i = 0; i < cut_lines_selection.size(); i++) {
-                pop_link(_proj.box_map.at(cut_lines_selection[i].first), _proj.box_map.at(cut_lines_selection[i].second));
+                pop_link(*_proj.box_map.at(cut_lines_selection[i].first), *_proj.box_map.at(cut_lines_selection[i].second));
             }
 
             cut_lines_selection.clear();
@@ -716,25 +703,26 @@ void Visualizer::cut_link_line()
 void Visualizer::connect_drag_line()
 {
     if (!first_link_ID.empty()) {
-        link_box_to_cursor(_proj.box_map.at(first_link_ID));
+        link_box_to_cursor(*_proj.box_map.at(first_link_ID));
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-            if ((first_link_ID != clicked_box_ID(second_link_ID)) && !second_link_ID.empty()) {
+            second_link_ID = get_hovered_box()->_id;
+            if (first_link_ID != second_link_ID && !second_link_ID.empty()) {
 
                 //First look out if the link between boxes already exists
-                auto it = std::find(_proj.box_map.at(first_link_ID).link_to.begin(), _proj.box_map.at(first_link_ID).link_to.end(), second_link_ID);
+                auto it = std::find(_proj.box_map.at(first_link_ID)->link_to.begin(), _proj.box_map.at(first_link_ID)->link_to.end(), second_link_ID);
 
-                if (it != _proj.box_map.at(first_link_ID).link_to.end()) {
+                if (it != _proj.box_map.at(first_link_ID)->link_to.end()) {
                     //If it already exists delete it
                     //Erase the arrows connected to the box
                     //Erase the ID from their 'Link to' and 'Link from' list
                     arrow_map.erase(first_link_ID + second_link_ID);
-                    _proj.box_map.at(first_link_ID).link_to.erase(second_link_ID);
-                    _proj.box_map.at(second_link_ID).link_from.erase(first_link_ID);
+                    _proj.box_map.at(first_link_ID)->link_to.erase(second_link_ID);
+                    _proj.box_map.at(second_link_ID)->link_from.erase(first_link_ID);
                 }
                 else {
                     //If it doesn't, create the link between the two boxes
-                    link_box(_proj.box_map.at(first_link_ID), _proj.box_map.at(second_link_ID));
+                    link_box(*_proj.box_map.at(first_link_ID), *_proj.box_map.at(second_link_ID));
                 }
             }
 
@@ -754,25 +742,25 @@ void Visualizer::multi_select()
 
     glm::vec3 new_pos = cursor_map_coordinates();
     //MAKE THE SELECTION PARTICLE IN FRONT
-    Selection_box._pos = _otherpos +  glm::vec3(0.f, 0.f, 0.f);
+    Selection_box._pos = _otherpos + glm::vec3(0.f, 0.f, 0.f);
     Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
 
 
     for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
-        if (it->second.check_collision(Selection_box)) {
-            if (!_selected_IDs.count(it->first)) {
-                _selected_IDs.emplace(it->first);
-            }
-        }
+        //if (it->second.check_collision(Selection_box)) {
+        //    if (!_selected_IDs.count(it->first)) {
+        //        _selected_IDs.emplace(it->first);
+        //    }
+        //}
     }
 
     //SELECTION RESET 
     if (_states == V_STATES::MULTI_SELECT && (mod == 0) || (mouse_action == GLFW_RELEASE)) {
         //RESET THE PARTICLE
         Selection_box._color = glm::vec4(0.f);
-        Selection_box._size  = glm::vec2(0.f);
-        Selection_box._pos   = glm::vec3(FLT_MAX);
-    
+        Selection_box._size = glm::vec2(0.f);
+        Selection_box._pos = glm::vec3(FLT_MAX);
+
         //RESET THE MOD, ACTION AND STATE
         mod = INT_MAX;
         mouse_action = INT_MAX;
@@ -796,25 +784,12 @@ void Visualizer::drag_screen()
     _cur_pos = _otherpos;
 }
 
-std::string Visualizer::clicked_box_ID(std::string& ID)
+Box::Shared Visualizer::get_hovered_box()
 {
-    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-        if (it->second.check_collision(cursor_map_coordinates()))
-        {
-            std::string on_top_box_ID = it->first;
-
-            //Priority test for the box that is already on top for the collision test
-            if (ID.empty()) {
-                ID = on_top_box_ID;
-            }
-
-            if (!ID.empty() && (_proj.box_map.at(ID)._pos.z < _proj.box_map.at(on_top_box_ID)._pos.z)) {
-                //Check if the current Box is on top of the already other selected box
-                ID = on_top_box_ID;
-            }
-        }
-    }
-    return ID;
+    for (auto [id, b] : _proj.box_map)
+        if (b->isHovered())
+            return b;
+    return nullptr;
 }
 
 void Visualizer::parse_info_data_visualizer_to_json(const std::string& path, const bool prettify)
@@ -914,12 +889,12 @@ void Visualizer::load()
     //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
     float i = 0;
     for (const Text_data& td : _mt.text_data) {
-        if (!_proj.box_map.count(td.text_ID)) {
-            push_box(glm::vec3(i*5.0f,-i*5.0f, i * 10.f * epsilon),td);
+        if (!_proj.box_map.contains(td.text_ID)) {
+            push_box(glm::vec3(i*5.0f,-i*5.0f, 10.f),td);
             i += 1.f;
         }
-
-        _proj.box_map[td.text_ID].set_text_data(td);
+        else
+            _proj.box_map[td.text_ID]->set_text_data(td);
     }
 
 
