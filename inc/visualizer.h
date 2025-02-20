@@ -93,7 +93,7 @@ private:
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
 	bool check_frustrum_render(Box &b);
-	void frustrum_test();
+	//void frustrum_test();
 	void drag_boxes();
 	void cut_link_line();
 	void connect_drag_line();
@@ -102,6 +102,7 @@ private:
 	// Returns hovered Box or nullptr
 	Box::Shared get_hovered_box();
 
+public:
 	/* [RENDERER DATA] */
 	// Objects
 	SSS::GL::Camera::Shared camera;
@@ -110,10 +111,9 @@ private:
 	SSS::GL::PlaneRenderer::Shared box_renderer;
 	Debugger::Shared debug_renderer;
 
+private:
 	GLFWwindow* glfwwindow{ nullptr };
 	double c_x = 0.0, c_y = 0.0;
-	int mod = INT_MAX;
-	int mouse_action = INT_MAX;
 
 	glm::vec3 clear_color = glm::vec3{ 1.0f };
 	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;

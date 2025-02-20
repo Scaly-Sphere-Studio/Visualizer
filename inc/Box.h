@@ -38,14 +38,19 @@ struct Particle {
 	bool check_collision(glm::vec3 const& c_pos);
 };
 
-class BoxPlane : public SSS::GL::PlaneTemplate<BoxPlane> {
+class Box;
 
+class BoxPlane : public SSS::GL::PlaneTemplate<BoxPlane> {
+	friend class SharedClass;
 protected:
 	virtual glm::mat4 _getTranslationMat4() const override;
-
 private:
+	BoxPlane() = default;
 	glm::vec3 _offset;
+	SSS::SharedClass<Box>::Weak _parent;
 public:
+	inline void setBox(SSS::SharedClass<Box>::Weak box) { _parent = box; };
+	inline auto getBox() const noexcept { return _parent.lock(); };
 	inline glm::vec3 getOffset() const noexcept { return _offset; };
 	void setOffset(glm::vec3 offset);
 };
@@ -60,16 +65,13 @@ struct Tags : public Particle {
 };
 
 
-class Box : public SSS::GL::Basic::SharedBase<Box> {
-	friend class SharedBase;
+class Box : public SSS::SharedClass<Box> {
+	friend class SharedClass;
 
 private:
 	Box() = default;
 public:
 	~Box();
-
-	using SharedBase::Shared;
-	using SharedBase::create;
 
 private:
 	glm::vec2 _size;

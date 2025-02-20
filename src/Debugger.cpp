@@ -13,7 +13,6 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
 }
 
 Debugger::Debugger()
-    : SSS::GL::Renderer<Debugger>(), vbo()
 {
     vbo.bind();
 

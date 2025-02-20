@@ -144,6 +144,7 @@ bool Box::isHeld() const noexcept
 void Box::create_box()
 {
     _size.y = 0;
+    Visualizer::get().box_renderer->removePlanes(model);
     model.clear();
 
     //Brightning the color
@@ -170,7 +171,7 @@ void Box::create_box()
         }
     }
 
-    setPos(_pos);
+    Visualizer::get().box_renderer->addPlanes(model);
 }
 
 #define PARTICLE_VERTICES       0
@@ -225,8 +226,9 @@ Tags::~Tags()
 void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
 {
     SSS::TR::Format fmt = layout._fmt;
-    auto& area = SSS::TR::Area::create();
+    auto area = SSS::TR::Area::create();
     auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
+    plane->setBox(weak_from_this());
 
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = rgb_to_hsl(_color),
@@ -236,14 +238,14 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
         fmt.text_color.rgb = rgb_to_int32t(hsl_to_rgb(tex_col));
         
         bg_col.b -= 0.15f;
-        area.setClearColor(rgb_to_int32t(hsl_to_rgb(bg_col)));
+        area->setClearColor(rgb_to_int32t(hsl_to_rgb(bg_col)));
         // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
         //fmt.line_spacing = 1.f;
     }
     else {
-        area.setClearColor(rgb_to_int32t(_color));
-        area.setFocusable(true);
-        area.setWrapping(true);
+        area->setClearColor(rgb_to_int32t(_color));
+        area->setFocusable(true);
+        area->setWrapping(true);
         plane->setTextureSizeCallback([this](auto& plane) {
             _size_update();
         });
@@ -262,10 +264,10 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
         });
     }
 
-    area.setMargins(layout._marginv, layout._marginh);
-    area.setWrappingMaxWidth(TEXT_MAX_WIDTH);
-    area.setFormat(fmt);
-    area.parseString(s);
+    area->setMargins(layout._marginv, layout._marginh);
+    area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
+    area->setFormat(fmt);
+    area->parseString(s);
 
     //Create the model
     plane->translate(_pos);
