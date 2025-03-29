@@ -265,17 +265,20 @@ void Visualizer::setup()
     //ID FORMAT
     layout._fmt.charsize = 13;
     layout._fmt.text_color = 0x000000;
+    layout._fmt.line_spacing = 1.f;
     layout._marginh = 4;
     layout._marginv = 5;
     Box::layout_map.insert(std::make_pair("ID", layout));
     //TEXT FORMAT
+    layout._fmt.line_spacing = 1.5f;
     layout._fmt.charsize = 19;
     layout._fmt.text_color = 0x111111;
-    layout._marginh = 2;
+    layout._marginh = 5;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
     //TEXT FORMAT
     layout._fmt.charsize = 16;
+    layout._fmt.line_spacing = 1.3f;
     layout._fmt.font = "Ariali.ttf";
     layout._fmt.text_color = 0x333333;
     Box::layout_map.insert(std::make_pair("COMMENT", layout));

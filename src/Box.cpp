@@ -144,6 +144,9 @@ bool Box::isHeld() const noexcept
 void Box::create_box()
 {
     _size.y = 0;
+    for (auto& a : model)
+        if (a)
+            _ignore(*a->getTexture());
     Visualizer::get().box_renderer->removePlanes(model);
     model.clear();
 
@@ -229,6 +232,7 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
     auto area = SSS::TR::Area::create();
     auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
     plane->setBox(weak_from_this());
+    _observe(*plane->getTexture());
 
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = rgb_to_hsl(_color),
@@ -246,22 +250,6 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
         area->setClearColor(rgb_to_int32t(_color));
         area->setFocusable(true);
         area->setWrapping(true);
-        plane->setTextureSizeCallback([this](auto& plane) {
-            _size_update();
-        });
-        // Reset minWidth if needed (avoid avoid boxes that are too wide after deleting text)
-        plane->setTextureCallback([this](auto& plane) {
-            auto area = plane.getTextArea();
-            if (area && area->isFocused()) {
-                for (auto p : model) {
-                    auto area = p->getTextArea();
-                    if (!area) continue;
-                    if (area->getUsedWidth() == _size.x)
-                        return;
-                }
-                _size_update();
-            }
-        });
     }
 
     area->setMargins(layout._marginv, layout._marginh);
@@ -274,6 +262,26 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
     
     plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
     model.emplace_back(plane);
+}
+
+void Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
+    if (event_id == SSS::GL::Texture::Resize) {
+        _size_update();
+        return;
+    }
+    auto& texture = static_cast<SSS::GL::Texture const&>(subject);
+    if (texture.getType() == SSS::GL::Texture::Type::Text &&
+        texture.getTextArea() && texture.getTextArea()->isFocused())
+    {
+        for (auto const& p : model) {
+            auto area = p->getTextArea();
+            if (!area) continue;
+            if (area->getUsedWidth() == _size.x)
+                return;
+        }
+        _size_update();
+    }
 }
 
 void Box::_size_update() try

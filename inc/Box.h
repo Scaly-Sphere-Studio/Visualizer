@@ -65,7 +65,7 @@ struct Tags : public Particle {
 };
 
 
-class Box : public SSS::SharedClass<Box> {
+class Box : public SSS::Observer, public SSS::SharedClass<Box> {
 	friend class SharedClass;
 
 private:
@@ -110,6 +110,8 @@ public:
 	void create_box();
 private:
 	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
+	
+	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
 
 public:
