@@ -25,29 +25,6 @@ Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
     translation = glm::vec3(0, 0, 0);
 }
 
-
-bool Particle::check_collision(glm::vec3 const& c_pos)
-{
-    //Check if a point is hovering the box
-    //Point to Box Collision test
-    if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
-        ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
-        return true;
-    }
-    return false;
-}
-
-bool Particle::check_collision(Particle p)
-{
-    glm::vec2 delta = glm::vec3(glm::abs(p.center() - this->center()));
-    glm::vec2 sum = (glm::abs(p._size) + this->_size) / 2.f;
-
-    if (delta.x < sum.x && delta.y < sum.y) {
-        return true;
-    }
-    return false;
-}
-
 glm::vec3 Particle::center()
 {
     return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
@@ -86,6 +63,32 @@ Box::~Box()
     link_to.clear();
     link_from.clear();
     model.clear();
+}
+
+static bool _checkCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
+{
+    if (r1p.y +  r1s.y >= r2p.y &&      // r1 top edge past r2 bottom
+        r1p.y <= r2p.y +  r2s.y &&      // r1 bottom edge past r2 top
+        r1p.x +  r1s.x >= r2p.x &&      // r1 right edge past r2 left
+        r1p.x <= r2p.x +  r2s.x)        // r1 left edge past r2 right
+    {
+        LOG_MSG("Collision !!");
+        return true;
+    }
+    return false;
+}
+
+bool Box::checkCollision(glm::vec2 const& r2p, glm::vec2 const& r2s)
+{
+    return _checkCollision({ _pos.x, _pos.y - _size.y }, _size, r2p, r2s);
+}
+
+bool Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane)
+{
+    glm::vec2 const pos = plane->getTranslation();
+    glm::vec2 const size = plane->getScaling();
+
+    return checkCollision(pos - (size / 2.f), size);
 }
 
 

@@ -32,10 +32,6 @@ struct Particle {
 	glm::vec3 center();
 	glm::vec2 center2D();
 	glm::vec3 centerZ0();
-	//Check for a collision box/point
-	bool check_collision(Particle p);
-	//Check for a collision with another particle
-	bool check_collision(glm::vec3 const& c_pos);
 };
 
 class Box;
@@ -82,6 +78,9 @@ public:
 	inline glm::vec2 getSize() const noexcept { return _size; };
 	inline glm::vec3 getPos() const noexcept { return _pos; };
 	inline glm::vec4 getColor() const noexcept { return _color; };
+
+	bool checkCollision(glm::vec2 const& r2p, glm::vec2 const& r2s);
+	bool checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane);
 
 	glm::vec3 center() const;
 

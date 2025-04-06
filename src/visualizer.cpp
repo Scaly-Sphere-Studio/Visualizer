@@ -294,11 +294,20 @@ void Visualizer::setup()
     camera->setZFar(40.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
+    auto texture = SSS::GL::Texture::create();
+    texture->setColor(SSS::RGBA32(200, 220, 240, 80));
+    Selection_box = BoxPlane::create(texture);
+
     line_renderer = SSS::GL::LineRenderer::create();
     line_renderer->camera = camera;
 
     box_renderer = SSS::GL::PlaneRenderer::create();
     box_renderer->camera = camera;
+
+    selection_renderer = SSS::GL::PlaneRenderer::create();
+    selection_renderer->camera = camera;
+    selection_renderer->addPlane(Selection_box);
+    selection_renderer->setActivity(false);
 
     debug_renderer = Debugger::create();
     debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
@@ -306,7 +315,7 @@ void Visualizer::setup()
     // Enable or disable debugger
     debug_renderer->setActivity(false);
 
-    window.setRenderers({ box_renderer, line_renderer, debug_renderer });
+    window.setRenderers({ box_renderer, line_renderer, selection_renderer, debug_renderer });
 }
 
 void Visualizer::input()
@@ -421,9 +430,9 @@ void Visualizer::input()
 
     // SHIFT LEFT CLICK
     if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && window->keyMod(GLFW_MOD_SHIFT)) {
-        Selection_box._color = hex_to_rgb("#abcdef") * glm::vec4(1.f, 1.f, 1.f, 0.3f);
-        Selection_box.translation = glm::vec3(0.f, 0.f, 2.5f);
         _otherpos = cursor_map_coordinates();
+        Selection_box->setTranslation(_otherpos);
+        selection_renderer->setActivity(true);
         _states = V_STATES::MULTI_SELECT;
     }
 
@@ -431,10 +440,7 @@ void Visualizer::input()
     if (_states == V_STATES::MULTI_SELECT
         && (clicks[GLFW_MOUSE_BUTTON_1].is_released() || !window->keyMod(GLFW_MOD_SHIFT)))
     {
-        Selection_box._color = glm::vec4(0.f);
-        Selection_box._size = glm::vec2(0.f);
-        Selection_box._pos = glm::vec3(FLT_MAX);
-
+        selection_renderer->setActivity(false);
         _states = V_STATES::DEFAULT;
     }
 }
@@ -725,20 +731,21 @@ void Visualizer::connect_drag_line()
 
 void Visualizer::multi_select()
 {
-    auto const& inputs = SSS::GL::Window::get(glfwwindow)->getKeyInputs();
+    static glm::vec2 diff(0);
+    glm::vec2 const new_diff = cursor_map_coordinates() - _otherpos;
+    if (diff == new_diff)
+        return;
+    diff = new_diff;
 
-    glm::vec3 new_pos = cursor_map_coordinates();
     //MAKE THE SELECTION PARTICLE IN FRONT
-    Selection_box._pos = _otherpos + glm::vec3(0.f, 0.f, 0.f);
-    Selection_box._size = glm::vec2(new_pos.x - _otherpos.x, -(new_pos.y - _otherpos.y));
+    Selection_box->setOffset(glm::vec3(diff / 2, 5.f));
+    Selection_box->setScaling(glm::vec3(glm::abs(diff), 1.f));
 
-
-    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
-        //if (it->second.check_collision(Selection_box)) {
-        //    if (!_selected_IDs.count(it->first)) {
-        //        _selected_IDs.emplace(it->first);
-        //    }
-        //}
+    for (auto [id, box] : _proj.box_map) {
+        if (box->checkCollision(Selection_box))
+            _selectedBoxes.emplace(box);
+        else
+            _selectedBoxes.erase(box);
     }
 }
 

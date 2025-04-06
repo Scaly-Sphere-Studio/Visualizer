@@ -82,8 +82,7 @@ private:
 
 
 	std::set<Box::Shared> _selectedBoxes;
-	Particle Selection_box{glm::vec3(INT_MAX,INT_MAX,0), glm::vec2(50,50), glm::vec4(0,0,0,0)};
-
+	BoxPlane::Shared Selection_box;
 
 	std::string first_link_ID;
 	std::string second_link_ID;
@@ -107,8 +106,9 @@ public:
 	// Objects
 	SSS::GL::Camera::Shared camera;
 	// Renderers
-	SSS::GL::LineRenderer::Shared line_renderer;
 	SSS::GL::PlaneRenderer::Shared box_renderer;
+	SSS::GL::LineRenderer::Shared line_renderer;
+	SSS::GL::PlaneRenderer::Shared selection_renderer;
 	Debugger::Shared debug_renderer;
 
 private:
