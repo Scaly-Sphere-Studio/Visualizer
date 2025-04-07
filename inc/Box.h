@@ -12,28 +12,6 @@ struct GUI_Layout {
 	int _marginh = 0, _marginv = 0;
 };
 
-struct Particle {
-	Particle();
-	Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 col);
-	// ---------- Below data is passed to OpenGL VBO
-	glm::vec3 _pos;
-	glm::vec2 _size;
-	glm::vec4 _color;
-	GLuint _glsl_tex_unit{ UINT32_MAX };
-	// ---------- Transformations
-	// float angle;
-	glm::vec3 translation;
-	// float scale;
-
-	// ---------- Below data is purely internal and not passed to OpenGL
-	SSS::GL::Texture::Shared _sss_texture;
-	
-	//Return the coordinates of the center of the box
-	glm::vec3 center();
-	glm::vec2 center2D();
-	glm::vec3 centerZ0();
-};
-
 class Box;
 
 class BoxPlane : public SSS::GL::PlaneTemplate<BoxPlane> {
@@ -51,7 +29,7 @@ public:
 	void setOffset(glm::vec3 offset);
 };
 
-struct Tags : public Particle {
+struct Tags {
 	Tags();
 	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
 	~Tags();
@@ -131,16 +109,6 @@ public:
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
 };
-
-class Selection_square : Particle {
-public:
-
-	//Box rendering
-	Particle model;
-
-	static std::vector<Particle> box_batch;
-};
-
 
 
 static bool sortPlanes(std::shared_ptr<SSS::GL::PlaneBase>& a, std::shared_ptr<SSS::GL::PlaneBase>& b) {

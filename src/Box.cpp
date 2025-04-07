@@ -10,36 +10,6 @@ std::map<uint16_t, Tags>Box::tags_list{};
 std::map<std::string, GUI_Layout> Box::layout_map{};
 glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
-Particle::Particle()
-{
-    _pos = glm::vec3(0);
-    _size = glm::vec2(50.f, 50.f);
-    _color = glm::vec4(0);
-
-    translation = glm::vec3(0,0,0);
-}
-
-Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
-    _pos(pos), _size(s), _color(_col)
-{
-    translation = glm::vec3(0, 0, 0);
-}
-
-glm::vec3 Particle::center()
-{
-    return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
-}
-
-glm::vec2 Particle::center2D()
-{
-    return glm::vec2(center());
-}
-
-glm::vec3 Particle::centerZ0()
-{
-    return glm::vec3(center2D(), 0);
-}
-
 
 glm::mat4 BoxPlane::_getTranslationMat4() const {
     glm::vec3 offset = _offset;
