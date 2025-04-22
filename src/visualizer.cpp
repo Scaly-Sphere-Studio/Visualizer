@@ -296,7 +296,7 @@ void Visualizer::setup()
 
     auto texture = SSS::GL::Texture::create();
     texture->setColor(SSS::RGBA32(200, 220, 240, 80));
-    Selection_box = BoxPlane::create(texture);
+    Selection_box = SSS::GL::Plane::create(texture);
 
     line_renderer = SSS::GL::LineRenderer::create();
     line_renderer->camera = camera;
@@ -431,7 +431,6 @@ void Visualizer::input()
     // SHIFT LEFT CLICK
     if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && window->keyMod(GLFW_MOD_SHIFT)) {
         _otherpos = cursor_map_coordinates();
-        Selection_box->setTranslation(_otherpos);
         selection_renderer->setActivity(true);
         _states = V_STATES::MULTI_SELECT;
     }
@@ -738,7 +737,7 @@ void Visualizer::multi_select()
     diff = new_diff;
 
     //MAKE THE SELECTION PARTICLE IN FRONT
-    Selection_box->setOffset(glm::vec3(diff / 2, 5.f));
+    Selection_box->setTranslation(_otherpos + glm::vec3(diff / 2, 5.f));
     Selection_box->setScaling(glm::vec3(glm::abs(diff), 1.f));
 
     for (auto [id, box] : _proj.box_map) {
@@ -811,23 +810,6 @@ void Visualizer::parse_info_data_project_to_json(const std::string& path, const 
         ofs << dst << std::endl;
     }
     ofs.close();
-}
-
-bool Visualizer::double_click_detection(std::chrono::milliseconds timestamp)
-{
-    using namespace std::chrono_literals;
-
-    static std::chrono::steady_clock::time_point start;
-    static std::chrono::steady_clock::time_point end;
-
-    start = std::chrono::steady_clock::now();
-    if ((start - end) < timestamp) {
-        auto elapsed_time = std::chrono::duration(start - end);
-        end = start;
-        return true;
-    }
-    end = start;
-    return false;
 }
 
 void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)

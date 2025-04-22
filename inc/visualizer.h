@@ -82,7 +82,7 @@ private:
 
 
 	std::set<Box::Shared> _selectedBoxes;
-	BoxPlane::Shared Selection_box;
+	SSS::GL::Plane::Shared Selection_box;
 
 	std::string first_link_ID;
 	std::string second_link_ID;
@@ -125,9 +125,6 @@ private:
 	
 	void parse_info_data_project_from_json(const std::string& path);
 	void parse_info_data_project_to_json(const std::string& path, const bool prettify = false);
-
-	//Check if a double click is detected in a selected time interval
-	bool double_click_detection(std::chrono::milliseconds timestamp);
 
 	//BACKEND INFORMATIONS
 	std::map<std::string, std::string> iso_map;
