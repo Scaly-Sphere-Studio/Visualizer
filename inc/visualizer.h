@@ -115,7 +115,7 @@ private:
 	GLFWwindow* glfwwindow{ nullptr };
 	double c_x = 0.0, c_y = 0.0;
 
-	glm::vec3 clear_color = glm::vec3{ 1.0f };
+	glm::vec4 clear_color = glm::vec4{ 1.0f };
 	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
 	Traduction_data _td;
 
