@@ -2,6 +2,7 @@
 
 #include "commons.h"
 #include "Text_data.h"
+#include "SSS/Commons/color.hpp"
 
 auto constexpr BOX_LAYER = 2.f;
 
@@ -66,7 +67,9 @@ public:
 	void setPos(glm::vec3 pos);
 	inline void setZ(float z) { /*setPos(glm::vec3(_pos.x, _pos.y, z));*/ };
 	void setColor(glm::vec4 color);
-	inline void setColor(std::string hex) { setColor(hex_to_rgb(hex)); };
+	//inline void setColor(std::string hex) { setColor(hex_to_rgb(hex)); };
+	inline void setColor(std::string hex) { setColor(SSS::RGBA_f{}.from_Hex(hex)._col); };
+	
 
 	//void setSelectedCol(std::string hex);
 

@@ -160,10 +160,10 @@ void Visualizer::run()
 
     refresh();
 
-    clear_color = hex_to_rgb("#4d5f83");
+    clear_color = SSS::RGBA_f{ "#4d5f83" }.to_RGBA();
 
     glEnable(GL_DEPTH_TEST);
-    glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
+    glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
     // Main loop
     while (!window->shouldClose()) {
@@ -344,7 +344,7 @@ void Visualizer::input()
 
     //INPUTS BOX
     if (keys[GLFW_KEY_KP_ADD].is_pressed()) {
-        push_box(rgb_to_hex(rand_pastel_color()));
+        push_box(SSS::RGBA_f(rand_pastel_color()).to_Hex());
     }
     //TEST SUPPRESSION
     if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxes.empty()) {
@@ -662,7 +662,7 @@ void Visualizer::cut_link_line()
     using Line = SSS::GL::Polyline;
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map["CUTLINE"] = Line::Segment({ _cur_pos.x, _cur_pos.y, 5.f }, second_cursor_pos, 10.f, hex_to_rgb("#03070e"), Line::JointType::BEVEL, Line::TermType::ROUND);
+        arrow_map["CUTLINE"] = Line::Segment({ _cur_pos.x, _cur_pos.y, 5.f }, second_cursor_pos, 10.f, SSS::RGBA_f{ "#03070e" }.to_RGBA(), Line::JointType::BEVEL, Line::TermType::ROUND);
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             arrow_map.erase("CUTLINE");

@@ -85,7 +85,7 @@ void Box::setColor(glm::vec4 color)
         auto area = texture->getTextArea();
         if (!area)
             continue;
-        area->setClearColor(rgb_to_int32t(_color));
+        area->setClearColor(SSS::RGBA_f{ _color });
     }
 }
 
@@ -208,19 +208,20 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
     _observe(*plane->getTexture());
 
     if (flag == FLAG_ID) {
-        glm::vec4 tex_col = rgb_to_hsl(_color),
-                  bg_col = tex_col;
+        glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
+        glm::vec4 bg_col = tex_col;
 
         tex_col.b = 0.3f;
-        fmt.text_color.rgb = rgb_to_int32t(hsl_to_rgb(tex_col));
+        fmt.text_color = SSS::RGBA_f::from_HSL(tex_col);
         
         bg_col.b -= 0.15f;
-        area->setClearColor(rgb_to_int32t(hsl_to_rgb(bg_col)));
+        area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
         // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
         //fmt.line_spacing = 1.f;
     }
     else {
-        area->setClearColor(rgb_to_int32t(_color));
+        //area->setClearColor(rgb_to_int32t(_color));
+        area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{_color}));
         area->setFocusable(true);
         area->setWrapping(true);
     }
