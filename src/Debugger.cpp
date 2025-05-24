@@ -13,7 +13,6 @@ debug_Vertex::debug_Vertex(float x, float y, float z, glm::vec3 col)
 }
 
 Debugger::Debugger()
-    : SSS::GL::Renderer<Debugger>(), vbo()
 {
     vbo.bind();
 
@@ -43,25 +42,27 @@ Debugger::~Debugger()
 
 void Debugger::debug_box(const Box& b)
 {
-    float cursor_size = 5.f;
+    float const cursor_size = 5.f;
+    glm::vec2 const size = b.getSize();
+    glm::vec3 const pos = b.getPos();
     //center
-    cross(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
-    circle(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
+    cross(pos.x + size.x / 2.f, pos.y - size.y / 2.f, 0.8f, cursor_size);
+    circle(pos.x + size.x / 2.f, pos.y - size.y / 2.f, 0.8f, cursor_size);
 
     //cage
-    rectangle(b._pos.x, b._pos.y, b._size.x, b._size.y);
+    rectangle(pos.x, pos.y, size.x, size.y);
 
     //corner
-    circle(b._pos.x, b._pos.y, 0.8f, cursor_size);
-    circle(b._pos.x, b._pos.y - b._size.y, 0.8f, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y, 0.8f, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y - b._size.y, 0.8f, cursor_size);
+    circle(pos.x, pos.y, 0.8f, cursor_size);
+    circle(pos.x, pos.y - size.y, 0.8f, cursor_size);
+    circle(pos.x + size.x, pos.y, 0.8f, cursor_size);
+    circle(pos.x + size.x, pos.y - size.y, 0.8f, cursor_size);
 
     //mid
-    circle(b._pos.x + b._size.x / 2.f, b._pos.y, 0.8f, cursor_size);
-    circle(b._pos.x + b._size.x / 2.f, b._pos.y - b._size.y, 0.8f, cursor_size);
-    circle(b._pos.x, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
-    circle(b._pos.x + b._size.x, b._pos.y - b._size.y / 2.f, 0.8f, cursor_size);
+    circle(pos.x + size.x / 2.f, pos.y, 0.8f, cursor_size);
+    circle(pos.x + size.x / 2.f, pos.y - size.y, 0.8f, cursor_size);
+    circle(pos.x, pos.y - size.y / 2.f, 0.8f, cursor_size);
+    circle(pos.x + size.x, pos.y - size.y / 2.f, 0.8f, cursor_size);
 }
 
 void Debugger::circle(float x, float y, float z, float radius)
@@ -127,12 +128,14 @@ void Debugger::render()
 {
     if (!isActive()) return;
 
-    Visualizer::Ptr const& visu = Visualizer::get();
+    Visualizer& visu = Visualizer::get();
+
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     glm::vec3 const cam_pos = camera->getPosition();
-    rectangle(cam_pos.x - visu->_info._w / 2 + 1, cam_pos.y + visu->_info._h / 2, visu->_info._w - 1, visu->_info._h - 1);
-    for (auto it = visu->_proj.box_map.begin(); it != visu->_proj.box_map.end(); it++) {
-        debug_box(it->second);
+    rectangle(cam_pos.x - visu._info._w / 2 + 1, cam_pos.y + visu._info._h / 2, visu._info._w - 1, visu._info._h - 1);
+    for (auto it = visu._proj.box_map.begin(); it != visu._proj.box_map.end(); it++) {
+        debug_box(*it->second);
     }
     float cursor_size = 5;
     //ORIGIN CURSOR

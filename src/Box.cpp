@@ -1,72 +1,31 @@
 #include "Box.h"
+#include "visualizer.h"
 
-std::vector<Particle>Box::box_batch{};
+#define FLAG_ID                 0
+#define FLAG_TEXT               1
+
+#define TEXT_MAX_WIDTH          600
+
 std::map<uint16_t, Tags>Box::tags_list{};
+std::map<std::string, GUI_Layout> Box::layout_map{};
+glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
 
-Particle::Particle()
-{
-    _pos = glm::vec3(0);
-    _size = glm::vec2(50.f, 50.f);
-    _color = glm::vec4(0);
-}
-
-Particle::Particle(glm::vec3 pos, glm::vec2 s, glm::vec4 _col) :
-    _pos(pos), _size(s), _color(_col)
-{
-}
-
-Particle::Particle(std::string t, const SSS::TR::Format& fmt, 
-    glm::vec3 pos, glm::vec2 s) :
-    _pos(pos), _size(s), _color(glm::vec4(0))
-{
-    // Create text area & gl texture
-    auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    area.setFormat(fmt);
-    area.parseString(t);
-
-    _sss_texture = SSS::GL::Texture::create(area);
-}
-
-bool Particle::check_collision(glm::vec3 const& c_pos)
-{
-    //Check if a point is hovering the box
-    //Point to Box Collision test
-    if (((c_pos.x > _pos.x) && (c_pos.x < static_cast<double>(_pos.x) + static_cast<double>(_size.x))) &&
-        ((c_pos.y < _pos.y) && (c_pos.y > static_cast<double>(_pos.y) - static_cast<double>(_size.y)))) {
-        return true;
+glm::mat4 BoxPlane::_getTranslationMat4() const {
+    glm::vec3 offset = _offset;
+    auto texture = getTexture();
+    if (texture) {
+        auto const [w, h] = getTexture()->getCurrentDimensions();
+        float const x = static_cast<float>(w) / 2.f;
+        float const y = static_cast<float>(-h) / 2.f;
+        offset += glm::vec3(x, y, 0);
     }
-    return false;
+    return glm::translate(ModelBase::_getTranslationMat4(), offset);
 }
 
-bool Particle::check_collision(Particle p)
-{
-    glm::vec2 delta = glm::vec3(glm::abs(p.center() - this->center()));
-    glm::vec2 sum = (glm::abs(p._size) + this->_size) / 2.f;
-
-    if (delta.x < sum.x && delta.y < sum.y) {
-        return true;
-    }
-    return false;
-}
-
-glm::vec3 Particle::center()
-{
-    return _pos + glm::vec3(_size.x /2.0, -_size.y /2.0, 0);
-}
-
-
-Box::Box() { }
-
-Box::Box(glm::vec3 pos, glm::vec2 s, std::string hex)
-{
-    _size = s;
-    //Center the box around the cursor
-    _pos = pos + glm::vec3{ -_size.x / 2.0f , _size.y / 2.0f, rand_float() };
-    _color = hex_to_rgb(hex);
-    _id = hex;
-
-    create_box();
+void BoxPlane::setOffset(glm::vec3 offset) {
+    _offset = offset;
+    _computeModelMat4();
 }
 
 Box::~Box()
@@ -74,269 +33,256 @@ Box::~Box()
     link_to.clear();
     link_from.clear();
     model.clear();
-    text_model.clear();
+}
+
+static bool _checkCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
+{
+    if (r1p.y +  r1s.y >= r2p.y &&      // r1 top edge past r2 bottom
+        r1p.y <= r2p.y +  r2s.y &&      // r1 bottom edge past r2 top
+        r1p.x +  r1s.x >= r2p.x &&      // r1 right edge past r2 left
+        r1p.x <= r2p.x +  r2s.x)        // r1 left edge past r2 right
+    {
+        LOG_MSG("Collision !!");
+        return true;
+    }
+    return false;
+}
+
+bool Box::checkCollision(glm::vec2 const& r2p, glm::vec2 const& r2s)
+{
+    return _checkCollision({ _pos.x, _pos.y - _size.y }, _size, r2p, r2s);
+}
+
+bool Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane)
+{
+    glm::vec2 const pos = plane->getTranslation();
+    glm::vec2 const size = plane->getScaling();
+
+    return checkCollision(pos - (size / 2.f), size);
 }
 
 
-void Box::set_selected_col(std::string hex)
+glm::vec3 Box::center() const
 {
+    return _pos + glm::vec3(_size.x / 2.f, _size.y / -2.f, 0);
 }
 
-void Box::set_col(std::string hex)
+void Box::setPos(glm::vec3 pos)
 {
+    _pos = pos;
+    for (auto& plane : model) {
+        plane->setTranslation(_pos);
+    }
+}
+
+void Box::setColor(glm::vec4 color)
+{
+    _color = color;
+    for (auto& plane : model) {
+        auto texture = plane->getTexture();
+        if (!texture)
+            continue;
+        auto area = texture->getTextArea();
+        if (!area)
+            continue;
+        area->setClearColor(SSS::RGBA_f{ _color });
+    }
+}
+
+
+void Box::set_text_data(const Text_data& td)
+{
+    _td = td;
+    create_box();
+}
+
+bool Box::isHovered() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isHovered(); });
+}
+
+bool Box::isClicked() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isClicked(); });
+}
+
+bool Box::isHeld() const noexcept
+{
+    return std::any_of(model.cbegin(), model.cend(),
+        [](BoxPlane::Shared p) { return p->isHeld(); });
 }
 
 void Box::create_box()
 {
+    _size.y = 0;
+    for (auto& a : model)
+        if (a)
+            _ignore(*a->getTexture());
+    Visualizer::get().box_renderer->removePlanes(model);
+    model.clear();
+
     //Brightning the color
     glm::vec4 factor = (glm::vec4(1.f) - _color) * glm::vec4(0.2f);
 
-    //Create the model
-    //Background
-    model.emplace_back(_pos, _size, glm::vec4(_color));
-    //ID Background
-    model.emplace_back(_pos + glm::vec3(0.f, 0.f, epsilon), glm::vec2(_size.x - 2, _size.y / 3), glm::vec4(_color + factor));
-    
-    SSS::TR::Format fmt;
-    fmt.charsize = (int)_size.y / 6;
-    fmt.has_outline = true;
-    fmt.outline_size = 2;
+    // Create the model
+    _create_part(_td.text_ID, Box::layout_map["ID"], FLAG_ID);
+    // Text
+    _create_part(_td.text, Box::layout_map["TEXT"], FLAG_TEXT);
+    // Comment text
+    if (!_td.comment.empty())
+        _create_part(_td.comment, Box::layout_map["COMMENT"], FLAG_TEXT);
+    // tags
+    if (!tags.empty())
+        _create_part("TODO: tags", Box::layout_map["TEXT"], FLAG_TEXT);
 
-    text_model.emplace_back(_id, fmt, _pos + glm::vec3(0.f, 0.f, 2.f * epsilon), _size * glm::vec2(1.f, 0.3f));
-    text_model.emplace_back("bsr", fmt, _pos + glm::vec3(0.f, -_size.y/3.f, 2.f * epsilon), _size * glm::vec2(1.f, 1.f - 0.3f));
+    _size_update();
 
     //Tags
     if (tags.size() > 0) {
         model.reserve(tags.size() * 2);
         for (size_t i = 0; i < tags.size(); ++i) {
-            model.insert(model.end(), tags_list[tags[i]].model.begin(), tags_list[tags[i]].model.end());
-        }
-    }
-}
-
-SSS::GL::Texture::Shared Box::check_text_selection(glm::vec3 const& c_pos)
-{
-    for (Particle p : text_model) {
-        if (p.check_collision(c_pos) && p._sss_texture) {
-            p._sss_texture->getTextArea()->setFocus(true);
-            return p._sss_texture;
+            model.insert(model.end(), tags_list[tags[i]]._model.begin(), tags_list[tags[i]]._model.end());
         }
     }
 
-    return nullptr;
+    Visualizer::get().box_renderer->addPlanes(model);
 }
 
-void Box::update_pos(glm::vec3 delta)
-{
-    //Numbers of particles for each box
-    // Background, id background, numbers of tags, comment,  *2 + info particles
+#define PARTICLE_VERTICES       0
+#define PARTICLE_SIZE           1
+#define PARTICLE_COLOR          2
+#define PARTICLE_POSITION       3
+#define PARTICLE_UV             4
+#define ID_TEXTURE              5
+//Transformations
+#define PARTICLE_TRANSLATE      6
+#define PARTICLE_SCALE          7
+#define PARTICLE_ROTATE         8
 
-    for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
-    }
-    for (size_t i = 0; i < text_model.size(); i++) {
-        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
-    }
-
-}
-
-void Box::update()
-{
-    for (size_t i = 0; i < model.size(); i++) {
-        model[i]._pos = _pos + glm::vec3(0., 0., static_cast<float>(i) * epsilon);
-    }
-    for (size_t i = 0; i < text_model.size(); i++) {
-        text_model[i]._pos = _pos + glm::vec3(0., 0., 2.0f * epsilon);
-    }
-}
-
-
-BoxRenderer::BoxRenderer()
-    : Renderer<BoxRenderer>(), vao(), billboard_vbo(), billboard_ibo(), particles_vbo()
-{
-
-    vao.bind();
-
-    // Static vertices
-    {
-        constexpr GLfloat vertices[] = {
-            // Position         // Texture UV
-            0.f,  0.f, 0.f,     0.f, 1.f - 1.f, // Top left
-            0.f, -1.f, 0.f,     0.f, 1.f - 0.f, // Bottom left
-            1.f, -1.f, 0.f,     1.f, 1.f - 0.f, // Bottom right
-            1.f,  0.f, 0.f,     1.f, 1.f - 1.f  // Top right
-        };
-        billboard_vbo.edit(sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-            sizeof(float) * 5, (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE,
-            sizeof(float) * 5, (void*)(sizeof(float) * 3));
-
-        constexpr GLuint indices[] = {
-            0, 1, 2,    // First triangle
-            2, 3, 0     // Second triangle
-        };
-        billboard_ibo.edit(sizeof(indices), indices, GL_STATIC_DRAW);
-    }
-
-    // Particles
-    {
-        particles_vbo.bind();
-
-        // Size (width / height)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-            sizeof(Particle), (void*)(sizeof(glm::vec3)));
-        glVertexAttribDivisor(1, 1);
-
-        // Color
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE,
-            sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))
-        );
-        glVertexAttribDivisor(2, 1);
-
-        // Position
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-            sizeof(Particle), (void*)0);
-        glVertexAttribDivisor(3, 1);
-
-        // Texture unit
-        glEnableVertexAttribArray(5);
-        glVertexAttribIPointer(5, 1, GL_UNSIGNED_INT,
-            sizeof(Particle), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(glm::vec4)));
-        glVertexAttribDivisor(5, 1);
-    }
-
-    vao.unbind();
-}
-
-void BoxRenderer::render()
-{
-    std::queue<Batch> queue;
-    Batch* batch = &queue.emplace();
-
-    // Process batch queue
-    for (GLuint i = 0; i < Box::box_batch.size(); ++i) {
-        Particle& box = Box::box_batch[i];
-        // Skip if no texture needed
-        if (!box._sss_texture) {
-            batch->count++;
-            continue;
-        }
-        // Check if texture ID is already in batch
-        auto const it = std::find(
-            batch->textures.cbegin(),
-            batch->textures.cend(),
-            box._sss_texture
-        );
-        // If not found, push texture ID in batch
-        if (it == batch->textures.cend()) {
-            // Max number of texture units in the fragment shader
-            static uint32_t const max_texture_units = []() {
-                int i;
-                glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i);
-                return static_cast<uint32_t>(i);
-            }();
-            // If texture IDs are full, create new batch
-            if (batch->textures.size() >= max_texture_units) {
-                batch = &queue.emplace();
-                batch->offset = i;
-            }
-            // Add texture ID to batch and batch ID to particle
-            batch->textures.push_back(box._sss_texture);
-            box._glsl_tex_unit = static_cast<GLint>(batch->textures.size() - 1);
-        }
-        // Else just add corresponding batch ID
-        else {
-            box._glsl_tex_unit =
-                static_cast<GLint>(std::distance(batch->textures.cbegin(), it));
-        }
-        // Increment elements count
-        batch->count++;
-    }
-
-    // Setup VAO
-    vao.bind();
-    if (Box::box_batch.size() > 0) {
-        particles_vbo.edit(sizeof(Particle) * Box::box_batch.size(),
-            Box::box_batch.data(), GL_DYNAMIC_DRAW);
-    }
-
-    // Setup shader
-    auto const shader = getShaders();
-
-    auto mvp = camera->getVP();
-
-    shader->use();
-    shader->setUniformMat4fv("u_MVP", 1, GL_FALSE, &mvp[0][0]);
-
-    // Draw all particles
-    static constexpr std::array<GLint, 128> texture_IDs = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-        16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-        32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-        48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-        64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-        80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-        96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
-        112, 113, 114, 115, 116, 117, 118, 119, 110, 121, 122, 123, 124, 125, 126, 127
-    };
-    for (; !queue.empty(); queue.pop()) {
-        Batch const& batch = queue.front();
-        shader->setUniform1iv("u_Textures", batch.count, &texture_IDs[0]);
-        // Bind needed textures
-        for (uint32_t i = 0; i < batch.textures.size(); ++i) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            batch.textures[i]->bind();
-        }
-        // Draw batch
-        glDrawElementsInstancedBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-            nullptr, batch.count, batch.offset);
-    }
-
-    vao.unbind();
-}
 
 Tags::Tags()
 {
+    _weight = 1;
 }
 
 Tags::Tags(std::string _name, std::string hex, uint32_t weight)
 {
-    int char_size = 12;
-    _size = { char_size * _name.size() + 5, char_size * 1.5f};
-    //Center the box around the cursor
-    _pos = { 0.0f, 0.0f, 0.0f };
-    _color = hex_to_rgb(hex);
+    //int char_size = 12;
+    //_size = { char_size * _name.size() + 5, char_size * 1.5f};
+    ////Center the box around the cursor
+    //_pos = { 0.0f, 0.0f, 0.0f };
+    //_color = hex_to_rgb(hex);
+    //_weight = weight;
 
 
-    // Create text area & gl texture
-    auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    auto fmt = area.getFormat();
-    //fmt.charsize = (int)_size.y / 3;
-    fmt.charsize = char_size;
-    fmt.has_outline = false;
-    fmt.outline_size = 2;
-    fmt.text_color = 0x000000;
-    area.setFormat(fmt);
-    area.parseString(_name);
+    //// Create text area & gl texture
+    //auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
+    //auto fmt = area.getFormat();
+    ////fmt.charsize = (int)_size.y / 3;
+    //fmt.charsize = char_size;
+    //fmt.has_outline = false;
+    //fmt.outline_size = 2;
+    //fmt.text_color = 0x000000;
+    //area.setFormat(fmt);
+    //area.parseString(_name);
 
-    //Create the model
-    model.emplace_back(_pos, _size, glm::vec4(_color));
-    model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
-        ._sss_texture = SSS::GL::Texture::create(area);
+    ////Create the model
+    //_model.emplace_back(_pos, _size, glm::vec4(_color));
+    //_model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
+    //    ._sss_texture = SSS::GL::Texture::create(area);
 }
 
 Tags::~Tags()
 {
-    model.clear();
+    _model.clear();
 }
 
-Text_particle::Text_particle(glm::vec3 _pos, glm::vec2 _s, const std::string text, const SSS::TR::Format& fmt)
+void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
 {
+    SSS::TR::Format fmt = layout._fmt;
+    auto area = SSS::TR::Area::create();
+    auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
+    plane->setBox(weak_from_this());
+    _observe(*plane->getTexture());
 
+    if (flag == FLAG_ID) {
+        glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
+        glm::vec4 bg_col = tex_col;
+
+        tex_col.b = 0.3f;
+        fmt.text_color = SSS::RGBA_f::from_HSL(tex_col);
+        
+        bg_col.b -= 0.15f;
+        area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
+        // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
+        //fmt.line_spacing = 1.f;
+    }
+    else {
+        //area->setClearColor(rgb_to_int32t(_color));
+        area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{_color}));
+        area->setFocusable(true);
+        area->setWrapping(true);
+    }
+
+    area->setMargins(layout._marginv, layout._marginh);
+    area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
+    area->setFormat(fmt);
+    area->parseString(s);
+
+    //Create the model
+    plane->translate(_pos);
+    
+    plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
+    model.emplace_back(plane);
 }
+
+void Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
+    if (event_id == SSS::GL::Texture::Resize) {
+        _size_update();
+        return;
+    }
+    auto& texture = static_cast<SSS::GL::Texture const&>(subject);
+    if (texture.getType() == SSS::GL::Texture::Type::Text &&
+        texture.getTextArea() && texture.getTextArea()->isFocused())
+    {
+        for (auto const& p : model) {
+            auto area = p->getTextArea();
+            if (!area) continue;
+            if (area->getUsedWidth() == _size.x)
+                return;
+        }
+        _size_update();
+    }
+}
+
+void Box::_size_update() try
+{
+    glm::vec2 const old_size = _size;
+    _size = glm::vec2(0);
+    for (BoxPlane::Shared& p : model) {
+        p->setOffset(glm::vec3(0, -_size.y, BOX_LAYER));
+        auto [w, h] = p->getTexture()->getCurrentDimensions();
+        p->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
+        if (auto area = p->getTextArea(); area)
+            w = area->getUsedWidth();
+        _size.x = std::max(static_cast<float>(w), _size.x);
+        _size.y += static_cast<float>(h);
+    }
+    // Set min width
+    if (_size == old_size)
+        return;
+    if (_size.x != old_size.x) {
+        int w = static_cast<int>(_size.x);
+        if (TEXT_MAX_WIDTH - static_cast<int>(_size.x) < 10)
+            w = TEXT_MAX_WIDTH;
+        for (BoxPlane::Shared& p : model) {
+            if (auto area = p->getTextArea(); area)
+                area->setWrappingMinWidth(w);
+        }
+    }
+    Visualizer::get().link_box(*this);
+}
+CATCH_AND_LOG_METHOD_EXC;

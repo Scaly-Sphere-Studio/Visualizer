@@ -9,8 +9,7 @@ struct debug_Vertex {
 };
 
 class Debugger : public SSS::GL::Renderer<Debugger> {
-	friend SSS::GL::Basic::SharedBase<Debugger>;
-	friend SSS::GL::Window;
+	friend class SharedClass;
 
 private:
 	Debugger();

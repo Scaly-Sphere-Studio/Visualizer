@@ -1,0 +1,351 @@
+{
+    "CATEGORIES": [
+        [
+            0,
+            "Categories"
+        ],
+        [
+            1,
+            "Interface"
+        ],
+        [
+            2,
+            "Bohemian Rhapsody"
+        ]
+    ],
+    "DATA": [
+        {
+            "category": 2,
+            "comment": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque vitae velit ante. Suspendisse nulla lacus, tempor sit amet iaculis non, scelerisque.",
+            "id": "86bfd78c534d0",
+            "text": "Is this the real life?"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78c7222c",
+            "text": "Is this just fantasy?"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78c7ebbc",
+            "text": "Caught in a landside,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78c88540",
+            "text": "No escape from reality"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78c91ba4",
+            "text": "Open your eyes,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78c9d788",
+            "text": "Look up to the skies and see,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ca7cc4",
+            "text": "I'm just a poor boy, I need no sympathy,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78cb81b4",
+            "text": "Because I'm easy come, easy go,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78cbf0a4",
+            "text": "Little high, little low,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78cc7a24",
+            "text": "Any way the wind blows doesn't really matter to"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78cd70a0",
+            "text": "Me, to me"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78cdbd94",
+            "text": "Mamaaa,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ce1b54",
+            "text": "Just killed a man,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ceab14",
+            "text": "Put a gun against his head, pulled my trigger,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d00f54",
+            "text": "Now he's dead"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d08038",
+            "text": "Mamaaa, life had just begun,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d28694",
+            "text": "But now I've gone and thrown it all away"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d2fc8c",
+            "text": "Mama, oooh,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d36794",
+            "text": "Didn't mean to make you cry,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d3e818",
+            "text": "If I'm not back again this time tomorrow,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d5da24",
+            "text": "Carry on, carry on as if nothing really matters"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d64cfc",
+            "text": "Too late, my time has come,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d6d488",
+            "text": "Sends shivers down my spine, body's aching all"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d7249c",
+            "text": "The time"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d799cc",
+            "text": "Goodbye, everybody, I've got to go,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d81f64",
+            "text": "Gotta leave you all behind and face the truth"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d872fc",
+            "text": "Mama, oooh"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d8d440",
+            "text": "I don't want to die,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78d958ac",
+            "text": "I sometimes wish I'd never been born at all."
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78dbe630",
+            "text": "I see a little silhouetto of a man,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78dc7e88",
+            "text": "Scaramouch, Scaramouch, will you do the Fandango!"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78dd1550",
+            "text": "Thunderbolts and lightning, very, very frightening me"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78dd7568",
+            "text": "Galileo, Galileo"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ddec28",
+            "text": "Galileo, Figaro - magnificoo"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78de6540",
+            "text": "I'm just a poor boy nobody loves me"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78dee628",
+            "text": "He's just a poor boy from a poor family,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78df83f8",
+            "text": "Spare him his life from this monstrosity"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e0047c",
+            "text": "Easy come, easy go, will you let me go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e08244",
+            "text": "Bismillah! No, we will not let you go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e10bc4",
+            "text": "(Let him go!) Bismillah! We will not let you go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e17f00",
+            "text": "(Let me go) Will not let you go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e1f944",
+            "text": "(Let me go)(Never) Never let you go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e28134",
+            "text": "(Let me go) (Never) let you go (Let me go) Ah"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e5fdc8",
+            "text": "No, no, no, no, no, no, no"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e688d8",
+            "text": "Oh mama mia, mama mia, mama mia, let me go"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e71258",
+            "text": "Beelzebub has a devil put aside for me, for me,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e7626c",
+            "text": "For meee"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e7e7a0",
+            "text": "So you think you can stop me and spit in my eye"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e8724c",
+            "text": "So you think you can love me and leave me to die"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e8ee84",
+            "text": "Oh, baby, can't do this to me, baby,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e97d7c",
+            "text": "Just gotta get out, just gotta get right outta here"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78e9fd38",
+            "text": "Nothing really matters, Anyone can see,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ea65e8",
+            "text": "Nothing really matters,"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78ead410",
+            "text": "Nothing really matters to me"
+        },
+        {
+            "category": 2,
+            "comment": "",
+            "id": "86bfd78eb794c",
+            "text": "Any way the wind blows..."
+        }
+    ],
+    "LANGUAGE": "eng",
+    "MOTHER_FILE": 1,
+    "TRADUCTION_ID": "9095e582835ac"
+}
