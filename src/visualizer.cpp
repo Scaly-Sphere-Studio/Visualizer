@@ -1,4 +1,8 @@
 #include "visualizer.h"
+#pragma comment(lib, "rpcrt4.lib")  // UuidCreate - Minimum supported OS Win 2000
+#include <windows.h>
+#include <iostream>
+#include <rpc.h>
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
@@ -110,13 +114,19 @@ static bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm:
     return false;
 }
 
+
+
+
+
+
+
 Visualizer::Visualizer()
 {
     //TODO RANDSEED 
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
     //TODO Check if the data exists
-    parse_info_data_visualizer_from_json("save.json");
+    //parse_info_data_visualizer_from_json("save.json");
     setup();
 
     // FIRST SETUP OPERATION
@@ -151,12 +161,15 @@ Visualizer::~Visualizer()
 void Visualizer::run()
 {
     //load
-    load();
+    //load();
 
     SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
     SSS::ImGuiH::setContext(glfwwindow);
 
+    srand(123);
 
+    int rng = rand();
+    float rngf = rand_float();
 
     refresh();
 
@@ -224,8 +237,6 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
             visu._selectedBoxes.emplace(b);
         }
     }
-
-
 }
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
@@ -558,7 +569,12 @@ void Visualizer::push_box(std::string boxID)
     b->setPos(position);
     b->setColor(boxID);
     b->_id = boxID;
-    b->_td.text_ID = boxID;
+    ::UUID uuid;
+    ::UuidCreate(&uuid);
+    char* str;
+    ::UuidToStringA(&uuid, (RPC_CSTR*)&str);
+
+    b->_td.text_ID = str;
     b->create_box();
 }
 

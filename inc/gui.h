@@ -3,43 +3,42 @@
 #include "commons.h"
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"
-#include "gui.h"
 
 
-class Box;
+auto constexpr BOX_LAYER = 2.f;
 
-class BoxPlane : public SSS::GL::PlaneTemplate<BoxPlane> {
+struct GUI_Layout {
+	int32_t _ID = 0;
+
+	SSS::TR::Format _fmt;
+	int _marginh = 0, _marginv = 0;
+};
+
+class Box_GUI;
+
+class BoxPlane_GUI : public SSS::GL::PlaneTemplate<BoxPlane_GUI> {
 	friend class SharedClass;
 protected:
 	virtual glm::mat4 _getTranslationMat4() const override;
 private:
-	BoxPlane() = default;
+	BoxPlane_GUI() = default;
 	glm::vec3 _offset;
-	SSS::SharedClass<Box>::Weak _parent;
+	SSS::SharedClass<Box_GUI>::Weak _parent;
 public:
-	inline void setBox(SSS::SharedClass<Box>::Weak box) { _parent = box; };
+	inline void setBox(SSS::SharedClass<Box_GUI>::Weak Box_GUI) { _parent = Box_GUI; };
 	inline auto getBox() const noexcept { return _parent.lock(); };
 	inline glm::vec3 getOffset() const noexcept { return _offset; };
 	void setOffset(glm::vec3 offset);
 };
 
-struct Tags {
-	Tags();
-	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
-	~Tags();
-	std::string _name;
-	BoxPlane::Vector _model;
-	uint32_t _weight;
-};
 
-
-class Box : public SSS::Observer, public SSS::SharedClass<Box> {
+class Box_GUI : public SSS::Observer, public SSS::SharedClass<Box_GUI> {
 	friend class SharedClass;
 
 private:
-	Box() = default;
+	Box_GUI() = default;
 public:
-	~Box();
+	~Box_GUI();
 
 private:
 	glm::vec2 _size;
@@ -62,7 +61,7 @@ public:
 	void setColor(glm::vec4 color);
 	//inline void setColor(std::string hex) { setColor(hex_to_rgb(hex)); };
 	inline void setColor(std::string hex) { setColor(SSS::RGBA_f{}.from_Hex(hex)._col); };
-	
+
 
 	//void setSelectedCol(std::string hex);
 
@@ -77,31 +76,35 @@ public:
 	bool _show_tags = false;
 	glm::vec3 selected_color = glm::vec3(0.93f, 0.64f, 0.43f);
 
-	//Box rendering
-	
-	//Initialisation of the box and fill the model array
+	//Box_GUI rendering
+
+	//Initialisation of the Box_GUI and fill the model array
 	void create_box();
 private:
 	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
-	
+
 	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
 
 public:
 
 	// DATA
-	Text_data _td;   
+	Text_data _td;
 
 	std::string _id;
-	BoxPlane::Vector model;
+	BoxPlane_GUI::Vector model;
 
-	std::vector<uint16_t> tags;
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
-	
-	static std::map<uint16_t, Tags> tags_list;
+
 	static std::map<std::string, GUI_Layout> layout_map;
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
 };
+
+
+static bool sortPlanes(std::shared_ptr<SSS::GL::PlaneBase>& a, std::shared_ptr<SSS::GL::PlaneBase>& b) {
+
+	return a->getTranslation().z < b->getTranslation().z;
+}
