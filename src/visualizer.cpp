@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <iostream>
 #include <rpc.h>
+#include "scenegraph.h"
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
@@ -178,6 +179,22 @@ void Visualizer::run()
     glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
+    SceneGraph init;
+
+    //Node n1( &init );
+    //n1._key = 25;
+    //init.push(&n1);
+
+    //Node_Block n2{ &init };
+    //n2._key = 20;
+    //init.push(&n2);
+
+    //Node n3{ &init };
+    //n3._key = 251;
+    //init[n1._key].lock()->push(&n3);
+
+    std::cout << init.to_string() << std::endl;
+
     // Main loop
     while (!window->shouldClose()) {
         SSS::GL::pollEverything();
@@ -272,10 +289,10 @@ void Visualizer::setup()
     SSS::GL::Window& window = SSS::GL::Window::create(args);
     glfwwindow = window.getGLFWwindow();
 
-    GUI_Layout layout;
+    SSS::GUI_Layout layout;
     //ID FORMAT
     layout._fmt.charsize = 13;
-    layout._fmt.text_color = 0x000000;
+    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{0,0,0,255});
     layout._fmt.line_spacing = 1.f;
     layout._marginh = 4;
     layout._marginv = 5;
@@ -283,7 +300,7 @@ void Visualizer::setup()
     //TEXT FORMAT
     layout._fmt.line_spacing = 1.5f;
     layout._fmt.charsize = 19;
-    layout._fmt.text_color = 0x111111;
+    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{ std::string{"#111111"} });
     layout._marginh = 5;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
@@ -291,7 +308,7 @@ void Visualizer::setup()
     layout._fmt.charsize = 16;
     layout._fmt.line_spacing = 1.3f;
     layout._fmt.font = "Ariali.ttf";
-    layout._fmt.text_color = 0x333333;
+    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{ std::string{"#333333"} }); 0x333333;
     Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
     window.setVSYNC(true);

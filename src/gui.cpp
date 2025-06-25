@@ -6,11 +6,11 @@
 
 #define TEXT_MAX_WIDTH          600
 
-std::map<std::string, GUI_Layout> Box_GUI::layout_map{};
+std::map<std::string, SSS::GUI_Layout> Box_GUI::layout_map{};
 glm::vec2 Box_GUI::minsize = glm::vec2{ 150,75 };
 
 
-glm::mat4 BoxPlane_GUI::_getTranslationMat4() const {
+glm::mat4 Plane::_getTranslationMat4() const {
     glm::vec3 offset = _offset;
     auto texture = getTexture();
     if (texture) {
@@ -22,7 +22,7 @@ glm::mat4 BoxPlane_GUI::_getTranslationMat4() const {
     return glm::translate(ModelBase::_getTranslationMat4(), offset);
 }
 
-void BoxPlane_GUI::setOffset(glm::vec3 offset) {
+void Plane::setOffset(glm::vec3 offset) {
     _offset = offset;
     _computeModelMat4();
 }
@@ -88,32 +88,17 @@ void Box_GUI::setColor(glm::vec4 color)
     }
 }
 
-void Box_GUI::_create_part(std::string s, const GUI_Layout& layout, int flag)
+void Box_GUI::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
 {
     SSS::TR::Format fmt = layout._fmt;
     auto area = SSS::TR::Area::create();
-    auto plane = BoxPlane_GUI::create(SSS::GL::Texture::create(area));
+    auto plane = Plane::create(SSS::GL::Texture::create(area));
     plane->setBox(weak_from_this());
     _observe(*plane->getTexture());
 
-    if (flag == FLAG_ID) {
-        glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
-        glm::vec4 bg_col = tex_col;
-
-        tex_col.b = 0.3f;
-        fmt.text_color = SSS::RGBA_f::from_HSL(tex_col);
-
-        bg_col.b -= 0.15f;
-        area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
-        // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
-        //fmt.line_spacing = 1.f;
-    }
-    else {
-        //area->setClearColor(rgb_to_int32t(_color));
-        area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ _color }));
-        area->setFocusable(true);
-        area->setWrapping(true);
-    }
+    area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ _color }));
+    area->setFocusable(true);
+    area->setWrapping(true);
 
     area->setMargins(layout._marginv, layout._marginh);
     area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
@@ -137,19 +122,19 @@ void Box_GUI::set_text_data(const Text_data& td)
 bool Box_GUI::isHovered() const noexcept
 {
     return std::any_of(model.cbegin(), model.cend(),
-        [](BoxPlane_GUI::Shared p) { return p->isHovered(); });
+        [](Plane::Shared p) { return p->isHovered(); });
 }
 
 bool Box_GUI::isClicked() const noexcept
 {
     return std::any_of(model.cbegin(), model.cend(),
-        [](BoxPlane_GUI::Shared p) { return p->isClicked(); });
+        [](Plane::Shared p) { return p->isClicked(); });
 }
 
 bool Box_GUI::isHeld() const noexcept
 {
     return std::any_of(model.cbegin(), model.cend(),
-        [](BoxPlane_GUI::Shared p) { return p->isHeld(); });
+        [](Plane::Shared p) { return p->isHeld(); });
 }
 
 void Box_GUI::create_box()
@@ -195,49 +180,49 @@ void Box_GUI::create_box()
 
 void Box_GUI::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-    //if (event_id == SSS::GL::Texture::Resize) {
-    //    _size_update();
-    //    return;
-    //}
-    //auto& texture = static_cast<SSS::GL::Texture const&>(subject);
-    //if (texture.getType() == SSS::GL::Texture::Type::Text &&
-    //    texture.getTextArea() && texture.getTextArea()->isFocused())
-    //{
-    //    for (auto const& p : model) {
-    //        auto area = p->getTextArea();
-    //        if (!area) continue;
-    //        if (area->getUsedWidth() == _size.x)
-    //            return;
-    //    }
-    //    _size_update();
-    //}
+    if (event_id == SSS::GL::Texture::Resize) {
+        _size_update();
+        return;
+    }
+    auto& texture = static_cast<SSS::GL::Texture const&>(subject);
+    if (texture.getType() == SSS::GL::Texture::Type::Text &&
+        texture.getTextArea() && texture.getTextArea()->isFocused())
+    {
+        for (auto const& p : model) {
+            auto area = p->getTextArea();
+            if (!area) continue;
+            if (area->getUsedWidth() == _size.x)
+                return;
+        }
+        _size_update();
+    }
 }
 
 void Box_GUI::_size_update() try
 {
-    //glm::vec2 const old_size = _size;
-    //_size = glm::vec2(0);
-    //for (BoxPlane_GUI::Shared& p : model) {
-    //    p->setOffset(glm::vec3(0, -_size.y, BOX_LAYER));
-    //    auto [w, h] = p->getTexture()->getCurrentDimensions();
-    //    p->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
-    //    if (auto area = p->getTextArea(); area)
-    //        w = area->getUsedWidth();
-    //    _size.x = std::max(static_cast<float>(w), _size.x);
-    //    _size.y += static_cast<float>(h);
-    //}
-    //// Set min width
-    //if (_size == old_size)
-    //    return;
-    //if (_size.x != old_size.x) {
-    //    int w = static_cast<int>(_size.x);
-    //    if (TEXT_MAX_WIDTH - static_cast<int>(_size.x) < 10)
-    //        w = TEXT_MAX_WIDTH;
-    //    for (BoxPlane_GUI::Shared& p : model) {
-    //        if (auto area = p->getTextArea(); area)
-    //            area->setWrappingMinWidth(w);
-    //    }
-    //}
+    glm::vec2 const old_size = _size;
+    _size = glm::vec2(0);
+    for (Plane::Shared& p : model) {
+        p->setOffset(glm::vec3(0, -_size.y, BOX_LAYER));
+        auto [w, h] = p->getTexture()->getCurrentDimensions();
+        p->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
+        if (auto area = p->getTextArea(); area)
+            w = area->getUsedWidth();
+        _size.x = std::max(static_cast<float>(w), _size.x);
+        _size.y += static_cast<float>(h);
+    }
+    // Set min width
+    if (_size == old_size)
+        return;
+    if (_size.x != old_size.x) {
+        int w = static_cast<int>(_size.x);
+        if (TEXT_MAX_WIDTH - static_cast<int>(_size.x) < 10)
+            w = TEXT_MAX_WIDTH;
+        for (Plane::Shared& p : model) {
+            if (auto area = p->getTextArea(); area)
+                area->setWrappingMinWidth(w);
+        }
+    }
     //Visualizer::get().link_box(*this);
 }
 CATCH_AND_LOG_METHOD_EXC;

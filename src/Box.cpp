@@ -7,7 +7,7 @@
 #define TEXT_MAX_WIDTH          600
 
 std::map<uint16_t, Tags>Box::tags_list{};
-std::map<std::string, GUI_Layout> Box::layout_map{};
+std::map<std::string, SSS::GUI_Layout> Box::layout_map{};
 glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
 
@@ -169,29 +169,7 @@ Tags::Tags()
 
 Tags::Tags(std::string _name, std::string hex, uint32_t weight)
 {
-    //int char_size = 12;
-    //_size = { char_size * _name.size() + 5, char_size * 1.5f};
-    ////Center the box around the cursor
-    //_pos = { 0.0f, 0.0f, 0.0f };
-    //_color = hex_to_rgb(hex);
-    //_weight = weight;
 
-
-    //// Create text area & gl texture
-    //auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    //auto fmt = area.getFormat();
-    ////fmt.charsize = (int)_size.y / 3;
-    //fmt.charsize = char_size;
-    //fmt.has_outline = false;
-    //fmt.outline_size = 2;
-    //fmt.text_color = 0x000000;
-    //area.setFormat(fmt);
-    //area.parseString(_name);
-
-    ////Create the model
-    //_model.emplace_back(_pos, _size, glm::vec4(_color));
-    //_model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
-    //    ._sss_texture = SSS::GL::Texture::create(area);
 }
 
 Tags::~Tags()
@@ -199,7 +177,7 @@ Tags::~Tags()
     _model.clear();
 }
 
-void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
+void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
 {
     SSS::TR::Format fmt = layout._fmt;
     auto area = SSS::TR::Area::create();

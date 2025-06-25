@@ -6,22 +6,35 @@
 
 
 auto constexpr BOX_LAYER = 2.f;
+namespace SSS
+{
+	struct GUI_Layout {
+		int32_t _ID = 0;
 
-struct GUI_Layout {
-	int32_t _ID = 0;
+		SSS::TR::Format _fmt;
+		int _marginh = 0, _marginv = 0;
+	};
 
-	SSS::TR::Format _fmt;
-	int _marginh = 0, _marginv = 0;
-};
+
+	class SceneGraph 
+	{
+	public:
+		SceneGraph();
+		~SceneGraph();
+	private:
+
+	};
+}
+
 
 class Box_GUI;
 
-class BoxPlane_GUI : public SSS::GL::PlaneTemplate<BoxPlane_GUI> {
+class Plane : public SSS::GL::PlaneTemplate<Plane> {
 	friend class SharedClass;
 protected:
 	virtual glm::mat4 _getTranslationMat4() const override;
 private:
-	BoxPlane_GUI() = default;
+	Plane() = default;
 	glm::vec3 _offset;
 	SSS::SharedClass<Box_GUI>::Weak _parent;
 public:
@@ -81,7 +94,7 @@ public:
 	//Initialisation of the Box_GUI and fill the model array
 	void create_box();
 private:
-	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
+	void _create_part(std::string s, const SSS::GUI_Layout& lyt, int flag = 0);
 
 	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
@@ -92,12 +105,12 @@ public:
 	Text_data _td;
 
 	std::string _id;
-	BoxPlane_GUI::Vector model;
+	Plane::Vector model;
 
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
 
-	static std::map<std::string, GUI_Layout> layout_map;
+	static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;

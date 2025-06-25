@@ -82,7 +82,7 @@ public:
 	//Initialisation of the box and fill the model array
 	void create_box();
 private:
-	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
+	void _create_part(std::string s, const SSS::GUI_Layout& lyt, int flag = 0);
 	
 	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
@@ -100,7 +100,7 @@ public:
 	std::set<std::string> link_from;
 	
 	static std::map<uint16_t, Tags> tags_list;
-	static std::map<std::string, GUI_Layout> layout_map;
+	static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
