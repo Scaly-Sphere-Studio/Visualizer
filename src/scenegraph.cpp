@@ -74,6 +74,18 @@ Node::operator std::string() const
 }
 
 
+SceneGraph::SceneGraph()
+{
+	_cam = SSS::GL::Camera::create();
+	_cam->setPosition({ 0, 0, 20.f });
+	_cam->setZFar(40.f);
+	_cam->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+
+	_rd = SSS::GL::PlaneRenderer::create();
+	_rd->camera = _cam;
+
+}
+
 void SceneGraph::push(Node* n)
 {
 	emplace(n);
@@ -134,6 +146,7 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 	:Node(p_Sg)
 {
 	SSS::TR::Format fmt = lyt._fmt;
+	fmt.charsize = 58;
 	auto area = SSS::TR::Area::create();
 	auto plane = TextPlane::create(SSS::GL::Texture::create(area));
 	//plane->setBox(nullptr);
@@ -147,7 +160,7 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 	fmt.text_color = SSS::RGBA_f::from_HSL(tex_col);
 
 	bg_col.b -= 0.15f;
-	//area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
+	area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
 	//area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ BLACK }));
 	area->setFocusable(true);
 	area->setWrapping(true);
@@ -161,4 +174,34 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 
 	plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
 	model = plane;
+
+
+	_sg->_rd->addPlane(plane);
+
+
+}
+
+void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
+
+	if (event_id == SSS::GL::Texture::Resize) {
+		auto [w, h] = model->getTexture()->getCurrentDimensions();
+		model->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
+
+		_notifyObservers(event_id);
+		return;
+	}
+
+
+	//auto& texture = static_cast<SSS::GL::Texture const&>(subject);
+	//if (texture.getType() == SSS::GL::Texture::Type::Text &&
+	//	texture.getTextArea() && texture.getTextArea()->isFocused())
+	//{
+	//	auto area = model->getTextArea();
+	//	if (!area) return;
+	//	//if (area->getUsedWidth() == _size.x)
+	//	//	return;
+
+	//	//_size_update();
+	//}
 }

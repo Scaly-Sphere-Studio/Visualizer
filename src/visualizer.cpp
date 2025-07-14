@@ -127,7 +127,7 @@ Visualizer::Visualizer()
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
     //TODO Check if the data exists
-    //parse_info_data_visualizer_from_json("save.json");
+    parse_info_data_visualizer_from_json("save.json");
     setup();
 
     // FIRST SETUP OPERATION
@@ -162,7 +162,7 @@ Visualizer::~Visualizer()
 void Visualizer::run()
 {
     //load
-    //load();
+    load();
 
     SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
     SSS::ImGuiH::setContext(glfwwindow);
@@ -180,20 +180,25 @@ void Visualizer::run()
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
     SceneGraph sg;
+    window->addRenderer(sg._rd);
 
-    Node* n1 = new Node{ &sg };
-    n1->_key = 25;
-    //sg._nodeList.emplace(n1._key, std::make_shared<Node>(n1));
-    //sg.list.push_back(n1->_key);
-    sg.push(n1);
+    //Node* n1 = new Node{ &sg };
+    //n1->_key = 25;
+    ////sg._nodeList.emplace(n1._key, std::make_shared<Node>(n1));
+    ////sg.list.push_back(n1->_key);
+    //sg.push(n1);
 
-    Node_Block* n2 = new Node_Block{ &sg };
-    n2->_key = 20;
-    sg.push(n2);
+    //Node_Block* n2 = new Node_Block{ &sg };
+    //n2->_key = 20;
+    //sg.push(n2);
 
-    Node* n3 = new Node{ &sg };
-    n3->_key = 251;
-    sg.push(n3);
+    //Node* n3 = new Node{ &sg };
+    //n3->_key = 251;
+    //sg.push(n3);
+
+    Node_Text* n4 = new Node_Text{ &sg, "bonjour", SSS::GUI_Layout{} };
+    sg.push(n4);
+
 
     //init._nodeList.emplace(n2._key, std::make_shared<Node_Block>(n2));
     //init.list.push_back(n2._key);

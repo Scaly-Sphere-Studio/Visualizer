@@ -23,7 +23,7 @@ static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 class SceneGraph;
 
-class Node 
+class Node : public SSS::Observer, public SSS::Subject
 {
 public:
 	Node() = default;
@@ -73,32 +73,35 @@ protected:
 private:
 	TextPlane() = default;
 	glm::vec3 _offset = glm::vec3{ 0 };
-	Node* _parent;
+	Node* _parent = nullptr;
 public:
 	inline void setParent(Node* node) { _parent = node; };
 	inline auto getParent() const noexcept { return _parent; };
 	inline glm::vec3 getOffset() const noexcept { return _offset; };
-	void setOffset(glm::vec3 offset);
+	void setOffset(glm::vec3 offset) {};
 };
 
 
-class Node_Text : public SSS::Observer, public Node
+class Node_Text : public Node
 {
 public:
 	Node_Text(SceneGraph* p_Sg, const std::string &s, const SSS::GUI_Layout& lyt );
 	std::string name() const { return "Text"; };
 
-	glm::vec3 _pos;
+	glm::vec3 _pos = glm::vec3{ 0 };
 	TextPlane::Shared model;
 	int _type = 2;
-};
 
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+
+
+};
 
 
 class SceneGraph
 {
 public:
-	SceneGraph() {};
+	SceneGraph();
 	~SceneGraph() {};
 
 	//Add the node to the nodelist and add it to the arborescence, to be used on free nodes
@@ -116,9 +119,12 @@ public:
 	Node* operator[](const int &keyNode);
 	std::unordered_map<int, Node*> _nodeList;
 	std::vector<int> list;
-private:
 
 	SSS::GL::PlaneRenderer::Shared _rd;
+private:
+
+	SSS::GL::Camera::Shared _cam;
+
 	//std::unordered_map<std::string, SSS::GL::PlaneRenderer::Shared> _rdList;
 
 };

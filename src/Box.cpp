@@ -148,6 +148,7 @@ void Box::create_box()
     }
 
     Visualizer::get().box_renderer->addPlanes(model);
+
 }
 
 #define PARTICLE_VERTICES       0
@@ -185,6 +186,9 @@ void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
     plane->setBox(weak_from_this());
     _observe(*plane->getTexture());
 
+
+
+
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
         glm::vec4 bg_col = tex_col;
@@ -208,6 +212,8 @@ void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
     area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
     area->setFormat(fmt);
     area->parseString(s);
+
+   
 
     //Create the model
     plane->translate(_pos);
@@ -249,6 +255,8 @@ void Box::_size_update() try
         _size.x = std::max(static_cast<float>(w), _size.x);
         _size.y += static_cast<float>(h);
     }
+
+    
     // Set min width
     if (_size == old_size)
         return;
