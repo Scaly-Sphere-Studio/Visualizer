@@ -1,6 +1,11 @@
 #include "scenegraph.h"
 
 
+//Node::Node(Node n)
+//{
+//	*this = n;
+//}
+
 Node::Node(SceneGraph* p_Sg)
 {
 	_key = 0;
@@ -13,16 +18,15 @@ Node::~Node()
 
 	for (int cKey : _children) 
 	{
-		_sg->pop(cKey);
+		//_sg->pop(cKey);
 	}
 	_children.clear();
 }
 
-void Node::push(Node& n)
+
+Node* Node::push(Node* n)
 {
-	n.add_parent(_key);
-	_sg->emplace(n);
-	_children.emplace(n._key);
+	return nullptr;
 }
 
 void Node::pop_child(const int& keyNode)
@@ -37,7 +41,7 @@ void Node::detach_parent(const int& keyNode)
 
 void Node::add_parent(const int& keyNode)
 {
-	_parents.emplace(keyNode);
+	//_parents.emplace(keyNode);
 }
 
 std::string Node::to_string() const
@@ -57,7 +61,7 @@ std::string Node::to_string() const
 	if (!_children.empty()) {
 		res += "\tchildren :\n";
 		for (auto node : _children) {
-			res += "\t" + _sg->at(node).lock()->to_string() + "\n";
+			res += "\t" + _sg->at(node)->to_string() + "\n";
 		}
 	}
 
@@ -70,42 +74,24 @@ Node::operator std::string() const
 }
 
 
-SceneGraph::SceneGraph()
+void SceneGraph::push(Node* n)
 {
-
+	emplace(n);
+	list.push_back(n->_key);
 }
 
-SceneGraph::~SceneGraph()
+void SceneGraph::emplace(Node* n)
 {
-}
-
-void SceneGraph::push(const Node& n)
-{
-	_nodeList.emplace(n._key, std::make_shared<Node>(n));
-	list.push_back(n._key);
-}
-
-void SceneGraph::emplace(const Node& n)
-{
-	_nodeList.emplace(n._key, std::make_shared<Node>(n));
+	_nodeList.emplace(n->_key, n);
 }
 
 
-void SceneGraph::pop(const int& keyNode)
-{
-	auto it = std::find(list.begin(), list.end(), keyNode);
-	if (it != list.end()) {
-		list.erase(it);
-	}
-	_nodeList.erase(keyNode);
-}
-
-std::weak_ptr<Node> SceneGraph::at(const int& keyNode)
+Node* SceneGraph::at(const int& keyNode)
 {
 	if (_nodeList.contains(keyNode))
 		return _nodeList.at(keyNode);
 
-	return std::weak_ptr<Node>();
+	return nullptr;
 }
 
 std::string SceneGraph::to_string() const
@@ -123,11 +109,56 @@ SceneGraph::operator std::string() const
 	return to_string();
 }
 
-std::weak_ptr<Node> SceneGraph::operator[](const int& keyNode)
+Node* SceneGraph::operator[](const int& keyNode)
 {
 	if (_nodeList.contains(keyNode))
 	{
 		return _nodeList.at(keyNode);
 	}
-	return std::weak_ptr<Node>();
+	return nullptr;
+}
+
+glm::mat4 TextPlane::_getTranslationMat4() const {
+	glm::vec3 offset = _offset;
+	auto texture = getTexture();
+	if (texture) {
+		auto const [w, h] = getTexture()->getCurrentDimensions();
+		float const x = static_cast<float>(w) / 2.f;
+		float const y = static_cast<float>(-h) / 2.f;
+		offset += glm::vec3(x, y, 0);
+	}
+	return glm::translate(ModelBase::_getTranslationMat4(), offset);
+}
+
+Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt)
+	:Node(p_Sg)
+{
+	SSS::TR::Format fmt = lyt._fmt;
+	auto area = SSS::TR::Area::create();
+	auto plane = TextPlane::create(SSS::GL::Texture::create(area));
+	//plane->setBox(nullptr);
+	_observe(*plane->getTexture());
+
+
+	glm::vec4 tex_col = SSS::RGBA_f(BLACK).to_HSL();
+	glm::vec4 bg_col = tex_col;
+
+	tex_col.b = 0.3f;
+	fmt.text_color = SSS::RGBA_f::from_HSL(tex_col);
+
+	bg_col.b -= 0.15f;
+	//area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
+	//area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ BLACK }));
+	area->setFocusable(true);
+	area->setWrapping(true);
+	area->setMargins(lyt._marginv, lyt._marginh);
+	area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
+	area->setFormat(fmt);
+	area->parseString(s);
+
+	//Create the model
+	plane->translate(_pos);
+
+	plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
+	model = plane;
 }

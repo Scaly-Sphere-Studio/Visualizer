@@ -16,6 +16,15 @@
     <Filter Include="Fichiers glsl">
       <UniqueIdentifier>{e8629981-873c-4152-a201-60a69688d2be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Nodes">
+      <UniqueIdentifier>{6a3af3b1-0fcf-4b4d-9400-90853ab10a46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Nodes\Src">
+      <UniqueIdentifier>{73d23d5d-b1ce-4cb7-a056-bfffc681eda6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Nodes\Headers">
+      <UniqueIdentifier>{e398d395-315d-4b08-94ab-1738ac148df5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\commons.cpp">
@@ -49,7 +58,7 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\scenegraph.cpp">
-      <Filter>Fichiers sources</Filter>
+      <Filter>Nodes\Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,7 +96,7 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="inc\scenegraph.h">
-      <Filter>Fichiers d%27en-tête</Filter>
+      <Filter>Nodes\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -179,21 +179,28 @@ void Visualizer::run()
     glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
-    SceneGraph init;
+    SceneGraph sg;
 
-    //Node n1( &init );
-    //n1._key = 25;
-    //init.push(&n1);
+    Node* n1 = new Node{ &sg };
+    n1->_key = 25;
+    //sg._nodeList.emplace(n1._key, std::make_shared<Node>(n1));
+    //sg.list.push_back(n1->_key);
+    sg.push(n1);
 
-    //Node_Block n2{ &init };
-    //n2._key = 20;
-    //init.push(&n2);
+    Node_Block* n2 = new Node_Block{ &sg };
+    n2->_key = 20;
+    sg.push(n2);
 
-    //Node n3{ &init };
-    //n3._key = 251;
-    //init[n1._key].lock()->push(&n3);
+    Node* n3 = new Node{ &sg };
+    n3->_key = 251;
+    sg.push(n3);
 
-    std::cout << init.to_string() << std::endl;
+    //init._nodeList.emplace(n2._key, std::make_shared<Node_Block>(n2));
+    //init.list.push_back(n2._key);
+    //init[n1._key].lock()->push<Node>(&n3);
+
+    std::cout << sg.to_string() << std::endl;
+
 
     // Main loop
     while (!window->shouldClose()) {

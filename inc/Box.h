@@ -14,7 +14,7 @@ protected:
 	virtual glm::mat4 _getTranslationMat4() const override;
 private:
 	BoxPlane() = default;
-	glm::vec3 _offset;
+	glm::vec3 _offset = glm::vec3{ 0 };
 	SSS::SharedClass<Box>::Weak _parent;
 public:
 	inline void setBox(SSS::SharedClass<Box>::Weak box) { _parent = box; };
