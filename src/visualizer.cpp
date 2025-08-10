@@ -196,16 +196,16 @@ void Visualizer::run()
     //n3->_key = 251;
     //sg.push(n3);
 
-    Node_Text* n4 = new Node_Text{ &sg, "bonjour", SSS::GUI_Layout{} };
-    sg.push(n4);
-
+    //Node_Text* n4 = new Node_Text{ &sg, "bonjour", SSS::GUI_Layout{} };
+    //sg.push(n4);
+    sg.Text("bonsoir");
 
     //init._nodeList.emplace(n2._key, std::make_shared<Node_Block>(n2));
     //init.list.push_back(n2._key);
     //init[n1._key].lock()->push<Node>(&n3);
 
     std::cout << sg.to_string() << std::endl;
-
+    
 
     // Main loop
     while (!window->shouldClose()) {

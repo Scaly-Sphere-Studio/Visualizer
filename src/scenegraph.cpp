@@ -97,6 +97,18 @@ void SceneGraph::emplace(Node* n)
 	_nodeList.emplace(n->_key, n);
 }
 
+int SceneGraph::Text(const std::string& s, const SSS::GUI_Layout& lyt)
+{
+	Node_Text* node = new Node_Text{ this, s, lyt };
+	return node->_key;
+}
+
+int SceneGraph::Block(const glm::vec3& pos)
+{
+	Node_Block* node = new Node_Block{this};
+	return node->_key;
+}
+
 
 Node* SceneGraph::at(const int& keyNode)
 {
@@ -204,4 +216,8 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 
 	//	//_size_update();
 	//}
+}
+
+void Node_Block::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
 }

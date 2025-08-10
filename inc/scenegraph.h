@@ -58,11 +58,14 @@ public:
 class Node_Block : public Node
 {
 public:
-	Node_Block(SceneGraph* p_Sg) :Node(p_Sg) {};
+	Node_Block(SceneGraph* p_Sg) :Node(p_Sg), _pos(glm::vec3(0)) {};
 	std::string name() const { return "Block"; };
 
 	glm::vec3 _pos;
 	int _type = 1;
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+
 };
 
 
@@ -88,7 +91,7 @@ public:
 	Node_Text(SceneGraph* p_Sg, const std::string &s, const SSS::GUI_Layout& lyt );
 	std::string name() const { return "Text"; };
 
-	glm::vec3 _pos = glm::vec3{ 0 };
+	glm::vec3 _pos = glm::vec3{ -150, 25, 0 };
 	TextPlane::Shared model;
 	int _type = 2;
 
@@ -108,6 +111,11 @@ public:
 	void push(Node* n);	
 	void emplace(Node* n);	// Add the node to the nodelist
 
+	int Text(const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
+	int Block(const glm::vec3 &pos = glm::vec3(0));
+	//void push(Node* n);
+	//void push(Node* n);
+	//void push(Node* n);
 
 
 	Node* at(const int & keyNode);
