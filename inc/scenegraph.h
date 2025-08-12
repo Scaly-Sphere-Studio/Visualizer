@@ -120,6 +120,8 @@ public:
 
 	Node* at(const int & keyNode);
 
+	void setCamera(SSS::GL::Camera::Shared pCam);
+
 	//to_string
 	std::string to_string() const;
 	operator std::string() const;

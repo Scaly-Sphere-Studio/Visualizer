@@ -118,6 +118,12 @@ Node* SceneGraph::at(const int& keyNode)
 	return nullptr;
 }
 
+void SceneGraph::setCamera(SSS::GL::Camera::Shared pCam)
+{
+	_cam = pCam;
+	_rd->camera = _cam;
+}
+
 std::string SceneGraph::to_string() const
 {
 	std::string res;

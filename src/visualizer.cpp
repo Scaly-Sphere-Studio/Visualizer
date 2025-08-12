@@ -180,6 +180,7 @@ void Visualizer::run()
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
     SceneGraph sg;
+    sg.setCamera(camera);
     window->addRenderer(sg._rd);
 
     //Node* n1 = new Node{ &sg };
