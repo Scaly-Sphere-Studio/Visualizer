@@ -3,7 +3,8 @@
 #include <windows.h>
 #include <iostream>
 #include <rpc.h>
-#include "scenegraph.h"
+//#include "scenegraph.h"
+#include "Node_Box.h"
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)

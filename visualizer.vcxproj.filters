@@ -60,6 +60,12 @@
     <ClCompile Include="src\scenegraph.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Node_Box.cpp">
+      <Filter>Nodes\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Node_Primitive.cpp">
+      <Filter>Nodes\Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
@@ -96,6 +102,12 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="inc\scenegraph.h">
+      <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Node_Box.h">
+      <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Node_Primitive.h">
       <Filter>Nodes\Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -25,6 +25,8 @@
     <ClCompile Include="src\Box.cpp" />
     <ClCompile Include="src\Debugger.cpp" />
     <ClCompile Include="src\gui.cpp" />
+    <ClCompile Include="src\Node_Box.cpp" />
+    <ClCompile Include="src\Node_Primitive.cpp" />
     <ClCompile Include="src\rng.cpp" />
     <ClCompile Include="src\scenegraph.cpp" />
     <ClCompile Include="src\Text_data.cpp" />
@@ -36,6 +38,8 @@
     <ClInclude Include="inc\backend_json.h" />
     <ClInclude Include="inc\data.hpp" />
     <ClInclude Include="inc\gui.h" />
+    <ClInclude Include="inc\Node_Box.h" />
+    <ClInclude Include="inc\Node_Primitive.h" />
     <ClInclude Include="inc\rng.h" />
     <ClInclude Include="inc\scenegraph.h" />
     <ClInclude Include="inc\Text_data.h" />
