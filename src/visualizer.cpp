@@ -199,7 +199,9 @@ void Visualizer::run()
 
     //Node_Text* n4 = new Node_Text{ &sg, "bonjour", SSS::GUI_Layout{} };
     //sg.push(n4);
-    sg.Text("bonsoir");
+    /*sg.Text("bonsoir");*/
+
+    Node_Box box1(&sg);
 
     //init._nodeList.emplace(n2._key, std::make_shared<Node_Block>(n2));
     //init.list.push_back(n2._key);

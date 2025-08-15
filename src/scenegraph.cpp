@@ -1,11 +1,5 @@
 #include "scenegraph.h"
 
-
-//Node::Node(Node n)
-//{
-//	*this = n;
-//}
-
 Node::Node(SceneGraph* p_Sg)
 {
 	_key = 0;
@@ -211,17 +205,34 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 	}
 
 
-	//auto& texture = static_cast<SSS::GL::Texture const&>(subject);
-	//if (texture.getType() == SSS::GL::Texture::Type::Text &&
-	//	texture.getTextArea() && texture.getTextArea()->isFocused())
-	//{
-	//	auto area = model->getTextArea();
-	//	if (!area) return;
-	//	//if (area->getUsedWidth() == _size.x)
-	//	//	return;
+	auto& texture = static_cast<SSS::GL::Texture const&>(subject);
+	if (texture.getType() == SSS::GL::Texture::Type::Text &&
+		texture.getTextArea() && texture.getTextArea()->isFocused())
+	{
+		auto area = model->getTextArea();
+		if (!area) return;
+		if (area->getUsedWidth() == _size.x)
+			return;
 
-	//	//_size_update();
-	//}
+		_size_update();
+	}
+}
+
+
+
+Node_Box::Node_Box(SceneGraph* p_Sg):
+	Node_Block(p_Sg)
+{
+	//p_Sg->Text("bonsoir");
+	//p_Sg->Text("bonjour");
+	//p_Sg->Text("ola");
+	//p_Sg->Text("guten tag");
+}
+
+void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
+
+
 }
 
 void Node_Block::_subjectUpdate(SSS::Subject const& subject, int event_id)
