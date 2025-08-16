@@ -60,7 +60,7 @@ public:
 	void setHorizontalOffset(Node_UI* pHO)	{ _hOffset = pHO; }; // Set the ptr Node to horizontal offset
 	void setDepthOffset(Node_UI* pDO)		{ _dOffset = pDO; }; // Set the ptr Node to depth offset
 
-private:
+protected:
 	Node_UI* _hOffset = nullptr;	// horizontal offset
 	Node_UI* _vOffset = nullptr;	// vertical offset
 	Node_UI* _dOffset = nullptr;	// depth offset
