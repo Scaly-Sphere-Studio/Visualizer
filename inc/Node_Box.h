@@ -6,6 +6,8 @@
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"
 
+
+
 class Node_Box : public Node_Block 
 {
 public:

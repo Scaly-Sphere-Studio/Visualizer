@@ -184,29 +184,8 @@ void Visualizer::run()
     sg.setCamera(camera);
     window->addRenderer(sg._rd);
 
-    //Node* n1 = new Node{ &sg };
-    //n1->_key = 25;
-    ////sg._nodeList.emplace(n1._key, std::make_shared<Node>(n1));
-    ////sg.list.push_back(n1->_key);
-    //sg.push(n1);
-
-    //Node_Block* n2 = new Node_Block{ &sg };
-    //n2->_key = 20;
-    //sg.push(n2);
-
-    //Node* n3 = new Node{ &sg };
-    //n3->_key = 251;
-    //sg.push(n3);
-
-    //Node_Text* n4 = new Node_Text{ &sg, "bonjour", SSS::GUI_Layout{} };
-    //sg.push(n4);
-    /*sg.Text("bonsoir");*/
-
     Node_Box box1(&sg);
-
-    //init._nodeList.emplace(n2._key, std::make_shared<Node_Block>(n2));
-    //init.list.push_back(n2._key);
-    //init[n1._key].lock()->push<Node>(&n3);
+    //Node_Text text(&sg, "OHAYO");
 
     std::cout << sg.to_string() << std::endl;
     

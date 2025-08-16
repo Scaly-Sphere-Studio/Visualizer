@@ -2,6 +2,8 @@
 
 #include "scenegraph.h"
 
+#define BLACK glm::vec4(0,0,0,1)
+#define WHITE glm::vec4(1,1,1,1)
 
 glm::mat4 TextPlane::_getTranslationMat4() const {
 	glm::vec3 offset = _offset;
@@ -16,7 +18,7 @@ glm::mat4 TextPlane::_getTranslationMat4() const {
 }
 
 Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt)
-	:Node(p_Sg)
+	:Node_Block(p_Sg)
 {
 	SSS::TR::Format fmt = lyt._fmt;
 	fmt.charsize = 58;
@@ -38,7 +40,7 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 	area->setFocusable(true);
 	area->setWrapping(true);
 	area->setMargins(lyt._marginv, lyt._marginh);
-	area->setWrappingMaxWidth(TEXT_MAX_WIDTH);
+	area->setWrappingMaxWidth(_maxStrSize);
 	area->setFormat(fmt);
 	area->parseString(s);
 
@@ -50,8 +52,6 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 
 
 	_sg->_rd->addPlane(plane);
-
-
 }
 
 void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
@@ -79,10 +79,15 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 	}
 }
 
+void Node_Text::setMaxStrSize(const int maxSize)
+{
+	_maxStrSize = maxSize;
+}
+
 void Node_Text::_size_update()
 {
-	glm::vec2 const old_size = _size;
-	_size = glm::vec2(0);
+	glm::vec3 const old_size = _size;
+	_size = glm::vec3(0);
 
 	model->setOffset(glm::vec3(0, -_size.y, BOX_LAYER));
 	auto [w, h] = model->getTexture()->getCurrentDimensions();
@@ -100,8 +105,8 @@ void Node_Text::_size_update()
 
 	if (_size.x != old_size.x) {
 		int w = static_cast<int>(_size.x);
-		if (TEXT_MAX_WIDTH - static_cast<int>(_size.x) < 10)
-			w = TEXT_MAX_WIDTH;
+		if (_maxStrSize - static_cast<int>(_size.x) < 10)
+			w = _maxStrSize;
 
 		if (auto area = model->getTextArea(); area)
 			area->setWrappingMinWidth(w);

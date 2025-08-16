@@ -8,41 +8,13 @@
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"
 
-#define BLACK glm::vec4(0,0,0,1)
-#define WHITE glm::vec4(1,1,1,1)
-
-#define TEXT_MAX_WIDTH          600
-
-
-namespace SSS
-{
-	//struct GUI_Layout {
-	//	int32_t _ID = 0;
-
-	//	SSS::TR::Format _fmt;
-	//	int _marginh = 0, _marginv = 0;
-	//	
-	//};
-}
 
 static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 
 class SceneGraph;
 
-class Node_Block : public Node
-{
-public:
-	Node_Block(SceneGraph* p_Sg) :Node(p_Sg), _pos(glm::vec3(0)) {};
-	std::string name() const { return "Block"; };
-
-	glm::vec3 _pos;
-	int _type = 1;
-
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
-
-};
-
+// Utility for Text Nodes
 
 class TextPlane : public SSS::GL::PlaneTemplate<TextPlane> {
 	friend class SharedClass;
@@ -59,19 +31,53 @@ public:
 	void setOffset(glm::vec3 offset) {};
 };
 
-
-class Node_Text : public Node
+// 3D Node for grouping elements
+class Node_Block : public Node
 {
 public:
-	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt);
-	std::string name() const { return "Text"; };
+	Node_Block(SceneGraph* p_Sg) :Node(p_Sg) {};
+	std::string name() const { return "Block"; };
 
-	glm::vec3 _pos = glm::vec3{ -150, 25, 0 };
-	glm::vec2 _size = glm::vec2{ 0, 0 };
-	TextPlane::Shared model;
+	glm::vec3 _pos = glm::vec3{ 0, 0, 0 };	// Node position and translations
+	glm::vec3 _size = glm::vec3{ 0, 0, 0 };	// Node bounding box
+	int _type = 1;
+
+
+	//transforms
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+private:
+};
+
+class Node_UI : public Node_Block
+{
+public:
+	Node_UI(SceneGraph* p_Sg) :Node_Block(p_Sg) {};
+	std::string name() const { return "UI"; };
 	int _type = 2;
 
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	//transforms
+	void setVerticalOffset(Node_UI* pVO)	{ _vOffset = pVO; }; // Set the ptr Node to vertical offset
+	void setHorizontalOffset(Node_UI* pHO)	{ _hOffset = pHO; }; // Set the ptr Node to horizontal offset
+	void setDepthOffset(Node_UI* pDO)		{ _dOffset = pDO; }; // Set the ptr Node to depth offset
 
+private:
+	Node_UI* _hOffset = nullptr;	// horizontal offset
+	Node_UI* _vOffset = nullptr;	// vertical offset
+	Node_UI* _dOffset = nullptr;	// depth offset
+};
+
+class Node_Text : public Node_Block
+{
+public:
+	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
+	std::string name() const { return "Text"; };
+
+	TextPlane::Shared model;
+	int _type = 4;
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	void setMaxStrSize(const int maxSize);
+private:
+	int _maxStrSize = 600;
 	void _size_update();
 };
