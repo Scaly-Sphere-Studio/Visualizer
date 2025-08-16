@@ -56,14 +56,14 @@ public:
 	int _type = 2;
 
 	//transforms
-	void setVerticalOffset(Node_UI* pVO)	{ _vOffset = pVO; }; // Set the ptr Node to vertical offset
-	void setHorizontalOffset(Node_UI* pHO)	{ _hOffset = pHO; }; // Set the ptr Node to horizontal offset
-	void setDepthOffset(Node_UI* pDO)		{ _dOffset = pDO; }; // Set the ptr Node to depth offset
+	void setVerticalOffset(const int &keyVO)	{ _vOffset = keyVO; }; // Set the key Node to vertical offset
+	void setHorizontalOffset(const int& keyHO)	{ _hOffset = keyHO; }; // Set the key Node to horizontal offset
+	void setDepthOffset(const int& keyDO)		{ _dOffset = keyDO; }; // Set the key Node to depth offset
 
 protected:
-	Node_UI* _hOffset = nullptr;	// horizontal offset
-	Node_UI* _vOffset = nullptr;	// vertical offset
-	Node_UI* _dOffset = nullptr;	// depth offset
+	int _hOffset = -1;	// key node for horizontal offset
+	int _vOffset = -1;	// key node for vertical offset
+	int _dOffset = -1;	// key node for depth offset
 };
 
 class Node_Text : public Node_Block
