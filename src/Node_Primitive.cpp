@@ -91,6 +91,22 @@ void Node_Text::setMaxStrSize(const int maxSize)
 	_maxStrSize = maxSize;
 }
 
+void Node_Text::setTextColor(const  SSS::RGBA_f& col)
+{
+	SSS::GUI_Layout lyt{};
+	lyt._fmt.charsize = 58;
+	lyt._fmt.text_color = col;
+
+	model->getTextArea()->setFormat(lyt._fmt);
+}
+
+void Node_Text::setBackgroundColor(const  SSS::RGBA_f& bgCol)
+{
+
+
+	model->getTextArea()->setClearColor(bgCol);
+}
+
 void Node_Text::_size_update()
 {
 	glm::vec3 const old_size = _size;

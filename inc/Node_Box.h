@@ -15,6 +15,8 @@ public:
 	void setTextData(const Text_data& td) {};
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
+
+
 private :
 	glm::vec2 _size;
 	glm::vec3 _pos;

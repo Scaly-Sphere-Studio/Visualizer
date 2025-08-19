@@ -83,6 +83,8 @@ public:
 	virtual void setWrappingMin(const int& min);
 
 	void setMaxStrSize(const int maxSize);
+	void setTextColor(const SSS::RGBA_f& col);
+	void setBackgroundColor(const SSS::RGBA_f& bgCol);
 private:
 	void translateElem() { model->translate(_pos); };
 	int _maxStrSize = 600;
