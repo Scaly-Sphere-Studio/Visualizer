@@ -95,7 +95,10 @@ void Node_Text::_size_update()
 	auto [w, h] = model->getTexture()->getCurrentDimensions();
 	model->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
 	if (auto area = model->getTextArea(); area)
+	{
 		w = area->getUsedWidth();
+		h = area->getHeight();
+	}
 	_size.x = std::max(static_cast<float>(w), _size.x);
 	_size.y += static_cast<float>(h);
 
@@ -126,7 +129,7 @@ void Node_UI::setVerticalOffset(const int& keyVO)
 	_vOffset = keyVO;
 	Node_Block* UIelem = static_cast<Node_Block*>(_sg->at(_vOffset));
 	_pos.y += UIelem->_pos.y;
-	_pos.y += UIelem->_size.y;
+	_pos.y -= UIelem->_size.y;
 
 	translateElem();
 }
@@ -136,7 +139,7 @@ void Node_UI::setHorizontalOffset(const int& keyHO)
 	_hOffset = keyHO;
 	Node_Block* UIelem = static_cast<Node_Block*>(_sg->at(_hOffset));
 	_pos = UIelem->_pos;
-	_pos.x += UIelem->_size.x + 100.0;
+	_pos.x += UIelem->_size.x;
 
 	translateElem();
 }

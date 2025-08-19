@@ -5,11 +5,11 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 {
 	Node_UI* first = new Node_Text(p_Sg, "Id");
 	Node_UI* textNode = new Node_Text(p_Sg, "Text");
-	textNode->setHorizontalOffset(first->_key);
+	textNode->setVerticalOffset(first->_key);
 	Node_UI* comNode = new Node_Text(p_Sg, "Comment");
-	comNode->setHorizontalOffset(textNode->_key);
+	comNode->setVerticalOffset(textNode->_key);
 	Node_UI* tagNode = new Node_Text(p_Sg, "Tag");
-	tagNode->setHorizontalOffset(comNode->_key);
+	tagNode->setVerticalOffset(comNode->_key);
 
 	
 	//p_Sg->Text("bonjour");

@@ -2,19 +2,21 @@
 
 #include "Node_Primitive.h"
 #include <random>
+#include <chrono>
 
 Node::Node()
 {
 	// Seed with a real random value, if available
-	std::random_device r;
-	std::default_random_engine e1(r());
-
+	std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+	_key = rng();
 
 }
 
 Node::Node(SceneGraph* p_Sg)
 {
-	_key = 0;
+	// Seed with a real random value, if available
+	std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+	_key = rng();
 	_sg = p_Sg;
 }
 
