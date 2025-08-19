@@ -11,10 +11,13 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	Node_UI* tagNode = new Node_Text(p_Sg, "Tag");
 	tagNode->setVerticalOffset(comNode->_key);
 
-	
-	//p_Sg->Text("bonjour");
-	//p_Sg->Text("ola");
-	//p_Sg->Text("guten tag");
+	float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x});
+
+	//first->setWrappingMin(static_cast<int>(min));
+	//textNode->setWrappingMin(static_cast<int>(min));
+	//comNode->setWrappingMin(static_cast<int>(min));
+	//tagNode->setWrappingMin(static_cast<int>(min));
+
 }
 
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)

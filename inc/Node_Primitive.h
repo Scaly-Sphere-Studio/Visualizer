@@ -59,6 +59,7 @@ public:
 	void setVerticalOffset(const int& keyVO);		// Set the key Node to vertical offset
 	void setHorizontalOffset(const int& keyHO);		// Set the key Node to horizontal offset
 	void setDepthOffset(const int& keyDO);			// Set the key Node to depth offset
+	virtual void setWrappingMin(const int& min) {};
 
 protected:
 	int _hOffset = -1;	// key node for horizontal offset
@@ -66,6 +67,7 @@ protected:
 	int _dOffset = -1;	// key node for depth offset
 
 	virtual void translateElem() {};
+
 };
 
 class Node_Text : public Node_UI
@@ -78,6 +80,8 @@ public:
 	int _type = 4;
 
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	virtual void setWrappingMin(const int& min);
+
 	void setMaxStrSize(const int maxSize);
 private:
 	void translateElem() { model->translate(_pos); };

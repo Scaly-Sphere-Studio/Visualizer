@@ -81,6 +81,11 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 	}
 }
 
+void Node_Text::setWrappingMin(const int& min)
+{
+	model->getTextArea()->setWrappingMinWidth(min);
+}
+
 void Node_Text::setMaxStrSize(const int maxSize)
 {
 	_maxStrSize = maxSize;
