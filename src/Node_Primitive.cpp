@@ -18,7 +18,7 @@ glm::mat4 TextPlane::_getTranslationMat4() const {
 }
 
 Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt)
-	:Node_Block(p_Sg)
+	:Node_UI(p_Sg)
 {
 	SSS::TR::Format fmt = lyt._fmt;
 	fmt.charsize = 58;
@@ -50,8 +50,10 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 	plane->setHitbox(SSS::GL::Plane::Hitbox::Full);
 	model = plane;
 
+	_size_update();
 
 	_sg->_rd->addPlane(plane);
+	_sg->emplace(this);
 }
 
 void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
@@ -115,4 +117,36 @@ void Node_Text::_size_update()
 
 void Node_Block::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
+}
+
+
+
+void Node_UI::setVerticalOffset(const int& keyVO)
+{
+	_vOffset = keyVO;
+	Node_Block* UIelem = static_cast<Node_Block*>(_sg->at(_vOffset));
+	_pos.y += UIelem->_pos.y;
+	_pos.y += UIelem->_size.y;
+
+	translateElem();
+}
+
+void Node_UI::setHorizontalOffset(const int& keyHO)
+{
+	_hOffset = keyHO;
+	Node_Block* UIelem = static_cast<Node_Block*>(_sg->at(_hOffset));
+	_pos = UIelem->_pos;
+	_pos.x += UIelem->_size.x + 100.0;
+
+	translateElem();
+}
+
+void Node_UI::setDepthOffset(const int& keyDO)
+{
+	_dOffset = keyDO;
+	Node_Block* UIelem = static_cast<Node_Block*>(_sg->at(_dOffset));
+	_pos.z += UIelem->_pos.z;
+	_pos.z += UIelem->_size.z;
+
+	translateElem();
 }

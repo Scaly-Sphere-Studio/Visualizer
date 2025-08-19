@@ -1,6 +1,16 @@
 #include "scenegraph.h"
 
 #include "Node_Primitive.h"
+#include <random>
+
+Node::Node()
+{
+	// Seed with a real random value, if available
+	std::random_device r;
+	std::default_random_engine e1(r());
+
+
+}
 
 Node::Node(SceneGraph* p_Sg)
 {

@@ -9,7 +9,7 @@ class SceneGraph;
 class Node : public SSS::Observer, public SSS::Subject
 {
 public:
-	Node() = default;
+	Node();
 	Node(SceneGraph* p_Sg);
 	~Node();
 

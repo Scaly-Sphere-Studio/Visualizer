@@ -56,17 +56,19 @@ public:
 	int _type = 2;
 
 	//transforms
-	void setVerticalOffset(const int &keyVO)	{ _vOffset = keyVO; }; // Set the key Node to vertical offset
-	void setHorizontalOffset(const int& keyHO)	{ _hOffset = keyHO; }; // Set the key Node to horizontal offset
-	void setDepthOffset(const int& keyDO)		{ _dOffset = keyDO; }; // Set the key Node to depth offset
+	void setVerticalOffset(const int& keyVO);		// Set the key Node to vertical offset
+	void setHorizontalOffset(const int& keyHO);		// Set the key Node to horizontal offset
+	void setDepthOffset(const int& keyDO);			// Set the key Node to depth offset
 
 protected:
 	int _hOffset = -1;	// key node for horizontal offset
 	int _vOffset = -1;	// key node for vertical offset
 	int _dOffset = -1;	// key node for depth offset
+
+	virtual void translateElem() {};
 };
 
-class Node_Text : public Node_Block
+class Node_Text : public Node_UI
 {
 public:
 	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
@@ -78,6 +80,7 @@ public:
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 	void setMaxStrSize(const int maxSize);
 private:
+	void translateElem() { model->translate(_pos); };
 	int _maxStrSize = 600;
 	void _size_update();
 };
