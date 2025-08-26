@@ -139,10 +139,62 @@ void Node_Text::_size_update()
 	}
 }
 
+void Node_Text::update()
+{
+	glm::mat4 transform = getGlobalTransform(); // your transformation matrix.
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(transform, scale, rotation, translation, skew, perspective);
+	glm::vec3 rot = glm::eulerAngles(rotation);
+
+	model->setTranslation(translation);
+	model->setRotation(glm::degrees(rot));
+	//model->translate(translation);
+	//model->rotate(glm::vec3(0,0,45.f));
+
+}
+
+Node_Block::Node_Block(SceneGraph* p_Sg): Node(p_Sg)
+{
+	_pos = glm::vec3{ 0, 0, 0 };
+	_size = glm::vec3{ 0, 0, 0 };
+}
+
 void Node_Block::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
 }
 
+void Node_Block::update()
+{
+}
+
+
+glm::mat4 Node_Block::getLocalTransform()
+{
+	//Rotation along the z axis with _pos translation
+	glm::mat4 mat = glm::mat4(1.0);
+	mat = glm::translate(mat, _pos);
+	mat *= glm::rotate(rotation, glm::vec3(0, 0, 1));
+	return mat;
+}
+
+glm::mat4 Node_Block::getGlobalTransform()
+{
+	if (_inherited_transform == false || _parent == 0)
+		return getLocalTransform();
+
+	//auto at = _sg->at(_parent);
+
+	Node_Block* test = (Node_Block*)_sg->at(_parent);
+	
+	glm::mat4 transform = test->getGlobalTransform() * getLocalTransform() ;
+	//Rotation along the z axis with _pos translation
+	//return getLocalTransform();
+	return transform;
+}
 
 
 void Node_UI::setVerticalOffset(const int& keyVO)
@@ -172,5 +224,10 @@ void Node_UI::setDepthOffset(const int& keyDO)
 	_pos.z += UIelem->_pos.z;
 	_pos.z += UIelem->_size.z;
 
+	translateElem();
+}
+
+void Node_UI::update()
+{
 	translateElem();
 }

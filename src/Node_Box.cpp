@@ -1,8 +1,11 @@
 #include "Node_Box.h"
 
 Node_Box::Node_Box(SceneGraph* p_Sg):
-	Node_Block(p_Sg)
+	Node_UI(p_Sg)
 {
+	_pos = glm::vec3(150, 350, 0);
+	rotation = 40.f;
+	//rotation = glm::vec3(0,0,0.5);
 
 	_color = { 0.979112982749939, 0.8841438889503479,	0.9663259983062744, 1.0 };
 	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
@@ -12,12 +15,18 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 		bg_col.b -= 0.15f;
 		first->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
 		first->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
+		first->set_parent(this->_key);
+		this->_children.emplace(first->_key);
 
 	Node_Text* textNode = new Node_Text(p_Sg, "Text");
 	textNode->setVerticalOffset(first->_key);
 
 		//textNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
-		textNode->setBackgroundColor(SSS::RGBA_f{ _color });
+	textNode->setBackgroundColor(SSS::RGBA_f{ _color });
+	//textNode->rotate(45.f);
+	textNode->set_parent(this->_key);
+		this->_children.emplace(textNode->_key);
+
 	
 	//Node_Text* comNode = new Node_Text(p_Sg, "Comment");
 	//comNode->setVerticalOffset(textNode->_key);
@@ -41,6 +50,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	textNode->setWrappingMin(static_cast<int>(min));
 	//comNode->setWrappingMin(static_cast<int>(min));
 	//tagNode->setWrappingMin(static_cast<int>(min));
+	_sg->push(this);
 
 }
 
@@ -48,4 +58,14 @@ void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
 
 
+}
+
+void Node_Box::update()
+{
+	for (int child : _children) 
+	{
+		Node_Text* t = (Node_Text*)_sg->at(child);
+		t->update();
+
+	}
 }

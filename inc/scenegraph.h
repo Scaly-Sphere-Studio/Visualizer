@@ -15,16 +15,20 @@ public:
 
 	int _key;
 	int _type = 0;
+	bool _inherited_transform = true;
 
-	std::set<int> _parents;
+	int _parent;
 	std::set<int> _children;
+
 
 	//Template node
 	Node* push(Node* n);
 
+	virtual void update() {};
+
 	void pop_child(const int& keyNode);
 	void detach_parent(const int& keyNode);
-	void add_parent(const int& keyNode);
+	void set_parent(const int& keyNode) { _parent = keyNode; };
 
 	//to_string
 	std::string to_string() const;

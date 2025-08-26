@@ -35,16 +35,20 @@ public:
 class Node_Block : public Node
 {
 public:
-	Node_Block(SceneGraph* p_Sg) :Node(p_Sg) {};
+	Node_Block(SceneGraph* p_Sg);
 	std::string name() const { return "Block"; };
 
-	glm::vec3 _pos = glm::vec3{ 0, 0, 0 };	// Node position and translations
-	glm::vec3 _size = glm::vec3{ 0, 0, 0 };	// Node bounding box
+	glm::vec3 _pos;		// Node position and translations
+	glm::vec3 _size;	// Node bounding box
 	int _type = 1;
 
+	float rotation = 0.f;
 
 	//transforms
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	virtual void update();
+	glm::mat4 getLocalTransform(); // Rotation*Translation*Scale
+	glm::mat4 getGlobalTransform();
 private:
 };
 
@@ -60,6 +64,8 @@ public:
 	void setHorizontalOffset(const int& keyHO);		// Set the key Node to horizontal offset
 	void setDepthOffset(const int& keyDO);			// Set the key Node to depth offset
 	virtual void setWrappingMin(const int& min) {};
+
+	virtual void update();
 
 protected:
 	int _hOffset = -1;	// key node for horizontal offset
@@ -85,6 +91,8 @@ public:
 	void setMaxStrSize(const int maxSize);
 	void setTextColor(const SSS::RGBA_f& col);
 	void setBackgroundColor(const SSS::RGBA_f& bgCol);
+	void rotate(const float &rot) { model->rotate(glm::vec3(0, 0,rot)); };
+	virtual void update();
 private:
 	void translateElem() { model->translate(_pos); };
 	int _maxStrSize = 600;

@@ -8,18 +8,16 @@
 
 
 
-class Node_Box : public Node_Block 
+class Node_Box : public Node_UI 
 {
 public:
 	Node_Box(SceneGraph* p_Sg);
 	void setTextData(const Text_data& td) {};
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
-
+	void update();
 
 private :
-	glm::vec2 _size;
-	glm::vec3 _pos;
 	glm::vec4 _color;
 
 	Text_data _td = Text_data{};

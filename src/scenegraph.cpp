@@ -22,7 +22,7 @@ Node::Node(SceneGraph* p_Sg)
 
 Node::~Node()
 {
-	_parents.clear();
+	_parent = 0;
 
 	for (int cKey : _children) 
 	{
@@ -47,22 +47,17 @@ void Node::detach_parent(const int& keyNode)
 	_sg[keyNode];
 }
 
-void Node::add_parent(const int& keyNode)
-{
-	//_parents.emplace(keyNode);
-}
-
 std::string Node::to_string() const
 {
 	std::string res;
 	res = "Node : " + name() + "(" + SSS::toString(_key) + ")\n";
 
 	//print parent list
-	if (!_parents.empty()) {
+	if (_parent) {
 		res += "\tparents :\n";
-		for (auto node : _parents) {
-			res += "\t id : " + std::to_string(node) + "\n";
-		}
+		//for (auto node : _parents) {
+		//}
+		res += "\t id : " + std::to_string(_parent) + "\n";
 	}
 
 	//print children description
