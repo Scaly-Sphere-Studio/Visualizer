@@ -23,14 +23,14 @@ public:
 	void setOffset(glm::vec3 offset);
 };
 
-struct Tags {
-	Tags();
-	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
-	~Tags();
-	std::string _name;
-	BoxPlane::Vector _model;
-	uint32_t _weight;
-};
+//struct Tags {
+//	Tags();
+//	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
+//	~Tags();
+//	std::string _name;
+//	BoxPlane::Vector _model;
+//	uint32_t _weight;
+//};
 
 
 class Box : public SSS::Observer, public SSS::SharedClass<Box> {
@@ -99,7 +99,6 @@ public:
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
 	
-	static std::map<uint16_t, Tags> tags_list;
 	static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 	// DEFAULT VALUES

@@ -47,6 +47,8 @@ public:
 	SceneGraph();
 	~SceneGraph() {};
 
+	void init();
+
 	//Add the node to the nodelist and add it to the arborescence, to be used on free nodes
 	void push(Node* n);	
 	void emplace(Node* n);	// Add the node to the nodelist

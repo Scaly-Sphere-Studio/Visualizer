@@ -3,14 +3,17 @@
 Node_Box::Node_Box(SceneGraph* p_Sg):
 	Node_UI(p_Sg)
 {
+	_td.text_ID = SSS::toString(_key);
+	_td.text = "Text";
+
+
+
 	_pos = glm::vec3(150, 350, 0);
-	rotation = 40.f;
-	//rotation = glm::vec3(0,0,0.5);
 
 	_color = { 0.979112982749939, 0.8841438889503479,	0.9663259983062744, 1.0 };
 	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
 	glm::vec4 bg_col = tex_col;
-	Node_Text* first = new Node_Text(p_Sg, "Id");
+	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
 		tex_col.b = 0.3f;
 		bg_col.b -= 0.15f;
 		first->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
@@ -18,7 +21,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 		first->set_parent(this->_key);
 		this->_children.emplace(first->_key);
 
-	Node_Text* textNode = new Node_Text(p_Sg, "Text");
+	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
 	textNode->setVerticalOffset(first->_key);
 
 		//textNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
@@ -26,6 +29,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	//textNode->rotate(45.f);
 	textNode->set_parent(this->_key);
 		this->_children.emplace(textNode->_key);
+
 
 	
 	//Node_Text* comNode = new Node_Text(p_Sg, "Comment");
@@ -43,8 +47,8 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	//	tagNode->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
 
 
-		//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
-		float min = std::max({ first->_size.x, textNode->_size.x });
+	//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
+	float min = std::max({ first->_size.x, textNode->_size.x });
 
 	first->setWrappingMin(static_cast<int>(min));
 	textNode->setWrappingMin(static_cast<int>(min));
@@ -68,4 +72,10 @@ void Node_Box::update()
 		t->update();
 
 	}
+}
+
+void Node_Box::setColor(std::string hex)
+{
+	auto col = SSS::RGB24(hex);
+	_color =glm::vec4(col.r, col.g, col.b, 255.f)/255.f;
 }

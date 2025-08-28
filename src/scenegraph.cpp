@@ -79,6 +79,12 @@ Node::operator std::string() const
 
 SceneGraph::SceneGraph()
 {
+
+
+}
+
+void SceneGraph::init()
+{
 	_cam = SSS::GL::Camera::create();
 	_cam->setPosition({ 0, 0, 20.f });
 	_cam->setZFar(40.f);
@@ -86,7 +92,6 @@ SceneGraph::SceneGraph()
 
 	_rd = SSS::GL::PlaneRenderer::create();
 	_rd->camera = _cam;
-
 }
 
 void SceneGraph::push(Node* n)

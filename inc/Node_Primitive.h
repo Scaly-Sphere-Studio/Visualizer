@@ -49,6 +49,7 @@ public:
 	virtual void update();
 	glm::mat4 getLocalTransform(); // Rotation*Translation*Scale
 	glm::mat4 getGlobalTransform();
+
 private:
 };
 
@@ -66,6 +67,29 @@ public:
 	virtual void setWrappingMin(const int& min) {};
 
 	virtual void update();
+
+	bool hidden = false;
+	bool movable = false;
+	//bool hidden = false;
+
+	//STATES 
+	bool isHovered() const noexcept;
+	bool isClicked() const noexcept;
+	bool isHeld() const noexcept;
+
+	glm::vec3 center() { return _pos + _size * 0.5f; };
+	bool _checkCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
+	{
+		if (r1p.y + r1s.y >= r2p.y &&      // r1 top edge past r2 bottom
+			r1p.y <= r2p.y + r2s.y &&      // r1 bottom edge past r2 top
+			r1p.x + r1s.x >= r2p.x &&      // r1 right edge past r2 left
+			r1p.x <= r2p.x + r2s.x)        // r1 left edge past r2 right
+		{
+			LOG_MSG("Collision !!");
+			return true;
+		}
+		return false;
+	}
 
 protected:
 	int _hOffset = -1;	// key node for horizontal offset

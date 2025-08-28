@@ -6,7 +6,7 @@
 
 #define TEXT_MAX_WIDTH          600
 
-std::map<uint16_t, Tags>Box::tags_list{};
+//std::map<uint16_t, Tags>Box::tags_list{};
 std::map<std::string, SSS::GUI_Layout> Box::layout_map{};
 glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
@@ -139,14 +139,6 @@ void Box::create_box()
 
     _size_update();
 
-    //Tags
-    if (tags.size() > 0) {
-        model.reserve(tags.size() * 2);
-        for (size_t i = 0; i < tags.size(); ++i) {
-            model.insert(model.end(), tags_list[tags[i]]._model.begin(), tags_list[tags[i]]._model.end());
-        }
-    }
-
     Visualizer::get().box_renderer->addPlanes(model);
 
 }
@@ -163,20 +155,7 @@ void Box::create_box()
 #define PARTICLE_ROTATE         8
 
 
-Tags::Tags()
-{
-    _weight = 1;
-}
 
-Tags::Tags(std::string _name, std::string hex, uint32_t weight)
-{
-
-}
-
-Tags::~Tags()
-{
-    _model.clear();
-}
 
 void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
 {

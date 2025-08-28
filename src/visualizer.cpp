@@ -180,11 +180,13 @@ void Visualizer::run()
     glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
-    SceneGraph sg;
+    //SceneGraph sg;
+    sg.init();
     sg.setCamera(camera);
     window->addRenderer(sg._rd);
 
-    Node_Box box1(&sg);
+    //Node_Box box1(&sg);
+    //box1.update();
     //Node_Text text(&sg, "OHAYO");
 
     std::cout << sg.to_string() << std::endl;
@@ -192,6 +194,7 @@ void Visualizer::run()
 
     // Main loop
     while (!window->shouldClose()) {
+
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
         input();
@@ -284,6 +287,13 @@ void Visualizer::setup()
     SSS::GL::Window& window = SSS::GL::Window::create(args);
     glfwwindow = window.getGLFWwindow();
 
+    window.setVSYNC(true);
+    window.setCallback(glfwSetWindowSizeCallback, resize_callback);
+    window.setCallback(glfwSetKeyCallback, key_callback);
+    window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
+    window.setCallback(glfwSetScrollCallback, scroll_callback);
+
+    // Formats loading
     SSS::GUI_Layout layout;
     //ID FORMAT
     layout._fmt.charsize = 13;
@@ -306,11 +316,7 @@ void Visualizer::setup()
     layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{ std::string{"#333333"} }); 0x333333;
     Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
-    window.setVSYNC(true);
-    window.setCallback(glfwSetWindowSizeCallback, resize_callback);
-    window.setCallback(glfwSetKeyCallback, key_callback);
-    window.setCallback(glfwSetMouseButtonCallback, mouse_callback);
-    window.setCallback(glfwSetScrollCallback, scroll_callback);
+
 
     camera = SSS::GL::Camera::create();
     camera->setPosition({ 0, 0, 20.f });
@@ -576,22 +582,30 @@ void Visualizer::pop_link(Box& a, Box& b)
 void Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
-    Box::Shared b = Box::create();
-    _proj.box_map[boxID] = b;
-    b->setPos(position);
-    b->setColor(boxID);
-    b->_id = boxID;
-    ::UUID uuid;
-    ::UuidCreate(&uuid);
-    char* str;
-    ::UuidToStringA(&uuid, (RPC_CSTR*)&str);
+    //Box::Shared b = Box::create();
+    //_proj.box_map[boxID] = b;
+    //b->setPos(position);
+    //b->setColor(boxID);
+    //b->_id = boxID;
+    //::UUID uuid;
+    //::UuidCreate(&uuid);
+    //char* str;
+    //::UuidToStringA(&uuid, (RPC_CSTR*)&str);
 
-    b->_td.text_ID = str;
-    b->create_box();
+    //b->_td.text_ID = str;
+    //b->create_box();
+
+    Node_Box* n1 = new Node_Box(&sg);
+    n1->_pos = position;
+    n1->setColor(boxID);
+    n1->update();
+    sg.push(n1);
+    _proj.sg_boxes[boxID] = n1->_key;
 }
 
 void Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
+
     Box::Shared b = Box::create();
     _proj.box_map[td.text_ID] = b;
     b->setPos(pos);
@@ -599,6 +613,11 @@ void Visualizer::push_box(glm::vec3 pos, const Text_data& td)
     b->_id = td.text_ID;
     b->set_text_data(td);
     b->create_box();
+
+
+    //Node_Box* n1;
+    //n1->_pos = glm::vec3(120, -10, 0);
+    
 }
 
 void Visualizer::pop_box(std::string ID)

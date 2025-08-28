@@ -17,8 +17,14 @@ public:
 
 	void update();
 
-private :
+
+	bool _show_comment	= false;
+	bool _show_tags		= false;
+
 	glm::vec4 _color;
+	void setColor(std::string hex);
+
+private :
 
 	Text_data _td = Text_data{};
 

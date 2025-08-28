@@ -3,6 +3,7 @@
 #include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
+#include "scenegraph.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -22,6 +23,8 @@ struct PROJECT_DATA {
 	~PROJECT_DATA();
 	std::unordered_map<std::string, Box::Shared> box_map;
 	std::string project_name;
+	std::unordered_map<std::string, int> sg_boxes;
+
 };
 
 class Visualizer {
@@ -146,6 +149,7 @@ private:
 	std::chrono::steady_clock::time_point end;
 
 	//INTERFACE
+	SceneGraph sg;
 };
 
 //JSON CONVERTION
