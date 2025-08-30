@@ -148,6 +148,32 @@ Visualizer& Visualizer::get()
     return *singleton;
 }
 
+void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
+    switch (event_id) {
+    case SSS::EventList::Hover:
+    {
+        Node* n = (Node*)&subject;
+        hovered_box = n->_key;
+        SSS::log_msg("Hovered Node updated :" + std::to_string(n->_key));
+        return;
+    }
+    case SSS::EventList::Leave:
+    {
+        Node* n = (Node*)&subject;
+        if (hovered_box == n->_key) 
+        {
+            hovered_box = -1;
+            SSS::log_msg("Last hovered node reseted :" + std::to_string(n->_key));
+        }
+        return;
+    }
+    default :
+        SSS::log_err("Unknown event [" + std::to_string(event_id) + "]");
+        return;
+    }
+}
+
 Visualizer::~Visualizer()
 {
     arrow_map.clear();
@@ -199,6 +225,12 @@ void Visualizer::run()
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
         input();
 
+
+        for (auto elem : _proj.sg_boxes)
+        {
+            Node_UI* node = (Node_UI*)sg.at(elem.second);
+            node->_checkPointCollision(cursor_map_coordinates());
+        }
 
         //Collision test
         switch (_states) {
@@ -271,6 +303,7 @@ void Visualizer::scroll_callback(GLFWwindow* window, double x, double y)
         zoom = 1.f;
     camera->setZoom(zoom);
 }
+
 
 void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
@@ -579,7 +612,7 @@ void Visualizer::pop_link(Box& a, Box& b)
 
 
 
-void Visualizer::push_box(std::string boxID)
+int Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
     //Box::Shared b = Box::create();
@@ -600,7 +633,11 @@ void Visualizer::push_box(std::string boxID)
     n1->setColor(boxID);
     n1->update();
     sg.push(n1);
-    _proj.sg_boxes[boxID] = n1->_key;
+    _proj.sg_boxes[std::to_string(n1->_key)] = n1->_key;
+
+    _observe(*n1);
+
+    return n1->_key;
 }
 
 void Visualizer::push_box(glm::vec3 pos, const Text_data& td)

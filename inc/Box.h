@@ -87,6 +87,9 @@ private:
 	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
 
+
+
+
 public:
 
 	// DATA

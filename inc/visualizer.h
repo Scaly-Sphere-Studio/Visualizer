@@ -4,6 +4,7 @@
 #include "Debugger.h"
 #include "backend.hpp"
 #include "scenegraph.h"
+#include "EventList.hpp"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -27,7 +28,7 @@ struct PROJECT_DATA {
 
 };
 
-class Visualizer {
+class Visualizer : public SSS::Observer {
 	friend Debugger;
 
 public:
@@ -42,6 +43,8 @@ private:
 	PROJECT_DATA _proj;
 	VISUALISER_INFO _info;
 	V_STATES _states = V_STATES::DEFAULT;
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
@@ -74,7 +77,7 @@ private:
 	//Remove the link between two selected box
 	void pop_link(Box& a, Box& b);
 	//Add a new box at the current cursor position
-	void push_box(std::string boxID);
+	int push_box(std::string boxID);
 	void push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
@@ -82,6 +85,8 @@ private:
 	//Translate the screen cursor position from input to the world coordinates
 	glm::vec3 cursor_map_coordinates();
 
+
+	int hovered_box = -1;
 
 
 	std::set<Box::Shared> _selectedBoxes;

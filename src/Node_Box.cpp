@@ -30,7 +30,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	textNode->set_parent(this->_key);
 		this->_children.emplace(textNode->_key);
 
-
+	
 	
 	//Node_Text* comNode = new Node_Text(p_Sg, "Comment");
 	//comNode->setVerticalOffset(textNode->_key);
@@ -49,6 +49,9 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 
 	//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
 	float min = std::max({ first->_size.x, textNode->_size.x });
+
+	_size.x = min;
+	_size.y = textNode->_pos.y - textNode->_size.y;
 
 	first->setWrappingMin(static_cast<int>(min));
 	textNode->setWrappingMin(static_cast<int>(min));
@@ -70,7 +73,6 @@ void Node_Box::update()
 	{
 		Node_Text* t = (Node_Text*)_sg->at(child);
 		t->update();
-
 	}
 }
 

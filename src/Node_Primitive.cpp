@@ -139,6 +139,7 @@ void Node_Text::_size_update()
 	}
 }
 
+
 void Node_Text::update()
 {
 	glm::mat4 transform = getGlobalTransform(); // your transformation matrix.
@@ -230,4 +231,33 @@ void Node_UI::setDepthOffset(const int& keyDO)
 void Node_UI::update()
 {
 	translateElem();
+}
+
+bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
+{
+	glm::vec3 absPos = getGlobalTransform()[3]; // Translation from Transform
+
+	if ((pt.x < (absPos.x + _size.x) && (pt.x > absPos.x) 
+		&& pt.y > (absPos.y + _size.y) && (pt.y < absPos.y)))
+	{
+		// Cursor enter the UI elem
+		if (!_hover)
+		{
+			_notifyObservers(SSS::EventList::Hover);
+			SSS::log_msg("Hover the node " + std::to_string(_key));
+		}
+
+		_hover = true;
+		return true; // Pt in the UI elem
+	}
+
+	// Cursor leave the UI elem
+	if (_hover) 
+	{
+		_notifyObservers(SSS::EventList::Leave);
+		SSS::log_msg("Leave the node "+ std::to_string(_key));
+	}
+
+	_hover = false;
+	return false;
 }

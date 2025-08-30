@@ -13,7 +13,7 @@ public:
 	Node(SceneGraph* p_Sg);
 	~Node();
 
-	int _key;
+	unsigned int _key;
 	int _type = 0;
 	bool _inherited_transform = true;
 

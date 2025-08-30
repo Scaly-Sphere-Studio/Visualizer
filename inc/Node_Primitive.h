@@ -7,6 +7,7 @@
 
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"
+#include "EventList.hpp"
 
 
 static std::map<std::string, SSS::GUI_Layout> layout_map;
@@ -91,12 +92,23 @@ public:
 		return false;
 	}
 
+	bool _checkPointCollision(glm::vec2 const& pt);
+
+
 protected:
 	int _hOffset = -1;	// key node for horizontal offset
 	int _vOffset = -1;	// key node for vertical offset
 	int _dOffset = -1;	// key node for depth offset
 
 	virtual void translateElem() {};
+
+	bool _hover		= false;
+	bool _held		= false;
+	bool _clicked	= false;
+
+	enum Event {
+		Hover
+	};
 
 };
 
