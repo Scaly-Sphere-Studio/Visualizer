@@ -44,6 +44,8 @@ private:
 	VISUALISER_INFO _info;
 	V_STATES _states = V_STATES::DEFAULT;
 
+	std::mt19937 rng;
+
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
 	//CALLBACKS

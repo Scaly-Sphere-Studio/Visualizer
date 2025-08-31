@@ -79,7 +79,7 @@ public:
 	bool isHeld() const noexcept;
 
 	glm::vec3 center() { return _pos + _size * 0.5f; };
-	bool _checkCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
+	bool _checkBoxCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
 	{
 		if (r1p.y + r1s.y >= r2p.y &&      // r1 top edge past r2 bottom
 			r1p.y <= r2p.y + r2s.y &&      // r1 bottom edge past r2 top

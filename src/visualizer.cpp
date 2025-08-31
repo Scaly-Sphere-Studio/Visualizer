@@ -117,15 +117,11 @@ static bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm:
 }
 
 
-
-
-
-
-
 Visualizer::Visualizer()
 {
     //TODO RANDSEED 
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    rng = std::mt19937((float)(std::chrono::steady_clock::now().time_since_epoch().count()));
+    /*std::srand(static_cast<unsigned int>(std::time(nullptr)));*/
 
     //TODO Check if the data exists
     parse_info_data_visualizer_from_json("save.json");
@@ -330,7 +326,7 @@ void Visualizer::setup()
     SSS::GUI_Layout layout;
     //ID FORMAT
     layout._fmt.charsize = 13;
-    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{0,0,0,255});
+    layout._fmt.text_color = glm::vec4{0,0,0,255};
     layout._fmt.line_spacing = 1.f;
     layout._marginh = 4;
     layout._marginv = 5;
@@ -338,7 +334,7 @@ void Visualizer::setup()
     //TEXT FORMAT
     layout._fmt.line_spacing = 1.5f;
     layout._fmt.charsize = 19;
-    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{ std::string{"#111111"} });
+    layout._fmt.text_color = SSS::RGBA_f{ "#111111" };
     layout._marginh = 5;
     layout._marginv = 10;
     Box::layout_map.insert(std::make_pair("TEXT", layout));
@@ -346,7 +342,7 @@ void Visualizer::setup()
     layout._fmt.charsize = 16;
     layout._fmt.line_spacing = 1.3f;
     layout._fmt.font = "Ariali.ttf";
-    layout._fmt.text_color = static_cast<SSS::TR::Color>(SSS::RGBA32{ std::string{"#333333"} }); 0x333333;
+    layout._fmt.text_color = SSS::RGBA_f{ "#333333" };
     Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
 

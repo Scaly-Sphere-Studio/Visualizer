@@ -7,7 +7,7 @@
 Node::Node()
 {
 	// Seed with a real random value, if available
-	std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+	std::mt19937 rng(unsigned int(std::chrono::steady_clock::now().time_since_epoch().count()));
 	_key = rng();
 
 }

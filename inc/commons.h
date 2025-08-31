@@ -1,6 +1,7 @@
 #pragma once
 
 #include "_includes.hpp"
+#include <random>
 
 // Converts a value to a hex string by outputing it to a string stream
 template <typename T>
