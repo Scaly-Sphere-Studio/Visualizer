@@ -160,15 +160,6 @@ Node_Block::Node_Block(SceneGraph* p_Sg): Node(p_Sg)
 	_size = glm::vec3{ 0, 0, 0 };
 }
 
-void Node_Block::_subjectUpdate(SSS::Subject const& subject, int event_id)
-{
-}
-
-void Node_Block::update()
-{
-}
-
-
 glm::mat4 Node_Block::getLocalTransform()
 {
 	//Rotation along the z axis with _pos translation
@@ -187,6 +178,11 @@ glm::mat4 Node_Block::getGlobalTransform()
 	return p_pNode->getGlobalTransform() * getLocalTransform();;
 }
 
+
+void Node_UI::setColor(const std::string& hex)
+{
+	setColor(SSS::RGBA_f(hex));
+}
 
 void Node_UI::setVerticalOffset(const int& keyVO)
 {

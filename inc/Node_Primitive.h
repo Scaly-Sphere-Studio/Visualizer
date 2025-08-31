@@ -44,8 +44,8 @@ public:
 	float rotation = 0.f;
 
 	//transforms
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
-	virtual void update();
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override {};
+	virtual void update() {};
 	glm::mat4 getLocalTransform(); // Rotation*Translation*Scale
 	glm::mat4 getGlobalTransform();
 
@@ -76,6 +76,9 @@ public:
 	bool isClicked() const noexcept;
 	bool isHeld() const noexcept;
 
+	virtual void setColor(const SSS::RGBA_f& col) { _color = col; };
+	virtual void setColor(const std::string& hex);
+
 	glm::vec3 center() { return _pos + _size * 0.5f; };
 	bool _checkBoxCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
 	{
@@ -99,6 +102,8 @@ protected:
 	int _dOffset = -1;	// key node for depth offset
 
 	virtual void translateElem() {};
+
+	SSS::RGBA_f _color;
 
 	bool _hover		= false;
 	bool _held		= false;

@@ -18,13 +18,12 @@ public:
 
 	void update();
 
-	void boxColor(const SSS::RGBA_f& col);
+	void setColor(const SSS::RGBA_f& col);
 
 	bool _show_comment	= false;
 	bool _show_tags		= false;
 
 	glm::vec4 _color;
-	void setColor(std::string hex);
 
 private :
 

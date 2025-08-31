@@ -166,8 +166,6 @@ void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
     _observe(*plane->getTexture());
 
 
-
-
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
         glm::vec4 bg_col = tex_col;

@@ -21,7 +21,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 
 	textNode->setVerticalOffset(first->_key);
 
-	boxColor(_color);
+	setColor(_color);
 	_resize();
 	_sg->push(this);
 }
@@ -34,7 +34,6 @@ void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 		_resize();
 		return;
 	}
-
 }
 
 void Node_Box::update()
@@ -46,7 +45,7 @@ void Node_Box::update()
 	}
 }
 
-void Node_Box::boxColor(const SSS::RGBA_f& col)
+void Node_Box::setColor(const SSS::RGBA_f& col)
 {
 	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
 	glm::vec4 bg_col = tex_col;
@@ -59,12 +58,6 @@ void Node_Box::boxColor(const SSS::RGBA_f& col)
 
 	Node_Text* _txt = (Node_Text*)_sg->at(_children["TEXT"]);
 	_txt->setBackgroundColor(SSS::RGBA_f{ _color });
-}
-
-void Node_Box::setColor(std::string hex)
-{
-	auto col = SSS::RGB24(hex);
-	_color =glm::vec4(col.r, col.g, col.b, 255.f)/255.f;
 }
 
 void Node_Box::_resize()
@@ -82,6 +75,6 @@ void Node_Box::_resize()
 
 	for (const auto& c : _children) {
 		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
-		t->setWrappingMin(min);
+		t->setWrappingMin(static_cast<unsigned int>(std::ceil(min)));
 	}
 }
