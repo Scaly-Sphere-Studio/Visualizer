@@ -169,6 +169,29 @@ glm::mat4 Node_Block::getLocalTransform()
 	return mat;
 }
 
+bool Node_Block::checkCollision2D(glm::vec2 np2, glm::vec2 ns2)
+{
+	//node pos np, node size ns
+	glm::vec3 globPos = getGlobalTransform()[3];
+	
+
+	if (globPos.y + _size.y >= np2.y &&      // r1 top edge past r2 bottom
+		globPos.y <= np2.y + ns2.y &&      // r1 bottom edge past r2 top
+		globPos.x + _size.x >= np2.x &&      // r1 right edge past r2 left
+		globPos.x <= np2.x + ns2.x)        // r1 left edge past r2 right
+	{
+		LOG_MSG("Collision !!");
+		return true;
+	}
+
+	return false;
+}
+
+glm::vec3 Node_Block::center()
+{
+	return glm::vec3(_pos) + glm::vec3(_size.x / 2.f, _size.y / -2.f, _size.z / 2.f);
+}
+
 glm::mat4 Node_Block::getGlobalTransform()
 {
 	if (_inherited_transform == false || _parent == 0)

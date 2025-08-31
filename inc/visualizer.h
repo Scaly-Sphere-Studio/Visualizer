@@ -92,6 +92,7 @@ private:
 
 
 	std::set<Box::Shared> _selectedBoxes;
+	std::set<int> _selectedBoxesID;
 	SSS::GL::Plane::Shared Selection_box;
 
 	std::string first_link_ID;

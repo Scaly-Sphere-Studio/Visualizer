@@ -427,32 +427,34 @@ void Visualizer::input()
         && !window->keyMod(GLFW_MOD_SHIFT | GLFW_MOD_CONTROL))
     {
         BoxPlane::Shared plane = window->getHovered<BoxPlane>();
-        if (!plane) {
+        if (hovered_box == -1) {
             _states = V_STATES::DRAG_SCREEN;
             _cur_pos = glm::vec3(-c_x, c_y, 0.f);
-            _selectedBoxes.clear();
+            _selectedBoxesID.clear();
 
             LOG_MSG("DRAG SCREEN MODE");
         }
         else if (!area) {
-            Box::Shared box = plane->getBox();
+            //Box::Shared box = plane->getBox();
+            Node_Box* box = reinterpret_cast<Node_Box*>(sg.at(hovered_box));
             //Create a selection or switch the two IDs
-            if (_selectedBoxes.size() < 2) {
-                for (Box::Shared b : _selectedBoxes) {
+            if (_selectedBoxesID.size() < 2) {
+                for (const auto& box : _selectedBoxesID) {
+                    Node_Box* nbox = reinterpret_cast<Node_Box*>(sg.at(box));
                     //Reset the Z offset for priority 
-                    if (box != b) {
-                        b->setZ(0);
-                    }
+                    nbox->setZ(0);
+
                 }
-                _selectedBoxes.clear();
-                _selectedBoxes.emplace(box);
+                box->setZ(2.0f);
+                _selectedBoxesID.clear();
+                _selectedBoxesID.emplace(box->_key);
             }
             _cur_pos = cursor_map_coordinates();
             _states = V_STATES::DRAG_BOX;
         }
         else {
             _states = V_STATES::DEFAULT;
-            _selectedBoxes.clear();
+            _selectedBoxesID.clear();
         }
     }
 
@@ -723,11 +725,12 @@ void Visualizer::drag_boxes()
 
     glm::vec3 const new_pos = cursor_map_coordinates();
     delta = new_pos - _cur_pos;
+
     //Update only if the box has moved
-    if (new_pos != _cur_pos) {
-        for (Box::Shared b : _selectedBoxes) {
-            b->setPos(b->getPos() + glm::vec3{ delta.x, delta.y, 0 });
-            link_box(*b);
+    if (delta != glm::vec3(0)) {
+        for (const int& b : _selectedBoxesID) {
+            Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b));
+            node->translate(delta);
         }
         _cur_pos = new_pos;
     }
@@ -820,11 +823,11 @@ void Visualizer::multi_select()
     Selection_box->setTranslation(_otherpos + glm::vec3(diff / 2, 5.f));
     Selection_box->setScaling(glm::vec3(glm::abs(diff), 1.f));
 
-    for (auto [id, box] : _proj.box_map) {
-        if (box->checkCollision(Selection_box))
-            _selectedBoxes.emplace(box);
+    for (auto [id, box] : _proj.sg_boxes) {
+        if (reinterpret_cast<Node_Box*>(sg.at(box))->checkCollision(Selection_box))
+            _selectedBoxesID.emplace(box);
         else
-            _selectedBoxes.erase(box);
+            _selectedBoxesID.erase(box);
     }
 }
 

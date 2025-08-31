@@ -49,6 +49,13 @@ public:
 	glm::mat4 getLocalTransform(); // Rotation*Translation*Scale
 	glm::mat4 getGlobalTransform();
 
+	void translate(const glm::vec3& translation) { _pos += translation; update(); };
+
+	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size);
+	virtual glm::vec3 center();
+
+	void setZ(const float& depth) { _pos.z = depth; update(); };
+
 private:
 };
 
@@ -79,7 +86,6 @@ public:
 	virtual void setColor(const SSS::RGBA_f& col) { _color = col; };
 	virtual void setColor(const std::string& hex);
 
-	glm::vec3 center() { return _pos + _size * 0.5f; };
 	bool _checkBoxCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
 	{
 		if (r1p.y + r1s.y >= r2p.y &&      // r1 top edge past r2 bottom

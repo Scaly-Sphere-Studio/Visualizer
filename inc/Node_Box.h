@@ -19,6 +19,8 @@ public:
 	void update();
 
 	void setColor(const SSS::RGBA_f& col);
+	bool checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane);
+
 
 	bool _show_comment	= false;
 	bool _show_tags		= false;

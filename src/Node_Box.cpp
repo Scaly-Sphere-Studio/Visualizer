@@ -60,6 +60,14 @@ void Node_Box::setColor(const SSS::RGBA_f& col)
 	_txt->setBackgroundColor(SSS::RGBA_f{ _color });
 }
 
+bool Node_Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane)
+{
+	glm::vec2 const pos = plane->getTranslation();
+	glm::vec2 const size = plane->getScaling();
+
+	return checkCollision2D(pos - (size / 2.f), size);
+}
+
 void Node_Box::_resize()
 {
 	float min = 0;
