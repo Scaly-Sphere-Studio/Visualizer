@@ -59,11 +59,11 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
 
-	if (event_id == SSS::GL::Texture::Resize) {
+	if (event_id == SSS::EventList::Resize) {
 		auto [w, h] = model->getTexture()->getCurrentDimensions();
 		model->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
 
-		_notifyObservers(event_id);
+		_notifyObservers(SSS::EventList::Resize);
 		return;
 	}
 
@@ -78,6 +78,7 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 			return;
 
 		_size_update();
+		_notifyObservers(SSS::EventList::Resize);
 	}
 }
 

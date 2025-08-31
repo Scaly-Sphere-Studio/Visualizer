@@ -110,9 +110,6 @@
     <ClInclude Include="inc\Node_Primitive.h">
       <Filter>Nodes\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="inc\EventList.hpp">
-      <Filter>Nodes\Headers</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\triangle.frag">

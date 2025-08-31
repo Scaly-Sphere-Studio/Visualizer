@@ -40,15 +40,17 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
 	
 	
-	float min = std::max({ first->_size.x, textNode->_size.x });
+	//float min = std::max({ first->_size.x, textNode->_size.x });
 
-	_size.x = min;
-	_size.y = textNode->_pos.y - textNode->_size.y;
+	//_size.x = min;
+	//_size.y = textNode->_pos.y - textNode->_size.y;
 
-	first->setWrappingMin(static_cast<int>(min));
-	textNode->setWrappingMin(static_cast<int>(min));
-	//comNode->setWrappingMin(static_cast<int>(min));
-	//tagNode->setWrappingMin(static_cast<int>(min));
+	//first->setWrappingMin(static_cast<int>(min));
+	//textNode->setWrappingMin(static_cast<int>(min));
+	////comNode->setWrappingMin(static_cast<int>(min));
+	////tagNode->setWrappingMin(static_cast<int>(min));
+
+	_resize();
 	_sg->push(this);
 
 }
@@ -57,7 +59,9 @@ void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
 	switch(event_id)
 	{
-	case : 
+	case SSS::EventList::Resize :
+		_resize();
+		return;
 	}
 
 }
@@ -90,4 +94,28 @@ void Node_Box::setColor(std::string hex)
 {
 	auto col = SSS::RGB24(hex);
 	_color =glm::vec4(col.r, col.g, col.b, 255.f)/255.f;
+}
+
+void Node_Box::_resize()
+{
+	float min = 0;
+	for (const auto& c : _children) {
+		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
+		min = std::max(min, t->_size.x);
+	}
+	
+	Node_Text* last = reinterpret_cast<Node_Text*>(_sg->at(_children["TEXT"]));
+	_size.x = min;
+	_size.y = last->_pos.y - last->_size.y;
+
+
+	for (const auto& c : _children) {
+		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
+		t->setWrappingMin(min);
+	}
+
+	//first->setWrappingMin(static_cast<int>(min));
+	//textNode->setWrappingMin(static_cast<int>(min));
+
+	
 }

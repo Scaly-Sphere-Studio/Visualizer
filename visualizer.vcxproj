@@ -37,7 +37,6 @@
     <ClInclude Include="inc\backend.hpp" />
     <ClInclude Include="inc\backend_json.h" />
     <ClInclude Include="inc\data.hpp" />
-    <ClInclude Include="inc\EventList.hpp" />
     <ClInclude Include="inc\gui.h" />
     <ClInclude Include="inc\Node_Box.h" />
     <ClInclude Include="inc\Node_Primitive.h" />

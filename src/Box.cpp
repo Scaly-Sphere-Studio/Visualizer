@@ -203,7 +203,7 @@ void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
 
 void Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-    if (event_id == SSS::GL::Texture::Resize) {
+    if (event_id == SSS::EventList::Resize) {
         _size_update();
         return;
     }
