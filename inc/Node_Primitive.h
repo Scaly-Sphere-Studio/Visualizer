@@ -9,9 +9,7 @@
 #include "SSS/Commons/color.hpp"
 #include "SSS/Commons/eventList.hpp"
 
-
 static std::map<std::string, SSS::GUI_Layout> layout_map;
-
 
 class SceneGraph;
 

@@ -15,44 +15,15 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	_observe(*first);
 
 	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
-	textNode->setVerticalOffset(first->_key);
 	textNode->set_parent(this->_key);
-	_observe(*textNode);
 	this->_children.emplace("TEXT", textNode->_key);
+	_observe(*textNode);
+
+	textNode->setVerticalOffset(first->_key);
 
 	boxColor(_color);
-	
-	//Node_Text* comNode = new Node_Text(p_Sg, "Comment");
-	//comNode->setVerticalOffset(textNode->_key);
-	//	tex_col.b = 0.3f;
-	//	bg_col.b -= 0.15f;
-	//	comNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
-	//	comNode->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
-
-	//Node_Text* tagNode = new Node_Text(p_Sg, "Tag");
-	//tagNode->setVerticalOffset(comNode->_key);
-	//	tex_col.b = 0.3f;
-	//	bg_col.b -= 0.15f;
-	//	tagNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
-	//	tagNode->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
-		//_children[0];
-
-	//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
-	
-	
-	//float min = std::max({ first->_size.x, textNode->_size.x });
-
-	//_size.x = min;
-	//_size.y = textNode->_pos.y - textNode->_size.y;
-
-	//first->setWrappingMin(static_cast<int>(min));
-	//textNode->setWrappingMin(static_cast<int>(min));
-	////comNode->setWrappingMin(static_cast<int>(min));
-	////tagNode->setWrappingMin(static_cast<int>(min));
-
 	_resize();
 	_sg->push(this);
-
 }
 
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
@@ -113,9 +84,4 @@ void Node_Box::_resize()
 		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
 		t->setWrappingMin(min);
 	}
-
-	//first->setWrappingMin(static_cast<int>(min));
-	//textNode->setWrappingMin(static_cast<int>(min));
-
-	
 }

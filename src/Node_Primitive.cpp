@@ -124,8 +124,6 @@ void Node_Text::_size_update()
 	_size.x = std::max(static_cast<float>(w), _size.x);
 	_size.y += static_cast<float>(h);
 
-
-
 	// Set min width
 	if (_size == old_size)
 		return;
@@ -154,9 +152,6 @@ void Node_Text::update()
 
 	model->setTranslation(translation);
 	model->setRotation(glm::degrees(rot));
-	//model->translate(translation);
-	//model->rotate(glm::vec3(0,0,45.f));
-
 }
 
 Node_Block::Node_Block(SceneGraph* p_Sg): Node(p_Sg)
@@ -188,14 +183,8 @@ glm::mat4 Node_Block::getGlobalTransform()
 	if (_inherited_transform == false || _parent == 0)
 		return getLocalTransform();
 
-	//auto at = _sg->at(_parent);
-
-	Node_Block* test = (Node_Block*)_sg->at(_parent);
-	
-	glm::mat4 transform = test->getGlobalTransform() * getLocalTransform() ;
-	//Rotation along the z axis with _pos translation
-	//return getLocalTransform();
-	return transform;
+	Node_Block* p_pNode = (Node_Block*)_sg->at(_parent);
+	return p_pNode->getGlobalTransform() * getLocalTransform();;
 }
 
 
