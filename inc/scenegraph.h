@@ -18,7 +18,7 @@ public:
 	bool _inherited_transform = true;
 
 	int _parent;
-	std::set<int> _children;
+	std::unordered_map<std::string, int> _children;
 
 
 	//Template node

@@ -6,31 +6,21 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	_td.text_ID = SSS::toString(_key);
 	_td.text = "Text";
 
-
-
 	_pos = glm::vec3(150, 350, 0);
+	_color = rand_pastel_color();
 
-	_color = { 0.979112982749939, 0.8841438889503479,	0.9663259983062744, 1.0 };
-	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
-	glm::vec4 bg_col = tex_col;
 	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
-		tex_col.b = 0.3f;
-		bg_col.b -= 0.15f;
-		first->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
-		first->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
-		first->set_parent(this->_key);
-		this->_children.emplace(first->_key);
+	first->set_parent(this->_key);
+	this->_children.emplace("ID", first->_key);
+	_observe(*first);
 
 	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
 	textNode->setVerticalOffset(first->_key);
-
-		//textNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
-	textNode->setBackgroundColor(SSS::RGBA_f{ _color });
-	//textNode->rotate(45.f);
 	textNode->set_parent(this->_key);
-		this->_children.emplace(textNode->_key);
+	_observe(*textNode);
+	this->_children.emplace("TEXT", textNode->_key);
 
-	
+	boxColor(_color);
 	
 	//Node_Text* comNode = new Node_Text(p_Sg, "Comment");
 	//comNode->setVerticalOffset(textNode->_key);
@@ -45,9 +35,11 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	//	bg_col.b -= 0.15f;
 	//	tagNode->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
 	//	tagNode->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
-
+		//_children[0];
 
 	//float min = std::max({ first->_size.x, textNode->_size.x,  comNode->_size.x,  tagNode->_size.x });
+	
+	
 	float min = std::max({ first->_size.x, textNode->_size.x });
 
 	_size.x = min;
@@ -63,17 +55,35 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-
+	switch(event_id)
+	{
+	case : 
+	}
 
 }
 
 void Node_Box::update()
 {
-	for (int child : _children) 
+	for (const auto &child : _children) 
 	{
-		Node_Text* t = (Node_Text*)_sg->at(child);
+		Node_Text* t = (Node_Text*)_sg->at(child.second);
 		t->update();
 	}
+}
+
+void Node_Box::boxColor(const SSS::RGBA_f& col)
+{
+	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
+	glm::vec4 bg_col = tex_col;
+
+	Node_Text* _id = (Node_Text*)_sg->at(_children["ID"]);
+	tex_col.b = 0.3f;
+	bg_col.b -= 0.15f;
+	_id->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
+	_id->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
+
+	Node_Text* _txt = (Node_Text*)_sg->at(_children["TEXT"]);
+	_txt->setBackgroundColor(SSS::RGBA_f{ _color });
 }
 
 void Node_Box::setColor(std::string hex)

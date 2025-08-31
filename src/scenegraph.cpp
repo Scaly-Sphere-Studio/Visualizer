@@ -24,7 +24,7 @@ Node::~Node()
 {
 	_parent = 0;
 
-	for (int cKey : _children) 
+	for (const auto &cKey : _children) 
 	{
 		//_sg->pop(cKey);
 	}
@@ -63,8 +63,8 @@ std::string Node::to_string() const
 	//print children description
 	if (!_children.empty()) {
 		res += "\tchildren :\n";
-		for (auto node : _children) {
-			res += "\t" + _sg->at(node)->to_string() + "\n";
+		for (const auto &node : _children) {
+			res += "\t" + _sg->at(node.second)->to_string() + "\n";
 		}
 	}
 
