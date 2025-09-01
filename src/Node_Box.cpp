@@ -26,6 +26,31 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	_sg->push(this);
 }
 
+Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
+	Node_UI(p_Sg)
+{
+	_td.text_ID;
+
+	_pos = glm::vec3(150, 350, 0);
+	_color = rand_pastel_color();
+
+	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
+	first->set_parent(this->_key);
+	this->_children.emplace("ID", first->_key);
+	_observe(*first);
+
+	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
+	textNode->set_parent(this->_key);
+	this->_children.emplace("TEXT", textNode->_key);
+	_observe(*textNode);
+
+	textNode->setVerticalOffset(first->_key);
+
+	setColor(_color);
+	_resize();
+	_sg->push(this);
+}
+
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
 	switch(event_id)
@@ -47,7 +72,7 @@ void Node_Box::update()
 
 void Node_Box::setColor(const SSS::RGBA_f& col)
 {
-	glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
+	glm::vec4 tex_col = SSS::RGBA_f(col).to_HSL();
 	glm::vec4 bg_col = tex_col;
 
 	Node_Text* _id = (Node_Text*)_sg->at(_children["ID"]);
@@ -57,7 +82,10 @@ void Node_Box::setColor(const SSS::RGBA_f& col)
 	_id->setBackgroundColor(SSS::RGBA_f::from_HSL((bg_col)));
 
 	Node_Text* _txt = (Node_Text*)_sg->at(_children["TEXT"]);
-	_txt->setBackgroundColor(SSS::RGBA_f{ _color });
+	_txt->setBackgroundColor(col);
+	tex_col.b = 0.15f;
+	//_txt->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
+
 }
 
 bool Node_Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane)

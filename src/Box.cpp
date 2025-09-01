@@ -175,8 +175,8 @@ void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
         
         bg_col.b -= 0.15f;
         area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
-        // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
-        //fmt.line_spacing = 1.f;
+         //TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
+        fmt.line_spacing = 1.f;
     }
     else {
         //area->setClearColor(rgb_to_int32t(_color));

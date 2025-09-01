@@ -1,4 +1,5 @@
 #include "backend_json.h"
+#include "Node_Box.h"
 
 void glm::to_json(nlohmann::json& j, const vec2& t)
 {
@@ -49,6 +50,19 @@ void glm::from_json(const nlohmann::json& j, vec4& t)
 
 }
 
+void from_json(nlohmann::json& j, SSS::RGBA_f& col)
+{
+    col = SSS::RGBA_f(j.at("HEX").get<std::string>());
+}
+
+void to_json(nlohmann::json& j, const SSS::RGBA_f& col)
+{
+    j = nlohmann::json{"HEX", col.to_Hex() };
+
+}
+
+
+
 void to_json(nlohmann::json& j, const Box& t)
 {
     j = nlohmann::json{
@@ -86,3 +100,16 @@ void from_json(const nlohmann::json& j, Box::Shared& t)
     t = Box::create();
     from_json(j, *t);
 }
+
+//void from_json(const nlohmann::json& j, Node_Box*& t)
+//{
+//    j.at("ID").get_to(t._id);
+//    t->setColor(j.at("COLOR").get<glm::vec4>());
+//    t->translate(j.at("POSITION"));
+//    //t.setSize(j.at("SIZE"));
+//    //j.at("TAGS").get_to(t.tags);
+//    //j.at("LINK_TO").get_to(t.link_to);
+//    //j.at("LINK_FROM").get_to(t.link_from);
+//
+//
+//}

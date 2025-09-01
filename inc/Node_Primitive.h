@@ -34,6 +34,7 @@ public:
 class Node_Block : public Node
 {
 public:
+	Node_Block() = default;
 	Node_Block(SceneGraph* p_Sg);
 	std::string name() const { return "Block"; };
 
@@ -62,6 +63,7 @@ private:
 class Node_UI : public Node_Block
 {
 public:
+	Node_UI() = default;
 	Node_UI(SceneGraph* p_Sg) :Node_Block(p_Sg) {};
 	std::string name() const { return "UI"; };
 	int _type = 2;
@@ -124,6 +126,7 @@ protected:
 class Node_Text : public Node_UI
 {
 public:
+	Node_Text() = default;
 	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Text"; };
 

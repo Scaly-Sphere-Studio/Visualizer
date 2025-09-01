@@ -343,14 +343,12 @@ void Visualizer::setup()
     Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
 
-
     camera = SSS::GL::Camera::create();
     camera->setPosition({ 0, 0, 20.f });
     camera->setZFar(40.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
-
-    //SceneGraph sg;
+    //SceneGraph
     sg.init();
     sg.setCamera(camera);
 
@@ -376,7 +374,6 @@ void Visualizer::setup()
     debug_renderer->setActivity(false);
 
     window.setRenderers({ box_renderer, line_renderer, sg._rd, selection_renderer, debug_renderer });
-
 }
 
 void Visualizer::input()
@@ -641,21 +638,28 @@ int Visualizer::push_box(std::string boxID)
     return n1->_key;
 }
 
-void Visualizer::push_box(glm::vec3 pos, const Text_data& td)
+int Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
 
-    Box::Shared b = Box::create();
-    _proj.box_map[td.text_ID] = b;
-    b->setPos(pos);
-    b->setColor(rand_color());
-    b->_id = td.text_ID;
-    b->set_text_data(td);
-    b->create_box();
+    //Box::Shared b = Box::create();
+    //_proj.box_map[td.text_ID] = b;
+    //b->setPos(pos);
+    //b->setColor(rand_color());
+    //b->_id = td.text_ID;
+    //b->set_text_data(td);
+    //b->create_box();
 
 
-    //Node_Box* n1;
-    //n1->_pos = glm::vec3(120, -10, 0);
-    
+    Node_Box* n1 = new Node_Box(&sg, td);
+    n1->translate(pos);
+    n1->setColor(rand_color());
+    sg.push(n1);
+    n1->update();
+    _proj.sg_boxes[std::to_string(n1->_key)] = n1->_key;
+
+    _observe(*n1);
+
+    return n1->_key;
 }
 
 void Visualizer::pop_box(std::string ID)

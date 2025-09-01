@@ -36,7 +36,7 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 
 	bg_col.b -= 0.15f;
 	area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
-	//area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ BLACK }));
+	area->setClearColor(static_cast<SSS::RGBA32>(SSS::RGBA_f{ BLACK }));
 	area->setFocusable(true);
 	area->setWrapping(true);
 	area->setMargins(lyt._marginv, lyt._marginh);

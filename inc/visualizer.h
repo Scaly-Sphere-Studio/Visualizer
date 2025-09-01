@@ -80,7 +80,7 @@ private:
 	void pop_link(Box& a, Box& b);
 	//Add a new box at the current cursor position
 	int push_box(std::string boxID);
-	void push_box(glm::vec3 pos, const Text_data& td);
+	int push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
 	inline void pop_box(Box& box) { pop_box(box._id); };

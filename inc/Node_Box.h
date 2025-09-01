@@ -12,7 +12,9 @@
 class Node_Box : public Node_UI 
 {
 public:
+	Node_Box() = default;
 	Node_Box(SceneGraph* p_Sg);
+	Node_Box(SceneGraph* p_Sg, const Text_data& td);
 	void setTextData(const Text_data& td) {};
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
