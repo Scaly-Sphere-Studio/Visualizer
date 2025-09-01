@@ -202,10 +202,7 @@ void Visualizer::run()
     glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
-    //SceneGraph sg;
-    sg.init();
-    sg.setCamera(camera);
-    window->addRenderer(sg._rd);
+
 
     //Node_Box box1(&sg);
     //box1.update();
@@ -352,6 +349,11 @@ void Visualizer::setup()
     camera->setZFar(40.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
 
+
+    //SceneGraph sg;
+    sg.init();
+    sg.setCamera(camera);
+
     auto texture = SSS::GL::Texture::create();
     texture->setColor(SSS::RGBA32(200, 220, 240, 80));
     Selection_box = SSS::GL::Plane::create(texture);
@@ -373,7 +375,8 @@ void Visualizer::setup()
     // Enable or disable debugger
     debug_renderer->setActivity(false);
 
-    window.setRenderers({ box_renderer, line_renderer, selection_renderer, debug_renderer });
+    window.setRenderers({ box_renderer, line_renderer, sg._rd, selection_renderer, debug_renderer });
+
 }
 
 void Visualizer::input()
