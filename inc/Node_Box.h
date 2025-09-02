@@ -27,7 +27,7 @@ public:
 	bool _show_comment	= false;
 	bool _show_tags		= false;
 
-	glm::vec4 _color;
+	SSS::RGBA_f _color;
 
 private :
 

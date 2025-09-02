@@ -94,11 +94,10 @@ void Node_Text::setMaxStrSize(const int maxSize)
 
 void Node_Text::setTextColor(const  SSS::RGBA_f& col)
 {
-	SSS::GUI_Layout lyt{};
-	lyt._fmt.charsize = 58;
-	lyt._fmt.text_color = col;
+	SSS::TR::Format fmt = model->getTextArea()->getFormat();
+	fmt.text_color = col;
 
-	model->getTextArea()->setFormat(lyt._fmt);
+	model->getTextArea()->setFormat(fmt);
 }
 
 void Node_Text::setBackgroundColor(const  SSS::RGBA_f& bgCol)
