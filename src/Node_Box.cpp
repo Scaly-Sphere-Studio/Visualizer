@@ -35,6 +35,32 @@ Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
 	_color = rand_pastel_color();
 
 	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
+	this->_children.emplace("ID", first->_key);
+	first->set_parent(this->_key);
+	_observe(*first);
+
+	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
+	this->_children.emplace("TEXT", textNode->_key);
+	textNode->set_parent(this->_key);
+	_observe(*textNode);
+
+	textNode->setVerticalOffset(first->_key);
+
+	setColor(_color);
+	_resize();
+	_sg->push(this);
+}
+
+Node_Box::Node_Box(SceneGraph* p_Sg, const Export_Node_Box& expNode, const Text_data& td):Node_UI(p_Sg)
+{
+	_td			= td;
+	_pos		= expNode.pos;
+	_color		= expNode.color;
+	//tags		= expNode.tags.value();
+	//link_to		= expNode.link_to.value();
+	//link_from	= expNode.link_from.value();
+
+	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
 	first->set_parent(this->_key);
 	this->_children.emplace("ID", first->_key);
 	_observe(*first);
@@ -49,6 +75,18 @@ Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
 	setColor(_color);
 	_resize();
 	_sg->push(this);
+}
+
+void Node_Box::setTextData(const Text_data& td)
+{
+	Node_Text* _id = (Node_Text*)_sg->at(_children["ID"]);
+	_id->parseText(td.text_ID);
+
+	Node_Text* _txt = (Node_Text*)_sg->at(_children["TEXT"]);
+	_txt->parseText(td.text);
+
+	update();
+
 }
 
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
@@ -88,12 +126,24 @@ void Node_Box::setColor(const SSS::RGBA_f& col)
 
 }
 
-bool Node_Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane)
+bool Node_Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane) const
 {
 	glm::vec2 const pos = plane->getTranslation();
 	glm::vec2 const size = plane->getScaling();
 
 	return checkCollision2D(pos - (size / 2.f), size);
+}
+
+Export_Node_Box Node_Box::export_node() const 
+{
+	Export_Node_Box ex;
+	ex.id			= _td.text_ID;
+	ex.pos			= _pos;
+	ex.color		= _color;
+	//ex.tags			= tags;
+	//ex.link_to		=  link_to;
+	//ex.link_from	= link_from;
+	return ex;
 }
 
 void Node_Box::_resize()

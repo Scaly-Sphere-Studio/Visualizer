@@ -61,6 +61,18 @@ void to_json(nlohmann::json& j, const SSS::RGBA_f& col)
 
 }
 
+void to_json(nlohmann::json& j, const Node_Box* box)
+{
+    j = nlohmann::json{
+        { "COLOR", box->_color},
+        {"POSITION", box->_pos},
+        {"TAGS", box->tags},
+        {"LINK_TO", box->link_to},
+        {"LINK_FROM", box->link_from}
+        };
+
+}
+
 
 
 void to_json(nlohmann::json& j, const Box& t)
@@ -85,7 +97,6 @@ void from_json(const nlohmann::json& j, Box& t)
     j.at("TAGS").get_to(t.tags);
     j.at("LINK_TO").get_to(t.link_to);
     j.at("LINK_FROM").get_to(t.link_from);
-
 
     t.create_box();
 }

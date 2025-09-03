@@ -47,13 +47,13 @@ public:
 	//transforms
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override {};
 	virtual void update() {};
-	glm::mat4 getLocalTransform(); // Rotation*Translation*Scale
-	glm::mat4 getGlobalTransform();
+	glm::mat4 getLocalTransform() const; // Rotation*Translation*Scale
+	glm::mat4 getGlobalTransform() const;
 
 	void translate(const glm::vec3& translation) { _pos += translation; update(); };
 
-	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size);
-	virtual glm::vec3 center();
+	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size) const;
+	virtual glm::vec3 center() const;
 
 	void setZ(const float& depth) { _pos.z = depth; update(); };
 
@@ -73,7 +73,7 @@ public:
 	void setHorizontalOffset(const int& keyHO);		// Set the key Node to horizontal offset
 	void setDepthOffset(const int& keyDO);			// Set the key Node to depth offset
 	virtual void setWrappingMin(const int& min) {};
-
+	
 	virtual void update();
 
 	bool hidden = false;
@@ -136,6 +136,8 @@ public:
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 	virtual void setWrappingMin(const int& min);
 
+
+	void parseText(const std::string& str);
 	void setMaxStrSize(const int maxSize);
 	void setTextColor(const SSS::RGBA_f& col);
 	void setBackgroundColor(const SSS::RGBA_f& bgCol);

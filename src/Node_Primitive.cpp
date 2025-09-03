@@ -153,13 +153,18 @@ void Node_Text::update()
 	model->setRotation(glm::degrees(rot));
 }
 
+void Node_Text::parseText(const std::string& str)
+{
+	model->getTextArea()->parseString(str);
+}
+
 Node_Block::Node_Block(SceneGraph* p_Sg): Node(p_Sg)
 {
 	_pos = glm::vec3{ 0, 0, 0 };
 	_size = glm::vec3{ 0, 0, 0 };
 }
 
-glm::mat4 Node_Block::getLocalTransform()
+glm::mat4 Node_Block::getLocalTransform() const
 {
 	//Rotation along the z axis with _pos translation
 	glm::mat4 mat = glm::mat4(1.0);
@@ -168,7 +173,7 @@ glm::mat4 Node_Block::getLocalTransform()
 	return mat;
 }
 
-bool Node_Block::checkCollision2D(glm::vec2 np2, glm::vec2 ns2)
+bool Node_Block::checkCollision2D(glm::vec2 np2, glm::vec2 ns2) const
 {
 	//node pos np, node size ns
 	glm::vec3 globPos = getGlobalTransform()[3];
@@ -186,12 +191,12 @@ bool Node_Block::checkCollision2D(glm::vec2 np2, glm::vec2 ns2)
 	return false;
 }
 
-glm::vec3 Node_Block::center()
+glm::vec3 Node_Block::center() const
 {
 	return glm::vec3(_pos) + glm::vec3(_size.x / 2.f, _size.y / -2.f, _size.z / 2.f);
 }
 
-glm::mat4 Node_Block::getGlobalTransform()
+glm::mat4 Node_Block::getGlobalTransform() const
 {
 	if (_inherited_transform == false || _parent == 0)
 		return getLocalTransform();
@@ -200,6 +205,11 @@ glm::mat4 Node_Block::getGlobalTransform()
 	return p_pNode->getGlobalTransform() * getLocalTransform();;
 }
 
+
+bool Node_UI::isHovered() const noexcept
+{
+	return false;
+}
 
 void Node_UI::setColor(const std::string& hex)
 {
