@@ -28,7 +28,6 @@
     <ClCompile Include="src\Node_Box.cpp" />
     <ClCompile Include="src\Node_Export.cpp" />
     <ClCompile Include="src\Node_Primitive.cpp" />
-    <ClCompile Include="src\rng.cpp" />
     <ClCompile Include="src\scenegraph.cpp" />
     <ClCompile Include="src\Text_data.cpp" />
     <ClCompile Include="src\visualizer.cpp" />
@@ -42,7 +41,6 @@
     <ClInclude Include="inc\Node_Box.h" />
     <ClInclude Include="inc\Node_Export.h" />
     <ClInclude Include="inc\Node_Primitive.h" />
-    <ClInclude Include="inc\rng.h" />
     <ClInclude Include="inc\scenegraph.h" />
     <ClInclude Include="inc\Text_data.h" />
     <ClInclude Include="inc\_includes.hpp" />
