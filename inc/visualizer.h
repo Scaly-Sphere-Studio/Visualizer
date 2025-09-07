@@ -115,8 +115,10 @@ private:
 	std::set<int> _selectedBoxesID;
 	SSS::GL::Plane::Shared Selection_box;
 
-	std::string first_link_ID;
-	std::string second_link_ID;
+	int ifirst_link_ID;
+	int isecond_link_ID;
+
+
 	glm::vec3 _cur_pos;
 	glm::vec3 _otherpos;
 

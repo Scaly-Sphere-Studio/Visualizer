@@ -375,7 +375,7 @@ void Visualizer::setup()
     // Enable or disable debugger
     debug_renderer->setActivity(false);
 
-    window.setRenderers({ box_renderer, line_renderer, sg._rd, selection_renderer, debug_renderer });
+    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer });
 }
 
 void Visualizer::input()
@@ -464,16 +464,18 @@ void Visualizer::input()
     if (clicks[GLFW_MOUSE_BUTTON_2].is_pressed()
         && !window->keyMod(GLFW_MOD_SHIFT | GLFW_MOD_CONTROL))
     {
-        auto box = get_hovered_box();
+        //auto box = get_hovered_box();
+
         _cur_pos = cursor_map_coordinates();
 
-        if (!box) {
+        if (hovered_box == -1) {
             _states = V_STATES::CUTLINE;
             arrow_map.try_emplace("CUTLINE");
         }
         else {
             _states = V_STATES::CONNECT_LINE;
-            first_link_ID = box->_id;
+            //first_link_ID = box->_id;
+            ifirst_link_ID = hovered_box;
         }
     }
 
@@ -611,34 +613,36 @@ void Visualizer::link_boxNode(const int& key_a)
     }
 }
 
-void Visualizer::link_boxNode_to_cursor(const int& a)
+void Visualizer::link_boxNode_to_cursor(const int& b_key)
 {
-    //    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
-//
-//    //Create a bezier curve to link the two boxes
-//    SSS::Math::Gradient<glm::vec4> Col_grdt;
-//    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-//    Col_grdt.push(std::make_pair(1.f, b.getColor()));
-//
-//    SSS::Math::Gradient<float> Thk_grdt;
-//    Thk_grdt.push(std::make_pair(0.f, 25.f));
-//    Thk_grdt.push(std::make_pair(1.f, 25.f));
-//
-//    auto seg = SSS::GL::Polyline::Bezier(
-//        b.center() + glm::vec3(0, 0, 5), b.center() + glm::vec3(0, -400, 5),
-//        c_pos, c_pos,
-//        Thk_grdt, Col_grdt,
-//        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
-//    );
-//
-//    if (arrow_map.contains(first_link_ID)) {
-//        arrow_map.at(b._id) = seg;
-//        return;
-//    }
-//
-//    //The arrow ID is the cat of the two boxes ID as it keeps the order
-//    arrow_map.insert(std::make_pair(b._id, seg));
-//
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
+
+    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
+
+    //Create a bezier curve to link the two boxes
+    SSS::Math::Gradient<glm::vec4> Col_grdt;
+    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    Col_grdt.push(std::make_pair(1.f, b->getColor()));
+
+    SSS::Math::Gradient<float> Thk_grdt;
+    Thk_grdt.push(std::make_pair(0.f, 25.f));
+    Thk_grdt.push(std::make_pair(1.f, 25.f));
+
+    auto seg = SSS::GL::Polyline::Bezier(
+        b->center() + glm::vec3(0, 0, 5), b->center() + glm::vec3(0, -400, 5),
+        c_pos, c_pos,
+        Thk_grdt, Col_grdt,
+        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
+    );
+
+    if (arrow_map.contains(b->getData().text_ID)) {
+        arrow_map.at(b->getData().text_ID) = seg;
+        return;
+    }
+
+    //The arrow ID is the cat of the two boxes ID as it keeps the order
+    arrow_map.insert(std::make_pair(b->getData().text_ID, seg));
+
 }
 
 void Visualizer::pop_Nodelink(const int& a_key, const int& b_key)
@@ -808,34 +812,43 @@ void Visualizer::cut_link_line()
 
 void Visualizer::connect_drag_line()
 {
-    if (!first_link_ID.empty()) {
+    if (ifirst_link_ID != -1) {
         //link_box_to_cursor(*_proj.box_map.at(first_link_ID));
+        link_boxNode_to_cursor(ifirst_link_ID);
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-            second_link_ID = get_hovered_box() ? get_hovered_box()->_id : "";
-            if (first_link_ID != second_link_ID && !second_link_ID.empty()) {
+            //second_link_ID = get_hovered_box() ? get_hovered_box()->_id : "";
+            isecond_link_ID = hovered_box;
 
+            Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(ifirst_link_ID));
+            
+            if (ifirst_link_ID != isecond_link_ID && isecond_link_ID!= -1) {
+                Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(isecond_link_ID));
                 //First look out if the link between boxes already exists
-                auto it = std::find(_proj.box_map.at(first_link_ID)->link_to.begin(), _proj.box_map.at(first_link_ID)->link_to.end(), second_link_ID);
+                //auto it = std::find(_proj.box_map.at(first_link_ID)->link_to.begin(), _proj.box_map.at(first_link_ID)->link_to.end(), second_link_ID);
 
-                if (it != _proj.box_map.at(first_link_ID)->link_to.end()) {
+                //if(!_proj.sg_boxes.contains(a->getData().text_ID+ b->getData().text_ID))
+
+                if (arrow_map.contains(a->getData().text_ID + b->getData().text_ID)) {
                     //If it already exists delete it
                     //Erase the arrows connected to the box
                     //Erase the ID from their 'Link to' and 'Link from' list
-                    arrow_map.erase(first_link_ID + second_link_ID);
-                    _proj.box_map.at(first_link_ID)->link_to.erase(second_link_ID);
-                    _proj.box_map.at(second_link_ID)->link_from.erase(first_link_ID);
+                    arrow_map.erase(a->getData().text_ID + b->getData().text_ID);
+                    a->link_to.erase(b->getData().text_ID);
+                    b->link_from.erase(a->getData().text_ID);
                 }
                 else {
                     //If it doesn't, create the link between the two boxes
                     //link_box(*_proj.box_map.at(first_link_ID), *_proj.box_map.at(second_link_ID));
-                    link_boxNode(_proj.sg_boxes[first_link_ID], _proj.sg_boxes[second_link_ID]);
+                    link_boxNode(ifirst_link_ID, isecond_link_ID);
                 }
             }
-
-            arrow_map.erase(first_link_ID);
-            first_link_ID.clear();
-            second_link_ID.clear();
+            
+            arrow_map.erase(a->getData().text_ID);
+            //first_link_ID.clear();
+            //second_link_ID.clear();
+            ifirst_link_ID = -1;
+            isecond_link_ID = -1;
 
             _states = V_STATES::DEFAULT;
             return;

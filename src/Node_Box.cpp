@@ -96,7 +96,6 @@ void Node_Box::setColor(const SSS::RGBA_f& col)
 	Node_Text* _txt = (Node_Text*)_sg->at(_children["TEXT"]);
 	_txt->setBackgroundColor(col);
 	tex_col.b = 0.15f;
-	//_txt->setTextColor(SSS::RGBA_f::from_HSL(tex_col));
 
 }
 
