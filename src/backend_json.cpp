@@ -47,7 +47,6 @@ void glm::from_json(const nlohmann::json& j, vec4& t)
     j.at("Y").get_to(t.y);
     j.at("Z").get_to(t.z);
     j.at("W").get_to(t.w);
-
 }
 
 void from_json(nlohmann::json& j, SSS::RGBA_f& col)
@@ -77,27 +76,27 @@ void to_json(nlohmann::json& j, const Node_Box* box)
 
 void to_json(nlohmann::json& j, const Box& t)
 {
-    j = nlohmann::json{
-    {"ID", t._id},
-    {"COLOR", t.getColor()},
-    {"POSITION", t.getPos()},
-    {"SIZE", t.getSize()},
-    {"TAGS", t.tags},
-    {"LINK_TO", t.link_to},
-    {"LINK_FROM", t.link_from},
-    };
+    //j = nlohmann::json{
+    //{"ID", t._id},
+    //{"COLOR", t.getColor()},
+    //{"POSITION", t.getPos()},
+    //{"SIZE", t.getSize()},
+    //{"TAGS", t.tags},
+    //{"LINK_TO", t.link_to},
+    //{"LINK_FROM", t.link_from},
+    //};
 }
 
 void from_json(const nlohmann::json& j, Box& t)
 {
-    j.at("ID").get_to(t._id);
-    t.setColor(j.at("COLOR").get<glm::vec4>());
-    t.setPos(j.at("POSITION"));
-    j.at("TAGS").get_to(t.tags);
-    j.at("LINK_TO").get_to(t.link_to);
-    j.at("LINK_FROM").get_to(t.link_from);
+    //j.at("ID").get_to(t._id);
+    //t.setColor(j.at("COLOR").get<glm::vec4>());
+    //t.setPos(j.at("POSITION"));
+    //j.at("TAGS").get_to(t.tags);
+    //j.at("LINK_TO").get_to(t.link_to);
+    //j.at("LINK_FROM").get_to(t.link_from);
 
-    t.create_box();
+    //t.create_box();
 }
 
 void to_json(nlohmann::json& j, Box::Shared const& t)

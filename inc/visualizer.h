@@ -5,6 +5,7 @@
 #include "backend.hpp"
 #include "scenegraph.h"
 #include "SSS/Commons/eventList.hpp"
+#include "Node_Export.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -26,6 +27,10 @@ struct PROJECT_DATA {
 	std::string project_name;
 	std::unordered_map<std::string, int> sg_boxes;
 
+	// Export
+	//std::unordered_map<std::string, Export_Node_Box> expNodes;
+	std::vector<Export_Node_Box>	expNodes;
+	std::vector<Text_data>			expData;
 };
 
 class Visualizer : public SSS::Observer {
@@ -67,20 +72,40 @@ private:
 	std::string project_path();
 	std::string lang_file_name(std::string& lang);
 
+	void fillProjExport();
+
 	/* [BOX METHODS] */
 	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
-	void link_box(Box& a, Box& b);
+	//void link_box(Box& a, Box& b);
 public:
 	//Update all the arrow linked to this box
-	void link_box(Box& a);
+	//void link_box(Box& a);
 private:
 	//Create a link from the box to the position of the cursor
-	void link_box_to_cursor(Box& a);
+	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
 	void pop_link(Box& a, Box& b);
+
+
+
+	/* [BOX METHODS] */
+//Link with an arrow the box a to the box b, and add the ID in their linked ID list
+	void link_boxNode(const int& a, const int& b);
+public:
+	//Update all the arrow linked to this box
+	void link_boxNode(const int& a);
+private:
+	//Create a link from the box to the position of the cursor
+	void link_boxNode_to_cursor(const int& a);
+	//Remove the link between two selected box
+	void pop_Nodelink(const int& a, const int& b);
+
+
+
+
 	//Add a new box at the current cursor position
-	int push_box(std::string boxID);
-	int push_box(glm::vec3 pos, const Text_data& td);
+	std::string push_box(std::string boxID);
+	std::string push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
 	inline void pop_box(Box& box) { pop_box(box._id); };

@@ -16,7 +16,6 @@ public:
 	Node_Box() = default;
 	Node_Box(SceneGraph* p_Sg);
 	Node_Box(SceneGraph* p_Sg, const Text_data& td);
-	Node_Box(SceneGraph* p_Sg, const Export_Node_Box& expNode, const Text_data& td = Text_data{});
 	void setTextData(const Text_data& td);
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
@@ -24,7 +23,7 @@ public:
 
 	void setColor(const SSS::RGBA_f& col);
 	bool checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane) const;
-
+	void readExport(const Export_Node_Box& expNode);
 
 	bool _show_comment	= false;
 	bool _show_tags		= false;
@@ -38,8 +37,7 @@ public:
 	Text_data getData() const { return _td; };
 
 private :
-
+	int minWidth = 600;
 	void _resize();
 	Text_data _td = Text_data{};
-
 };

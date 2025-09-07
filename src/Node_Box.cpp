@@ -6,7 +6,6 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 	_td.text_ID = SSS::toString(_key);
 	_td.text = "Text";
 
-	_pos = glm::vec3(150, 350, 0);
 	_color = rand_pastel_color();
 
 	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
@@ -29,7 +28,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
 	Node_UI(p_Sg)
 {
-	_td.text_ID;
+	_td = td;
 
 	_pos = glm::vec3(150, 350, 0);
 	_color = rand_pastel_color();
@@ -42,32 +41,6 @@ Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
 	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
 	this->_children.emplace("TEXT", textNode->_key);
 	textNode->set_parent(this->_key);
-	_observe(*textNode);
-
-	textNode->setVerticalOffset(first->_key);
-
-	setColor(_color);
-	_resize();
-	_sg->push(this);
-}
-
-Node_Box::Node_Box(SceneGraph* p_Sg, const Export_Node_Box& expNode, const Text_data& td):Node_UI(p_Sg)
-{
-	_td			= td;
-	_pos		= expNode.pos;
-	_color		= expNode.color;
-	//tags		= expNode.tags.value();
-	//link_to		= expNode.link_to.value();
-	//link_from	= expNode.link_from.value();
-
-	Node_Text* first = new Node_Text(p_Sg, _td.text_ID);
-	first->set_parent(this->_key);
-	this->_children.emplace("ID", first->_key);
-	_observe(*first);
-
-	Node_Text* textNode = new Node_Text(p_Sg, _td.text);
-	textNode->set_parent(this->_key);
-	this->_children.emplace("TEXT", textNode->_key);
 	_observe(*textNode);
 
 	textNode->setVerticalOffset(first->_key);
@@ -110,6 +83,7 @@ void Node_Box::update()
 
 void Node_Box::setColor(const SSS::RGBA_f& col)
 {
+	_color = col;
 	glm::vec4 tex_col = SSS::RGBA_f(col).to_HSL();
 	glm::vec4 bg_col = tex_col;
 
@@ -134,21 +108,35 @@ bool Node_Box::checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane) const
 	return checkCollision2D(pos - (size / 2.f), size);
 }
 
+void Node_Box::readExport(const Export_Node_Box& expNode)
+{
+
+	//_td.text_ID		= expNode.id;
+	_pos			= expNode.pos;
+	_color			= expNode.color;
+	tags			= expNode.tags;
+	link_to			= expNode.link_to;
+	link_from		= expNode.link_from;
+
+	setColor(_color);
+	update();
+}
+
 Export_Node_Box Node_Box::export_node() const 
 {
 	Export_Node_Box ex;
 	ex.id			= _td.text_ID;
 	ex.pos			= _pos;
 	ex.color		= _color;
-	//ex.tags			= tags;
-	//ex.link_to		=  link_to;
-	//ex.link_from	= link_from;
+	ex.tags			= tags;
+	ex.link_to		=  link_to;
+	ex.link_from	= link_from;
 	return ex;
 }
 
 void Node_Box::_resize()
 {
-	float min = 0;
+	float min = minWidth;
 	for (const auto& c : _children) {
 		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
 		min = std::max(min, t->_size.x);
@@ -163,4 +151,6 @@ void Node_Box::_resize()
 		Node_Text* t = reinterpret_cast<Node_Text*>(_sg->at(c.second));
 		t->setWrappingMin(static_cast<unsigned int>(std::ceil(min)));
 	}
+
+	_notifyObservers(SSS::EventList::Resize);
 }

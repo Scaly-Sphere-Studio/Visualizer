@@ -192,8 +192,14 @@ bool Node_Block::checkCollision2D(glm::vec2 np2, glm::vec2 ns2) const
 }
 
 glm::vec3 Node_Block::center() const
+{ 
+	glm::vec3 globPos = getGlobalTransform()[3];
+	return globPos + glm::vec3(_size.x / 2.f, _size.y / 2.f, 0.f);
+}
+
+glm::vec3 Node_Block::getPosition() const
 {
-	return glm::vec3(_pos) + glm::vec3(_size.x / 2.f, _size.y / -2.f, _size.z / 2.f);
+	return getGlobalTransform()[3];
 }
 
 glm::mat4 Node_Block::getGlobalTransform() const
@@ -202,7 +208,7 @@ glm::mat4 Node_Block::getGlobalTransform() const
 		return getLocalTransform();
 
 	Node_Block* p_pNode = (Node_Block*)_sg->at(_parent);
-	return p_pNode->getGlobalTransform() * getLocalTransform();;
+	return p_pNode->getGlobalTransform() * getLocalTransform();
 }
 
 
@@ -255,8 +261,8 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 {
 	glm::vec3 absPos = getGlobalTransform()[3]; // Translation from Transform
 
-	if ((pt.x < (absPos.x + _size.x) && (pt.x > absPos.x) 
-		&& pt.y > (absPos.y + _size.y) && (pt.y < absPos.y)))
+	if ((pt.x <= (absPos.x + _size.x) && (pt.x >= absPos.x) 
+		&& pt.y >= (absPos.y + _size.y) && (pt.y <= absPos.y)))
 	{
 		// Cursor enter the UI elem
 		if (!_hover)

@@ -32,16 +32,16 @@ float rand_float()
     return dist(rng);
 }
 
-std::string rand_color()
+SSS::RGBA_f rand_color()
 {
     std::random_device rd;
     std::mt19937 rng(rd());
-    std::uniform_real_distribution<> dist(0.0f, 1.0f);
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     return SSS::RGBA_f(glm::vec4(dist(rng), dist(rng), dist(rng), 1.0));
 }
 
-glm::vec4 rand_pastel_color()
+SSS::RGBA_f rand_pastel_color()
 {
     float H = 360.f * rand_float();
     float S = 0.25f + 0.7f * rand_float();

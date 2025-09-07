@@ -12,9 +12,10 @@ public:
 	std::string id;
 	glm::vec3 pos;
 	SSS::RGBA_f color;
-	//std::optional<std::vector<uint16_t>> tags		= std::nullopt;
-	//std::optional<std::set<std::string>> link_to	= std::nullopt;
-	//std::optional<std::set<std::string>> link_from	= std::nullopt;
+	std::vector<uint16_t> tags;
+	std::set<std::string> link_to;
+	std::set<std::string> link_from;
+	//Text_data td;
 };
 
 void to_json(nlohmann::json& j, const Export_Node_Box& t);

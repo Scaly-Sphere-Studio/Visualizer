@@ -246,6 +246,8 @@ void Box::_size_update() try
                 area->setWrappingMinWidth(w);
         }
     }
-    Visualizer::get().link_box(*this);
+
+    //Visualizer::get().link_box(*this);
+    //Visualizer::get().link_boxNode(*this);
 }
 CATCH_AND_LOG_METHOD_EXC;

@@ -51,14 +51,14 @@ public:
 	glm::mat4 getGlobalTransform() const;
 
 
+	virtual glm::vec3 center() const;
 	void translate(const glm::vec3& translation) { _pos += translation; update(); };
 	void setPosition(const glm::vec3& newPos) { _pos = newPos; update(); };
-
-	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size) const;
-	virtual glm::vec3 center() const;
+	glm::vec3 getPosition() const;
 
 	void setZ(const float& depth) { _pos.z = depth; update(); };
 
+	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size) const;
 private:
 };
 
@@ -89,6 +89,7 @@ public:
 
 	virtual void setColor(const SSS::RGBA_f& col) { _color = col; };
 	virtual void setColor(const std::string& hex);
+	virtual SSS::RGBA_f getColor()const { return _color; };
 
 	bool _checkBoxCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
 	{

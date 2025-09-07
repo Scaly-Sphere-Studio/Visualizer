@@ -164,6 +164,11 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
         }
         return;
     }
+    case SSS::EventList::Resize:
+    {
+        // Node resized, relink
+        return;
+    }
     default :
         SSS::log_err("Unknown event [" + std::to_string(event_id) + "]");
         return;
@@ -184,18 +189,10 @@ Visualizer::~Visualizer()
 
 void Visualizer::run()
 {
-    //load
-    load();
 
     SSS::GL::Window* window = SSS::GL::Window::get(glfwwindow);
     SSS::ImGuiH::setContext(glfwwindow);
 
-    srand(123);
-
-    int rng = rand();
-    float rngf = rand_float();
-
-    refresh();
 
     clear_color = SSS::RGBA_f{ "#4d5f83" }.to_RGBA();
 
@@ -207,8 +204,11 @@ void Visualizer::run()
     //Node_Box box1(&sg);
     //box1.update();
     //Node_Text text(&sg, "OHAYO");
+    //load
+    load();
+    refresh();
 
-    std::cout << sg.to_string() << std::endl;
+    //std::cout << sg.to_string() << std::endl;
     
 
     // Main loop
@@ -221,8 +221,7 @@ void Visualizer::run()
 
         for (auto elem : _proj.sg_boxes)
         {
-            Node_UI* node = (Node_UI*)sg.at(elem.second);
-            node->_checkPointCollision(cursor_map_coordinates());
+            reinterpret_cast<Node_UI*>(sg.at(elem.second))->_checkPointCollision(cursor_map_coordinates());
         }
 
         //Collision test
@@ -506,17 +505,120 @@ void Visualizer::input()
 
 void Visualizer::refresh()
 {
-    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
-        link_box(*it->second);
+    //for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); it++) {
+    //    link_box(*it->second);
+    //}
+
+    for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
+        if(!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty())
+            link_boxNode(it->second);
     }
 }
 
 
 
-void Visualizer::link_box(Box& a, Box& b)
-{
+//void Visualizer::link_box(Box& a, Box& b)
+//{
+//
+//    glm::vec3 offset{ 0.f, std::abs(a.getPos().y - b.getPos().y) / 2.f, 0.f };
+//    //Create a bezier curve to link the two boxes
+//    SSS::Math::Gradient<glm::vec4> Col_grdt;
+//
+//
+//    SSS::Math::Gradient<float> Thk_grdt;
+//    Thk_grdt.push(std::make_pair(0.f, 25.f));
+//    Thk_grdt.push(std::make_pair(1.f, 25.f));
+//
+//    using Line = SSS::GL::Polyline;
+//    Line::Shared seg;
+//    if (std::abs(a.center().x - b.center().x) < 5.0f) {
+//        Col_grdt.push(std::make_pair(0.f, a.getColor()));
+//        Col_grdt.push(std::make_pair(1.f, b.getColor()));
+//        seg = Line::Segment(a.center(), b.center(), Thk_grdt, Col_grdt);
+//    }
+//    else {
+//        // Couleurs inversées pour Bezier ?
+//        Col_grdt.push(std::make_pair(0.f, b.getColor()));
+//        Col_grdt.push(std::make_pair(1.f, a.getColor()));
+//        seg = Line::Bezier(
+//            a.center(), a.center() - offset,
+//            b.center() + offset, b.center(),
+//            Thk_grdt, Col_grdt,
+//            Line::JointType::BEVEL, Line::TermType::SQUARE
+//        );
+//    }
+//
+//    //Add the dst box to the 'link to' list of the src box
+//    //And add the src box to the 'link from' list of the dst box
+//    if (!a.link_to.contains(b._id)) {
+//        a.link_to.emplace(b._id);
+//    }
+//
+//    if (!b.link_from.contains(a._id)) {
+//        b.link_from.emplace(a._id);
+//    }
+//
+//    //The arrow ID is the cat of the two boxes ID as it keeps the order
+//    arrow_map[a._id + b._id] = seg;
+//
+//}
 
-    glm::vec3 offset{ 0.f, std::abs(a.getPos().y - b.getPos().y) / 2.f, 0.f };
+//void Visualizer::link_box(Box& a)
+//{
+//    for (std::string lt : a.link_to) {
+//        if (Box::Shared to = _proj.box_map[lt]; to)
+//            link_box(a, *to);
+//    }
+//    for (std::string lf : a.link_from) {
+//        if (Box::Shared from = _proj.box_map[lf]; from)
+//            link_box(*from, a);
+//    }
+//}
+
+//void Visualizer::link_box_to_cursor(Box& b)
+//{
+//    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
+//
+//    //Create a bezier curve to link the two boxes
+//    SSS::Math::Gradient<glm::vec4> Col_grdt;
+//    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
+//    Col_grdt.push(std::make_pair(1.f, b.getColor()));
+//
+//    SSS::Math::Gradient<float> Thk_grdt;
+//    Thk_grdt.push(std::make_pair(0.f, 25.f));
+//    Thk_grdt.push(std::make_pair(1.f, 25.f));
+//
+//    auto seg = SSS::GL::Polyline::Bezier(
+//        b.center() + glm::vec3(0, 0, 5), b.center() + glm::vec3(0, -400, 5),
+//        c_pos, c_pos,
+//        Thk_grdt, Col_grdt,
+//        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
+//    );
+//
+//    if (arrow_map.contains(first_link_ID)) {
+//        arrow_map.at(b._id) = seg;
+//        return;
+//    }
+//
+//    //The arrow ID is the cat of the two boxes ID as it keeps the order
+//    arrow_map.insert(std::make_pair(b._id, seg));
+//
+//}
+
+void Visualizer::pop_link(Box& a, Box& b)
+{
+    arrow_map.erase(a._id + b._id);
+    a.link_to.erase(b._id);
+    b.link_from.erase(a._id);
+}
+
+void Visualizer::link_boxNode(const int& a_key, const int& b_key)
+{
+    Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(a_key));
+    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
+
+    
+    glm::vec3 offset{ 0.f, std::abs(a->getPosition().y - b->getPosition().y) / 2.f, 0.f };
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
 
@@ -527,18 +629,18 @@ void Visualizer::link_box(Box& a, Box& b)
 
     using Line = SSS::GL::Polyline;
     Line::Shared seg;
-    if (std::abs(a.center().x - b.center().x) < 5.0f) {
-        Col_grdt.push(std::make_pair(0.f, a.getColor()));
-        Col_grdt.push(std::make_pair(1.f, b.getColor()));
-        seg = Line::Segment(a.center(), b.center(), Thk_grdt, Col_grdt);
+    if (std::abs(a->center().x - b->center().x) < 5.0f) {
+        Col_grdt.push(std::make_pair(0.f, a->_color));
+        Col_grdt.push(std::make_pair(1.f, b->_color));
+        seg = Line::Segment(a->center(), b->center(), Thk_grdt, Col_grdt);
     }
     else {
         // Couleurs inversées pour Bezier ?
-        Col_grdt.push(std::make_pair(0.f, b.getColor()));
-        Col_grdt.push(std::make_pair(1.f, a.getColor()));
+        Col_grdt.push(std::make_pair(0.f, b->_color));
+        Col_grdt.push(std::make_pair(1.f, a->_color));
         seg = Line::Bezier(
-            a.center(), a.center() - offset,
-            b.center() + offset, b.center(),
+            a->center(), a->center() - offset,
+            b->center() + offset, b->center(),
             Thk_grdt, Col_grdt,
             Line::JointType::BEVEL, Line::TermType::SQUARE
         );
@@ -546,85 +648,45 @@ void Visualizer::link_box(Box& a, Box& b)
 
     //Add the dst box to the 'link to' list of the src box
     //And add the src box to the 'link from' list of the dst box
-    if (!a.link_to.contains(b._id)) {
-        a.link_to.emplace(b._id);
+    if (!a->link_to.contains(b->getData().text_ID)) {
+        a->link_to.emplace(b->getData().text_ID);
     }
 
-    if (!b.link_from.contains(a._id)) {
-        b.link_from.emplace(a._id);
-    }
-
-    //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map[a._id + b._id] = seg;
-
-}
-
-void Visualizer::link_box(Box& a)
-{
-    for (std::string lt : a.link_to) {
-        if (Box::Shared to = _proj.box_map[lt]; to)
-            link_box(a, *to);
-    }
-    for (std::string lf : a.link_from) {
-        if (Box::Shared from = _proj.box_map[lf]; from)
-            link_box(*from, a);
-    }
-}
-
-void Visualizer::link_box_to_cursor(Box& b)
-{
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
-
-    //Create a bezier curve to link the two boxes
-    SSS::Math::Gradient<glm::vec4> Col_grdt;
-    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-    Col_grdt.push(std::make_pair(1.f, b.getColor()));
-
-    SSS::Math::Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.f, 25.f));
-    Thk_grdt.push(std::make_pair(1.f, 25.f));
-
-    auto seg = SSS::GL::Polyline::Bezier(
-        b.center() + glm::vec3(0, 0, 5), b.center() + glm::vec3(0, -400, 5),
-        c_pos, c_pos,
-        Thk_grdt, Col_grdt,
-        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
-    );
-
-    if (arrow_map.contains(first_link_ID)) {
-        arrow_map.at(b._id) = seg;
-        return;
+    if (!b->link_from.contains(a->getData().text_ID)) {
+        b->link_from.emplace(a->getData().text_ID);
     }
 
     //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map.insert(std::make_pair(b._id, seg));
-
+    arrow_map[a->getData().text_ID + b->getData().text_ID] = seg;
 }
 
-void Visualizer::pop_link(Box& a, Box& b)
+void Visualizer::link_boxNode(const int& key_a)
 {
-    arrow_map.erase(a._id + b._id);
-    a.link_to.erase(b._id);
-    b.link_from.erase(a._id);
+    const Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(key_a));
+
+    for (const std::string& lt : a->link_to) {
+        if (int to = _proj.sg_boxes[lt]; to)
+            link_boxNode(key_a, to);
+    }
+    for (const std::string& lf : a->link_from) {
+        if (int from = _proj.sg_boxes[lf]; from)
+            link_boxNode(from, key_a);
+    }
+}
+
+void Visualizer::link_boxNode_to_cursor(const int& a)
+{
+}
+
+void Visualizer::pop_Nodelink(const int& a, const int& b)
+{
 }
 
 
 
-int Visualizer::push_box(std::string boxID)
+std::string Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
-    //Box::Shared b = Box::create();
-    //_proj.box_map[boxID] = b;
-    //b->setPos(position);
-    //b->setColor(boxID);
-    //b->_id = boxID;
-    //::UUID uuid;
-    //::UuidCreate(&uuid);
-    //char* str;
-    //::UuidToStringA(&uuid, (RPC_CSTR*)&str);
-
-    //b->_td.text_ID = str;
-    //b->create_box();
 
     Node_Box* n1 = new Node_Box(&sg);
     n1->_pos = position;
@@ -635,31 +697,24 @@ int Visualizer::push_box(std::string boxID)
 
     _observe(*n1);
 
-    return n1->_key;
+    return std::to_string(n1->_key);
 }
 
-int Visualizer::push_box(glm::vec3 pos, const Text_data& td)
+std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
-
-    //Box::Shared b = Box::create();
-    //_proj.box_map[td.text_ID] = b;
-    //b->setPos(pos);
-    //b->setColor(rand_color());
-    //b->_id = td.text_ID;
-    //b->set_text_data(td);
-    //b->create_box();
-
-
     Node_Box* n1 = new Node_Box(&sg, td);
     n1->translate(pos);
-    n1->setColor(rand_color());
     sg.push(n1);
     n1->update();
-    _proj.sg_boxes[std::to_string(n1->_key)] = n1->_key;
+
+    //if (td.text_ID.empty())
+    //    td.text_ID = std::to_string(n1->_key);
+        
+    _proj.sg_boxes[td.text_ID] = n1->_key;
 
     _observe(*n1);
 
-    return n1->_key;
+    return  std::to_string(n1->_key);
 }
 
 void Visualizer::pop_box(std::string ID)
@@ -697,16 +752,16 @@ void Visualizer::pop_box(std::string ID)
 bool Visualizer::check_frustrum_render(Box& b)
 {
     //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    glm::vec3 const cam_pos = camera->getPosition();
-    float const dx = glm::abs(cam_pos.x - b.getPos().x);
-    float const dxmax = (b.getSize().x + _info._w) * 0.5f;
-    float const dy = glm::abs(cam_pos.y - b.getPos().y);
-    float const dymax = (b.getSize().y + _info._h) * 0.5f;
+    //glm::vec3 const cam_pos = camera->getPosition();
+    //float const dx = glm::abs(cam_pos.x - b.getPos().x);
+    //float const dxmax = (b.getSize().x + _info._w) * 0.5f;
+    //float const dy = glm::abs(cam_pos.y - b.getPos().y);
+    //float const dymax = (b.getSize().y + _info._h) * 0.5f;
 
 
-    if ((dx < dxmax) && (dy < dymax)) {
-        return true;
-    }
+    //if ((dx < dxmax) && (dy < dymax)) {
+    //    return true;
+    //}
     return false;
 }
 
@@ -785,7 +840,7 @@ void Visualizer::cut_link_line()
 void Visualizer::connect_drag_line()
 {
     if (!first_link_ID.empty()) {
-        link_box_to_cursor(*_proj.box_map.at(first_link_ID));
+        //link_box_to_cursor(*_proj.box_map.at(first_link_ID));
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             second_link_ID = get_hovered_box() ? get_hovered_box()->_id : "";
@@ -804,7 +859,8 @@ void Visualizer::connect_drag_line()
                 }
                 else {
                     //If it doesn't, create the link between the two boxes
-                    link_box(*_proj.box_map.at(first_link_ID), *_proj.box_map.at(second_link_ID));
+                    //link_box(*_proj.box_map.at(first_link_ID), *_proj.box_map.at(second_link_ID));
+                    link_boxNode(_proj.sg_boxes[first_link_ID], _proj.sg_boxes[second_link_ID]);
                 }
             }
 
@@ -887,6 +943,7 @@ void Visualizer::parse_info_data_project_from_json(const std::string& path)
     this->_proj = tmp;
 }
 
+// Nodes from SceneGraph
 void Visualizer::parse_info_data_project_to_json(const std::string& path, const bool prettify)
 {
     nlohmann::json dst;
@@ -912,12 +969,33 @@ void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
     this->_info = tmp;
 }
 
+ void Visualizer::fillProjExport()
+{
+     _proj.expNodes.reserve(_proj.sg_boxes.size());
+     _proj.expData.reserve(_proj.sg_boxes.size());
+
+    for (const auto& [str, id] : _proj.sg_boxes)
+    {
+        _proj.expNodes.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->export_node());
+        _proj.expData.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->getData());
+    }
+}
+
 void Visualizer::save()
 {
     LOG_MSG("SAVED");
     
-    std::string data_str = "data.json";
-    parse_info_data_project_to_json(data_str, true);
+    //Prepare la liste des nodes a exporter
+    fillProjExport();
+
+    //std::string data_str = "data.json";
+    //parse_info_data_project_to_json(data_str, true);
+
+    std::string data_str2 = "data3.json";
+    parse_info_data_project_to_json(data_str2, true);
+    _proj.expNodes.clear();
+    _proj.expData.clear();
+
     std::string str = "save.json";
     parse_info_data_visualizer_to_json(str, true);
 
@@ -936,18 +1014,43 @@ void Visualizer::load()
     //LOAD THE TEXT DATA FROM TRANSLATOR
     _mt.parse_traduction_data_from_json("project/bohemian/bohemian_eng.json");
     //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
-    parse_info_data_project_from_json("data.json");
+    parse_info_data_project_from_json("data3.json");
+    float i = 0;
+    for (const auto& td : _mt.text_data)
+    {
+        push_box(glm::vec3(i * 35.0f, -i * 35.0f, 0.f), td);
+        i += 1.f;
+    }
     SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
 
     //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
-    float i = 0;
-    for (const Text_data& td : _mt.text_data) {
-        if (!_proj.box_map.contains(td.text_ID)) {
-            push_box(glm::vec3(i*5.0f,-i*5.0f, 10.f),td);
-            i += 1.f;
+    //float i = 0;
+    //for (const Text_data& td : _mt.text_data) {
+    //    if (!_proj.box_map.contains(td.text_ID)) {
+    //        push_box(glm::vec3(i*5.0f,-i*5.0f, 10.f),td);
+    //        i += 1.f;
+    //    }
+    //    else
+    //        _proj.box_map[td.text_ID]->set_text_data(td);
+    //}
+    for (const auto& expNode: _proj.expNodes) {
+        //if (!_proj.sg_boxes.contains(td.text_ID)) {
+        //    push_box(glm::vec3(i * 5.0f, -i * 5.0f, 10.f), td);
+        //    i += 1.f;
+        //}
+        //else {
+        
+        if (_proj.sg_boxes.contains(expNode.id)) {
+            Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[expNode.id]));
+            node->readExport(expNode);
         }
-        else
-            _proj.box_map[td.text_ID]->set_text_data(td);
+        else {
+            push_box(expNode.pos, Text_data{});
+        }
+        //_proj.sg_boxes[td.text_ID];
+        //reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[td.text_ID]))->setTextData(td);
+        //}
+        //    _proj.box_map[td.text_ID]->set_text_data(td);
     }
 
 
@@ -1029,14 +1132,23 @@ void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 void to_json(nlohmann::json& j, const PROJECT_DATA& t)
 {
     j = nlohmann::json{
-        {"BOX", t.box_map},
+        {"BOX", t.expNodes},
         {"PROJECT_NAME", t.project_name}
     };
+
+    //optional fields
+    if (j.contains("BOX") && !j["BOX"].is_null()) {
+        j["BOX"] = t.expNodes;
+    }
 }
 
 void from_json(const nlohmann::json& j, PROJECT_DATA& t)
 {
-    j.at("BOX").get_to(t.box_map);
+    //j.at("BOX").get_to(t.box_map);
+    //optional fields
+    if (j.contains("BOX") && !j["BOX"].is_null()) {
+        j["BOX"].get_to(t.expNodes);
+    }
     j.at("PROJECT_NAME").get_to(t.project_name);
 }
 
