@@ -74,17 +74,12 @@ private:
 
 	void fillProjExport();
 
-	/* [BOX METHODS] */
-	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
-	//void link_box(Box& a, Box& b);
 public:
-	//Update all the arrow linked to this box
-	//void link_box(Box& a);
 private:
 	//Create a link from the box to the position of the cursor
 	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
-	void pop_link(Box& a, Box& b);
+
 
 
 
@@ -183,6 +178,8 @@ private:
 
 	//INTERFACE
 	SceneGraph sg;
+
+	bool _refreshed;
 };
 
 //JSON CONVERTION

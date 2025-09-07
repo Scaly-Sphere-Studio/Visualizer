@@ -52,7 +52,7 @@ public:
 
 
 	virtual glm::vec3 center() const;
-	void translate(const glm::vec3& translation) { _pos += translation; update(); };
+	void translate(const glm::vec3& translation) { _pos += translation; update(); _notifyObservers(SSS::EventList::Translated); };
 	void setPosition(const glm::vec3& newPos) { _pos = newPos; update(); };
 	glm::vec3 getPosition() const;
 

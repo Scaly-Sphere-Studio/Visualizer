@@ -47,9 +47,9 @@ private:
 	glm::vec4 _color;
 
 public:
-	inline glm::vec2 getSize() const noexcept { return _size; };
-	inline glm::vec3 getPos() const noexcept { return _pos; };
-	inline glm::vec4 getColor() const noexcept { return _color; };
+	//inline glm::vec2 getSize() const noexcept { return _size; };
+	//inline glm::vec3 getPos() const noexcept { return _pos; };
+	//inline glm::vec4 getColor() const noexcept { return _color; };
 
 	bool checkCollision(glm::vec2 const& r2p, glm::vec2 const& r2s);
 	bool checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane);
