@@ -19,5 +19,5 @@ catch (...) {
 std::vector<std::string> split_str(std::string src, unsigned int split_len);
 
 float rand_float();
-std::string rand_color();
-glm::vec4 rand_pastel_color();
+SSS::RGBA_f rand_color();
+SSS::RGBA_f rand_pastel_color();
