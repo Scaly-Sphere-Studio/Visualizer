@@ -50,7 +50,9 @@ public:
 	glm::mat4 getLocalTransform() const; // Rotation*Translation*Scale
 	glm::mat4 getGlobalTransform() const;
 
+
 	void translate(const glm::vec3& translation) { _pos += translation; update(); };
+	void setPosition(const glm::vec3& newPos) { _pos = newPos; update(); };
 
 	virtual bool checkCollision2D(glm::vec2 pos, glm::vec2 size) const;
 	virtual glm::vec3 center() const;
