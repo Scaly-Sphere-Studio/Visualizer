@@ -109,17 +109,25 @@ void to_json(nlohmann::json& j, const Text_data& p)
 	j = nlohmann::json{
 		{"id", p.text_ID},
 		{"text", p.text},
-		{"comment", p.comment},
-		{"category", p.category}
 	};
+
+	if (!p.comment.empty())j["comment"] = p.comment;
+	if (!p.context.empty())j["context"] = p.context;
 }
 
 void from_json(const nlohmann::json& j, Text_data& t)
 {
 	j.at("id").get_to(t.text_ID);
 	j.at("text").get_to(t.text);
-	j.at("comment").get_to(t.comment);
-	j.at("category").get_to(t.category);
+
+	if (j.contains("comment") && !j["comment"].is_null()) {
+		j.at("comment").get_to(t.comment);
+	}
+
+	if (j.contains("context") && !j["context"].is_null()) {
+		j.at("context").get_to(t.context);
+	}
+	else { t.context = "Default"; }
 
 }
 

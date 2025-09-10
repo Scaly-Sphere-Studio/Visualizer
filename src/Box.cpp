@@ -6,8 +6,8 @@
 
 #define TEXT_MAX_WIDTH          600
 
-std::map<uint16_t, Tags>Box::tags_list{};
-std::map<std::string, GUI_Layout> Box::layout_map{};
+//std::map<uint16_t, Tags>Box::tags_list{};
+std::map<std::string, SSS::GUI_Layout> Box::layout_map{};
 glm::vec2 Box::minsize = glm::vec2{ 150,75 };
 
 
@@ -139,15 +139,8 @@ void Box::create_box()
 
     _size_update();
 
-    //Tags
-    if (tags.size() > 0) {
-        model.reserve(tags.size() * 2);
-        for (size_t i = 0; i < tags.size(); ++i) {
-            model.insert(model.end(), tags_list[tags[i]]._model.begin(), tags_list[tags[i]]._model.end());
-        }
-    }
-
     Visualizer::get().box_renderer->addPlanes(model);
+
 }
 
 #define PARTICLE_VERTICES       0
@@ -162,50 +155,16 @@ void Box::create_box()
 #define PARTICLE_ROTATE         8
 
 
-Tags::Tags()
-{
-    _weight = 1;
-}
-
-Tags::Tags(std::string _name, std::string hex, uint32_t weight)
-{
-    //int char_size = 12;
-    //_size = { char_size * _name.size() + 5, char_size * 1.5f};
-    ////Center the box around the cursor
-    //_pos = { 0.0f, 0.0f, 0.0f };
-    //_color = hex_to_rgb(hex);
-    //_weight = weight;
 
 
-    //// Create text area & gl texture
-    //auto& area = SSS::TR::Area::create((int)_size.x, (int)_size.y);
-    //auto fmt = area.getFormat();
-    ////fmt.charsize = (int)_size.y / 3;
-    //fmt.charsize = char_size;
-    //fmt.has_outline = false;
-    //fmt.outline_size = 2;
-    //fmt.text_color = 0x000000;
-    //area.setFormat(fmt);
-    //area.parseString(_name);
-
-    ////Create the model
-    //_model.emplace_back(_pos, _size, glm::vec4(_color));
-    //_model.emplace_back(_pos + glm::vec3{1,2,0}, _size, glm::vec4(0))
-    //    ._sss_texture = SSS::GL::Texture::create(area);
-}
-
-Tags::~Tags()
-{
-    _model.clear();
-}
-
-void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
+void Box::_create_part(std::string s, const SSS::GUI_Layout& layout, int flag)
 {
     SSS::TR::Format fmt = layout._fmt;
     auto area = SSS::TR::Area::create();
     auto plane = BoxPlane::create(SSS::GL::Texture::create(area));
     plane->setBox(weak_from_this());
     _observe(*plane->getTexture());
+
 
     if (flag == FLAG_ID) {
         glm::vec4 tex_col = SSS::RGBA_f(_color).to_HSL();
@@ -216,8 +175,8 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
         
         bg_col.b -= 0.15f;
         area->setClearColor(SSS::RGBA_f::from_HSL((bg_col)));
-        // TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
-        //fmt.line_spacing = 1.f;
+         //TODO: Update TR pour que le texte soit au milieu de la "ligne" et non en haut
+        fmt.line_spacing = 1.f;
     }
     else {
         //area->setClearColor(rgb_to_int32t(_color));
@@ -231,6 +190,8 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
     area->setFormat(fmt);
     area->parseString(s);
 
+   
+
     //Create the model
     plane->translate(_pos);
     
@@ -240,7 +201,7 @@ void Box::_create_part(std::string s, const GUI_Layout& layout, int flag)
 
 void Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-    if (event_id == SSS::GL::Texture::Resize) {
+    if (event_id == SSS::EventList::Resize) {
         _size_update();
         return;
     }
@@ -271,6 +232,8 @@ void Box::_size_update() try
         _size.x = std::max(static_cast<float>(w), _size.x);
         _size.y += static_cast<float>(h);
     }
+
+    
     // Set min width
     if (_size == old_size)
         return;
@@ -283,6 +246,8 @@ void Box::_size_update() try
                 area->setWrappingMinWidth(w);
         }
     }
-    Visualizer::get().link_box(*this);
+
+    //Visualizer::get().link_box(*this);
+    //Visualizer::get().link_boxNode(*this);
 }
 CATCH_AND_LOG_METHOD_EXC;

@@ -15,7 +15,7 @@ public:
 	std::string text_ID;
 	std::string text;
 	std::string comment;
-	uint32_t category = UINT32_MAX;
+	std::string context;
 	/*Evaluation text_eval;*/
 
 

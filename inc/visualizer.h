@@ -3,6 +3,9 @@
 #include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
+#include "scenegraph.h"
+#include "SSS/Commons/eventList.hpp"
+#include "Node_Export.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -22,9 +25,15 @@ struct PROJECT_DATA {
 	~PROJECT_DATA();
 	std::unordered_map<std::string, Box::Shared> box_map;
 	std::string project_name;
+	std::unordered_map<std::string, int> sg_boxes;
+
+	// Export
+	//std::unordered_map<std::string, Export_Node_Box> expNodes;
+	std::vector<Export_Node_Box>	expNodes;
+	std::vector<Text_data>			expData;
 };
 
-class Visualizer {
+class Visualizer : public SSS::Observer {
 	friend Debugger;
 
 public:
@@ -39,6 +48,10 @@ private:
 	PROJECT_DATA _proj;
 	VISUALISER_INFO _info;
 	V_STATES _states = V_STATES::DEFAULT;
+
+	std::mt19937 rng;
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
@@ -59,20 +72,35 @@ private:
 	std::string project_path();
 	std::string lang_file_name(std::string& lang);
 
-	/* [BOX METHODS] */
-	//Link with an arrow the box a to the box b, and add the ID in their linked ID list
-	void link_box(Box& a, Box& b);
+	void fillProjExport();
+
 public:
-	//Update all the arrow linked to this box
-	void link_box(Box& a);
 private:
 	//Create a link from the box to the position of the cursor
-	void link_box_to_cursor(Box& a);
+	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
-	void pop_link(Box& a, Box& b);
+
+
+
+
+	/* [BOX METHODS] */
+//Link with an arrow the box a to the box b, and add the ID in their linked ID list
+	void link_boxNode(const int& a, const int& b);
+public:
+	//Update all the arrow linked to this box
+	void link_boxNode(const int& a);
+private:
+	//Create a link from the box to the position of the cursor
+	void link_boxNode_to_cursor(const int& a);
+	//Remove the link between two selected box
+	void pop_Nodelink(const int& a, const int& b);
+
+
+
+
 	//Add a new box at the current cursor position
-	void push_box(std::string boxID);
-	void push_box(glm::vec3 pos, const Text_data& td);
+	std::string push_box(std::string boxID);
+	std::string push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
 	void pop_box(std::string ID);
 	inline void pop_box(Box& box) { pop_box(box._id); };
@@ -80,12 +108,17 @@ private:
 	glm::vec3 cursor_map_coordinates();
 
 
+	int hovered_box = -1;
+
 
 	std::set<Box::Shared> _selectedBoxes;
+	std::set<int> _selectedBoxesID;
 	SSS::GL::Plane::Shared Selection_box;
 
-	std::string first_link_ID;
-	std::string second_link_ID;
+	int ifirst_link_ID;
+	int isecond_link_ID;
+
+
 	glm::vec3 _cur_pos;
 	glm::vec3 _otherpos;
 
@@ -146,6 +179,9 @@ private:
 	std::chrono::steady_clock::time_point end;
 
 	//INTERFACE
+	SceneGraph sg;
+
+	bool _refreshed;
 };
 
 //JSON CONVERTION

@@ -3,15 +3,8 @@
 #include "commons.h"
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"
+#include "gui.h"
 
-auto constexpr BOX_LAYER = 2.f;
-
-struct GUI_Layout {
-	int32_t _ID = 0;
-
-	SSS::TR::Format _fmt;
-	int _marginh = 0, _marginv = 0;
-};
 
 class Box;
 
@@ -21,7 +14,7 @@ protected:
 	virtual glm::mat4 _getTranslationMat4() const override;
 private:
 	BoxPlane() = default;
-	glm::vec3 _offset;
+	glm::vec3 _offset = glm::vec3{ 0 };
 	SSS::SharedClass<Box>::Weak _parent;
 public:
 	inline void setBox(SSS::SharedClass<Box>::Weak box) { _parent = box; };
@@ -30,14 +23,14 @@ public:
 	void setOffset(glm::vec3 offset);
 };
 
-struct Tags {
-	Tags();
-	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
-	~Tags();
-	std::string _name;
-	BoxPlane::Vector _model;
-	uint32_t _weight;
-};
+//struct Tags {
+//	Tags();
+//	Tags(std::string _name, std::string hex = "#FFFFFF", uint32_t weight = 1);
+//	~Tags();
+//	std::string _name;
+//	BoxPlane::Vector _model;
+//	uint32_t _weight;
+//};
 
 
 class Box : public SSS::Observer, public SSS::SharedClass<Box> {
@@ -54,9 +47,9 @@ private:
 	glm::vec4 _color;
 
 public:
-	inline glm::vec2 getSize() const noexcept { return _size; };
-	inline glm::vec3 getPos() const noexcept { return _pos; };
-	inline glm::vec4 getColor() const noexcept { return _color; };
+	//inline glm::vec2 getSize() const noexcept { return _size; };
+	//inline glm::vec3 getPos() const noexcept { return _pos; };
+	//inline glm::vec4 getColor() const noexcept { return _color; };
 
 	bool checkCollision(glm::vec2 const& r2p, glm::vec2 const& r2s);
 	bool checkCollision(std::shared_ptr<SSS::GL::PlaneBase> plane);
@@ -89,10 +82,13 @@ public:
 	//Initialisation of the box and fill the model array
 	void create_box();
 private:
-	void _create_part(std::string s, const GUI_Layout& lyt, int flag = 0);
+	void _create_part(std::string s, const SSS::GUI_Layout& lyt, int flag = 0);
 	
 	virtual void _subjectUpdate(SSS::Subject const& subjet, int event_id) override;
 	void _size_update();
+
+
+
 
 public:
 
@@ -106,15 +102,8 @@ public:
 	std::set<std::string> link_to;
 	std::set<std::string> link_from;
 	
-	static std::map<uint16_t, Tags> tags_list;
-	static std::map<std::string, GUI_Layout> layout_map;
+	static std::map<std::string, SSS::GUI_Layout> layout_map;
 
 	// DEFAULT VALUES
 	static glm::vec2 minsize;
 };
-
-
-static bool sortPlanes(std::shared_ptr<SSS::GL::PlaneBase>& a, std::shared_ptr<SSS::GL::PlaneBase>& b) {
-
-	return a->getTranslation().z < b->getTranslation().z;
-}
