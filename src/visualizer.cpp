@@ -1,9 +1,4 @@
 #include "visualizer.h"
-#pragma comment(lib, "rpcrt4.lib")  // UuidCreate - Minimum supported OS Win 2000
-#include <windows.h>
-#include <iostream>
-#include <rpc.h>
-//#include "scenegraph.h"
 #include "Node_Box.h"
 
 /* [MISC] */
@@ -680,9 +675,7 @@ std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
     sg.push(n1);
     n1->update();
 
-     
     _proj.sg_boxes[td.text_ID] = n1->_key;
-
     _observe(*n1);
 
     return  std::to_string(n1->_key);
