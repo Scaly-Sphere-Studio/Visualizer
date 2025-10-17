@@ -82,6 +82,20 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 	}
 }
 
+
+Node_Text::~Node_Text()
+{
+	clear();
+}
+
+void Node_Text::clear() 
+{
+	_sg->_rd->removePlane(model);
+	model.reset();
+	std::cout << "text cleared" << std::endl;
+	_notifyObservers(SSS::EventList::Content);
+}
+
 void Node_Text::setWrappingMin(const int& min)
 {
 	model->getTextArea()->setWrappingMinWidth(min);

@@ -181,7 +181,7 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
 Visualizer::~Visualizer()
 {
     arrow_map.clear();
-    _proj.box_map.clear();
+    //_proj.box_map.clear();
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
@@ -211,15 +211,15 @@ void Visualizer::run()
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
 
-
         refresh();
 
         input();
 
-
         for (auto elem : _proj.sg_boxes)
         {
-            reinterpret_cast<Node_UI*>(sg.at(elem.second))->_checkPointCollision(cursor_map_coordinates());
+            Node_UI* node = reinterpret_cast<Node_UI*>(sg.at(elem.second));
+            if(node != nullptr)
+                node->_checkPointCollision(cursor_map_coordinates());
         }
 
         //Collision test
@@ -250,6 +250,8 @@ void Visualizer::run()
         menu_bar();
 
         window->printFrame();
+
+        
     }
 
 }
@@ -269,9 +271,9 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
 
     if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_Q && action == GLFW_PRESS) {
         //Select all
-        visu._selectedBoxes.clear();
-        for (auto [id, b] : visu._proj.box_map) {
-            visu._selectedBoxes.emplace(b);
+        visu._selectedBoxesID.clear();
+        for (auto [id, b] : visu._proj.sg_boxes) {
+            visu._selectedBoxesID.emplace(b);
         }
     }
 }
@@ -324,20 +326,20 @@ void Visualizer::setup()
     layout._fmt.line_spacing = 1.f;
     layout._marginh = 4;
     layout._marginv = 5;
-    Box::layout_map.insert(std::make_pair("ID", layout));
+    //Box::layout_map.insert(std::make_pair("ID", layout));
     //TEXT FORMAT
     layout._fmt.line_spacing = 1.5f;
     layout._fmt.charsize = 19;
     layout._fmt.text_color = SSS::RGBA_f{ "#111111" };
     layout._marginh = 5;
     layout._marginv = 10;
-    Box::layout_map.insert(std::make_pair("TEXT", layout));
+    //Box::layout_map.insert(std::make_pair("TEXT", layout));
     //TEXT FORMAT
     layout._fmt.charsize = 16;
     layout._fmt.line_spacing = 1.3f;
     layout._fmt.font = "Ariali.ttf";
     layout._fmt.text_color = SSS::RGBA_f{ "#333333" };
-    Box::layout_map.insert(std::make_pair("COMMENT", layout));
+    //Box::layout_map.insert(std::make_pair("COMMENT", layout));
 
 
     camera = SSS::GL::Camera::create();
@@ -402,11 +404,14 @@ void Visualizer::input()
         push_box(SSS::RGBA_f(rand_pastel_color()).to_Hex());
     }
     //TEST SUPPRESSION
-    if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxes.empty()) {
-        for (Box::Shared b : _selectedBoxes) {
-            pop_box(*b);
+    if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxesID.empty()) {
+        for (const int& bId : _selectedBoxesID) {
+            //std::string strId = reinterpret_cast<Node_Box*>(sg.at(bId))->getData().text_ID;
+            pop_box(bId);
+
         }
-        _selectedBoxes.clear();
+        _selectedBoxesID.clear();
+        return;
     }
 
     // TEXT
@@ -423,7 +428,6 @@ void Visualizer::input()
     if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()
         && !window->keyMod(GLFW_MOD_SHIFT | GLFW_MOD_CONTROL))
     {
-        BoxPlane::Shared plane = window->getHovered<BoxPlane>();
         if (hovered_box == -1) {
             _states = V_STATES::DRAG_SCREEN;
             _cur_pos = glm::vec3(-c_x, c_y, 0.f);
@@ -469,20 +473,20 @@ void Visualizer::input()
         }
         else {
             _states = V_STATES::CONNECT_LINE;
-            //first_link_ID = box->_id;
             ifirst_link_ID = hovered_box;
         }
     }
 
     // CTRL LEFT CLICK
     if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && window->keyMod(GLFW_MOD_CONTROL)) {
-        auto box = get_hovered_box();
-        if (box) {
-            if (_selectedBoxes.contains(box)) {
-                _selectedBoxes.erase(box);
+       
+        
+        if (hovered_box != -1) {
+            if (_selectedBoxesID.contains(hovered_box)) {
+                _selectedBoxesID.erase(hovered_box);
             }
             else {
-                _selectedBoxes.emplace(box);
+                _selectedBoxesID.emplace(hovered_box);
             }
         }
     }
@@ -505,6 +509,8 @@ void Visualizer::input()
 
 void Visualizer::refresh()
 {
+    sg.update();
+
     if (!_refreshed)
         return;
     
@@ -515,38 +521,8 @@ void Visualizer::refresh()
 
     _refreshed = false;
     std::cout << "refresh" << std::endl;
+
 }
-
-
-//void Visualizer::link_box_to_cursor(Box& b)
-//{
-//    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
-//
-//    //Create a bezier curve to link the two boxes
-//    SSS::Math::Gradient<glm::vec4> Col_grdt;
-//    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-//    Col_grdt.push(std::make_pair(1.f, b.getColor()));
-//
-//    SSS::Math::Gradient<float> Thk_grdt;
-//    Thk_grdt.push(std::make_pair(0.f, 25.f));
-//    Thk_grdt.push(std::make_pair(1.f, 25.f));
-//
-//    auto seg = SSS::GL::Polyline::Bezier(
-//        b.center() + glm::vec3(0, 0, 5), b.center() + glm::vec3(0, -400, 5),
-//        c_pos, c_pos,
-//        Thk_grdt, Col_grdt,
-//        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
-//    );
-//
-//    if (arrow_map.contains(first_link_ID)) {
-//        arrow_map.at(b._id) = seg;
-//        return;
-//    }
-//
-//    //The arrow ID is the cat of the two boxes ID as it keeps the order
-//    arrow_map.insert(std::make_pair(b._id, seg));
-//
-//}
 
 void Visualizer::link_boxNode(const int& a_key, const int& b_key)
 {
@@ -681,53 +657,55 @@ std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
     return  std::to_string(n1->_key);
 }
 
-void Visualizer::pop_box(std::string ID)
+void Visualizer::pop_box(const int& id)
 {
-    if (!_selectedBoxes.empty()) {
+
+    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(id));
+    std::string b_ID = b->getData().text_ID;
+    if (!_selectedBoxesID.empty()) {
         //Clear the connected arrows and remove the ID from the ID lists 
 
         //Erase the arrows connected to the box
         //Erase the ID from their 'Link to' list
-        for (std::string f_ID : _proj.box_map.at(ID)->link_from) {
-            arrow_map.erase(f_ID + ID);
-            _proj.box_map.at(f_ID)->link_to.erase(ID);
+        for (std::string f_ID : b->link_from) {
+            arrow_map.erase(f_ID + b_ID);
+            b->link_to.erase(b_ID);
         }
 
         //Clear all the arrows connected to other boxes
 
         //Erase the arrows that connect to other boxes
         //Erase the ID from their 'link from' list
-        for (std::string l_ID : _proj.box_map.at(ID)->link_to) {
-            arrow_map.erase(ID + l_ID);
-            _proj.box_map.at(l_ID)->link_from.erase(ID);
+        for (std::string l_ID : b->link_to) {
+            arrow_map.erase(b_ID + l_ID);
+            b->link_from.erase(b_ID);
         }
 
         //Clear the box from the map
-        box_renderer->removePlanes(_proj.box_map.at(ID)->model);
-        _proj.box_map.erase(ID);
+        _proj.sg_boxes.erase(b_ID);
     }
 
-    //Erase the selection
-    //last_selected_ID.clear();
-    //current_selected_ID.clear();
+    b->pop();
+    hovered_box = -1;
+
 }
 
-
-bool Visualizer::check_frustrum_render(Box& b)
-{
-    //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-    //glm::vec3 const cam_pos = camera->getPosition();
-    //float const dx = glm::abs(cam_pos.x - b.getPos().x);
-    //float const dxmax = (b.getSize().x + _info._w) * 0.5f;
-    //float const dy = glm::abs(cam_pos.y - b.getPos().y);
-    //float const dymax = (b.getSize().y + _info._h) * 0.5f;
-
-
-    //if ((dx < dxmax) && (dy < dymax)) {
-    //    return true;
-    //}
-    return false;
-}
+//
+//bool Visualizer::check_frustrum_render(Box& b)
+//{
+//    //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
+//    //glm::vec3 const cam_pos = camera->getPosition();
+//    //float const dx = glm::abs(cam_pos.x - b.getPos().x);
+//    //float const dxmax = (b.getSize().x + _info._w) * 0.5f;
+//    //float const dy = glm::abs(cam_pos.y - b.getPos().y);
+//    //float const dymax = (b.getSize().y + _info._h) * 0.5f;
+//
+//
+//    //if ((dx < dxmax) && (dy < dymax)) {
+//    //    return true;
+//    //}
+//    return false;
+//}
 
 // TODO: exporter dans GL::Window
 glm::vec3 Visualizer::cursor_map_coordinates()
@@ -741,8 +719,8 @@ glm::vec3 Visualizer::cursor_map_coordinates()
 void Visualizer::drag_boxes()
 {
     //SI LA SELECTION EST DE 1 LE METTRE EN PRIO
-    if (_selectedBoxes.size() == 1) {
-        (*_selectedBoxes.cbegin())->setZ(2);
+    if (_selectedBoxesID.size() == 1) {
+        reinterpret_cast<Node_Box*>(sg.at(*_selectedBoxesID.begin()))->setZ(2);
     }
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
 
@@ -838,8 +816,6 @@ void Visualizer::connect_drag_line()
             }
             
             arrow_map.erase(a->getData().text_ID);
-            //first_link_ID.clear();
-            //second_link_ID.clear();
             ifirst_link_ID = -1;
             isecond_link_ID = -1;
 
@@ -884,14 +860,14 @@ void Visualizer::drag_screen()
     _cur_pos = _otherpos;
 }
 
-Box::Shared Visualizer::get_hovered_box()
-{
-    if (auto window = SSS::GL::Window::get(glfwwindow); window) {
-        if (auto plane = window->getHovered<BoxPlane>(); plane)
-            return plane->getBox();
-    }
-    return nullptr;
-}
+//Box::Shared Visualizer::get_hovered_box()
+//{
+//    if (auto window = SSS::GL::Window::get(glfwwindow); window) {
+//        if (auto plane = window->getHovered<BoxPlane>(); plane)
+//            return plane->getBox();
+//    }
+//    return nullptr;
+//}
 
 void Visualizer::parse_info_data_visualizer_to_json(const std::string& path, const bool prettify)
 {
@@ -976,9 +952,9 @@ void Visualizer::save()
 
 
     //Todo save the text data in their own file
-    for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
+    //for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
 
-    }
+    //}
 }
 
 void Visualizer::load()
@@ -1129,7 +1105,7 @@ void from_json(const nlohmann::json& j, PROJECT_DATA& t)
 
 PROJECT_DATA::~PROJECT_DATA()
 {
-    box_map.clear();
+    //box_map.clear();
 }
 
 

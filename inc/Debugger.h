@@ -26,7 +26,7 @@ private:
 
 	//DEBUG
 	std::vector<debug_Vertex> debug_batch;
-	void debug_box(const Box& b);
+	//void debug_box(const Box& b);
 
 	//Differents shapes for the debugging process
 	void circle(float x, float y, float z, float radius);

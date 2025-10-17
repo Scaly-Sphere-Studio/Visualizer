@@ -23,6 +23,8 @@ public:
 
 	//Template node
 	Node* push(Node* n);
+	void pop();
+	virtual void clear() {};
 
 	virtual void update() {};
 
@@ -35,7 +37,7 @@ public:
 	operator std::string() const;
 
 	virtual std::string name() const  { return "Node"; };
-
+	
 	SceneGraph* _sg;
 	SSS::GL::PlaneRenderer::Weak _rd;
 };
@@ -48,7 +50,7 @@ public:
 	~SceneGraph() {};
 
 	void init();
-
+	void update();
 	//Add the node to the nodelist and add it to the arborescence, to be used on free nodes
 	void push(Node* n);	
 	void emplace(Node* n);	// Add the node to the nodelist
@@ -56,7 +58,8 @@ public:
 	int Text(const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	int Block(const glm::vec3 &pos = glm::vec3(0));
 
-
+	void pop(const int& key) { _deleteNode.push(key); };
+	bool contains(const int& key) { return _nodeList.contains(key); };
 	Node* at(const int & keyNode);
 
 	void setCamera(SSS::GL::Camera::Shared pCam);
@@ -73,6 +76,7 @@ public:
 private:
 
 	SSS::GL::Camera::Shared _cam;
+	std::queue<int> _deleteNode;
 
 	//std::unordered_map<std::string, SSS::GL::PlaneRenderer::Shared> _rdList;
 

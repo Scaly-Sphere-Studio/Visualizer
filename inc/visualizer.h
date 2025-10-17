@@ -23,7 +23,7 @@ struct VISUALISER_INFO {
 
 struct PROJECT_DATA {
 	~PROJECT_DATA();
-	std::unordered_map<std::string, Box::Shared> box_map;
+	//std::unordered_map<std::string, Box::Shared> box_map;
 	std::string project_name;
 	std::unordered_map<std::string, int> sg_boxes;
 
@@ -102,8 +102,8 @@ private:
 	std::string push_box(std::string boxID);
 	std::string push_box(glm::vec3 pos, const Text_data& td);
 	//Remove the selected box
-	void pop_box(std::string ID);
-	inline void pop_box(Box& box) { pop_box(box._id); };
+	void pop_box(const int& id);
+	//inline void pop_box(Box& box) { pop_box(box._id); };
 	//Translate the screen cursor position from input to the world coordinates
 	glm::vec3 cursor_map_coordinates();
 
@@ -111,7 +111,7 @@ private:
 	int hovered_box = -1;
 
 
-	std::set<Box::Shared> _selectedBoxes;
+	//std::set<Box::Shared> _selectedBoxes;
 	std::set<int> _selectedBoxesID;
 	SSS::GL::Plane::Shared Selection_box;
 
@@ -124,7 +124,7 @@ private:
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
-	bool check_frustrum_render(Box &b);
+	//bool check_frustrum_render(Box &b);
 	//void frustrum_test();
 	void drag_boxes();
 	void cut_link_line();
@@ -132,7 +132,7 @@ private:
 	void multi_select();
 	void drag_screen();
 	// Returns hovered Box or nullptr
-	Box::Shared get_hovered_box();
+	//Box::Shared get_hovered_box();
 
 public:
 	/* [RENDERER DATA] */

@@ -22,19 +22,28 @@ Node::Node(SceneGraph* p_Sg)
 
 Node::~Node()
 {
-	_parent = 0;
-
-	for (const auto &cKey : _children) 
-	{
-		//_sg->pop(cKey);
-	}
-	_children.clear();
+	pop();
 }
 
 
 Node* Node::push(Node* n)
 {
 	return nullptr;
+}
+
+void Node::pop()
+{
+	_parent = 0;
+
+	for (const auto& cKey : _children)
+	{
+		if (_sg->contains(cKey.second)) 
+		{
+			_sg->pop(cKey.second);
+		}
+	}
+
+	_sg->pop(_key);
 }
 
 void Node::pop_child(const int& keyNode)
@@ -92,6 +101,25 @@ void SceneGraph::init()
 
 	_rd = SSS::GL::PlaneRenderer::create();
 	_rd->camera = _cam;
+}
+
+void SceneGraph::update()
+{
+	// Clear the delete node queue
+	while(!_deleteNode.empty())
+	{
+		int key = _deleteNode.front();
+		
+		//remove elem if not already removed
+		if (_nodeList.contains(key)) 
+		{
+			delete _nodeList[key];
+			_nodeList.erase(key);
+			list.erase(std::remove(list.begin(), list.end(), key), list.end());
+		}
+
+		_deleteNode.pop();
+	}
 }
 
 void SceneGraph::push(Node* n)

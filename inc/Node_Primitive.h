@@ -130,6 +130,7 @@ class Node_Text : public Node_UI
 {
 public:
 	Node_Text() = default;
+	~Node_Text();
 	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Text"; };
 
@@ -139,6 +140,7 @@ public:
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 	virtual void setWrappingMin(const int& min);
 
+	void clear() override;
 
 	void parseText(const std::string& str);
 	void setMaxStrSize(const int maxSize);
