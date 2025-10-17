@@ -1,6 +1,6 @@
 #pragma once
 #include "commons.h"
-#include "Box.h"
+
 
 namespace glm {
 	void to_json(nlohmann::json& j, const vec2& t);
@@ -15,9 +15,3 @@ namespace glm {
 
 //JSON CONVERTION
 //Text data convertion
-
-//void to_json(nlohmann::json& j, const Box& t);
-//void from_json(const nlohmann::json& j, Box& t);
-
-//void to_json(nlohmann::json& j, Box::Shared const& t);
-//void from_json(const nlohmann::json& j, Box::Shared& t);

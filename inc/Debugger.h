@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Box.h"
+//#include "Box.h"
+#include "gui.h"
 
 struct debug_Vertex {
 	debug_Vertex(float x, float y, float z, glm::vec3 col);
