@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scenegraph.h"
-#include "Node_Primitive.h"
+#include "Node_UI.h"
 
 #include "Text_data.h"
 #include "SSS/Commons/color.hpp"

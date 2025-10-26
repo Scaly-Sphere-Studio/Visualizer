@@ -63,6 +63,9 @@
     <ClCompile Include="src\Node_Export.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Node_UI.cpp">
+      <Filter>Nodes\Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
@@ -104,12 +107,21 @@
     <ClInclude Include="inc\Node_Export.h">
       <Filter>Nodes\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Node_UI.h">
+      <Filter>Nodes\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\triangle.frag">
       <Filter>Fichiers glsl</Filter>
     </None>
     <None Include="glsl\triangle.vert">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\ui.frag">
+      <Filter>Fichiers glsl</Filter>
+    </None>
+    <None Include="glsl\ui.vert">
       <Filter>Fichiers glsl</Filter>
     </None>
   </ItemGroup>
