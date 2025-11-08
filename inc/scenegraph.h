@@ -13,9 +13,10 @@ public:
 	Node(SceneGraph* p_Sg);
 	~Node();
 
-	unsigned int _key;
-	int _type = 0;
-	bool _inherited_transform = true;
+	unsigned int _key			= 0;
+	int _type					= 0;
+	bool _inherited_transform	= true;
+	bool hide					= false;
 
 	int _parent;
 	std::unordered_map<std::string, int> _children;
@@ -40,6 +41,12 @@ public:
 	
 	SceneGraph* _sg;
 	SSS::GL::PlaneRenderer::Weak _rd;
+
+
+	virtual std::vector<UIPrimitive> renderUI() const { return _UIprims; };
+protected:
+
+	std::vector<UIPrimitive> _UIprims;
 };
 
 

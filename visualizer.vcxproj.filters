@@ -25,6 +25,9 @@
     <Filter Include="Nodes\Headers">
       <UniqueIdentifier>{e398d395-315d-4b08-94ab-1738ac148df5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Nodes\UIRenderer">
+      <UniqueIdentifier>{5fa92b60-5db6-4d00-b08e-7e29eb2fbf0b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\commons.cpp">
@@ -65,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="src\Node_UI.cpp">
       <Filter>Nodes\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="inc\UIRenderer.cpp">
+      <Filter>Nodes\UIRenderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="inc\Node_UI.h">
       <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\UIRenderer.hpp">
+      <Filter>Nodes\UIRenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

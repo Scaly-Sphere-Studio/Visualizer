@@ -7,6 +7,8 @@
 #include "SSS/Commons/eventList.hpp"
 #include "Node_Export.h"
 
+#include "UIRenderer.hpp"
+
 enum struct V_STATES {
 	DEFAULT = 0,
 	CUTLINE = 1,
@@ -142,6 +144,7 @@ public:
 	SSS::GL::PlaneRenderer::Shared box_renderer;
 	SSS::GL::LineRenderer::Shared line_renderer;
 	SSS::GL::PlaneRenderer::Shared selection_renderer;
+	SSS::GL::UIRenderer::Shared UI_renderer;
 	Debugger::Shared debug_renderer;
 
 private:

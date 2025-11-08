@@ -114,20 +114,19 @@ static bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm:
 
 Visualizer::Visualizer()
 {
-    //TODO RANDSEED 
     rng = std::mt19937((float)(std::chrono::steady_clock::now().time_since_epoch().count()));
 
     //TODO Check if the data exists
-    parse_info_data_visualizer_from_json("save.json");
+    //parse_info_data_visualizer_from_json("save.json");
     setup();
 
     // FIRST SETUP OPERATION
     // Fill the languages ISO code map 
-    std::string iso_file = "iso_codes/iso.json";
-    if (check_folder_exists(iso_file)) {
-        iso_map = retrieve_iso_codes(iso_file);
-        SSS::log_msg("ISO File found");
-    }
+    //std::string iso_file = "iso_codes/iso.json";
+    //if (check_folder_exists(iso_file)) {
+    //    iso_map = retrieve_iso_codes(iso_file);
+    //    SSS::log_msg("ISO File found");
+    //}
 
     start = std::chrono::steady_clock::now();
 
@@ -185,6 +184,7 @@ Visualizer::~Visualizer()
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
+    UI_renderer.reset();
     auto win = SSS::GL::Window::get(glfwwindow);
     if (win)
         win->close();
@@ -200,9 +200,8 @@ void Visualizer::run()
     glEnable(GL_DEPTH_TEST);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
-
     //load
-    load();
+    //load();
     refresh();
 
     // Main loop
@@ -305,12 +304,15 @@ void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 
 void Visualizer::setup()
 {
+
+
     SSS::GL::Window::CreateArgs args;
     args.title = "VISUALIZER";
     args.w = static_cast<int>(_info._w);
     args.h = static_cast<int>(_info._h);
     SSS::GL::Window& window = SSS::GL::Window::create(args);
     glfwwindow = window.getGLFWwindow();
+
 
     window.setVSYNC(true);
     window.setCallback(glfwSetWindowSizeCallback, resize_callback);
@@ -361,18 +363,23 @@ void Visualizer::setup()
     box_renderer = SSS::GL::PlaneRenderer::create();
     box_renderer->camera = camera;
 
+    UI_renderer = SSS::GL::UIRenderer::create();
+    UI_renderer->camera = camera;
+    
+
     selection_renderer = SSS::GL::PlaneRenderer::create();
     selection_renderer->camera = camera;
     selection_renderer->addPlane(Selection_box);
     selection_renderer->setActivity(false);
 
-    debug_renderer = Debugger::create();
-    debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
-    debug_renderer->camera = camera;
-    // Enable or disable debugger
-    debug_renderer->setActivity(false);
+    //debug_renderer = Debugger::create();
+    //debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
+    //debug_renderer->camera = camera;
+    //// Enable or disable debugger
+    //debug_renderer->setActivity(false);
 
-    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer });
+    //window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer, UI_renderer });
+    window.setRenderers({ UI_renderer });
 }
 
 void Visualizer::input()

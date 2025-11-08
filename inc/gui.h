@@ -20,6 +20,55 @@ namespace SSS
 	};
 }
 
+enum SDF_BlendModes {
+	DEFAULT = 0,
+	GROUP = 1,
+	SUBTRACT = 2
+};
+
+
+enum SDF_Shapes {
+	sdCircle,
+	sdOrientedBox,
+	sdRoundedBox,
+	sdSegment,
+	sdPie,
+	sdRing,
+	sdArc,
+	sdTriangle,
+	sdRounedX,
+	sdCross,
+	sdPentagon,
+	sdHexagon,
+};
+
+// ! ordre important !
+struct UIPrimitive {
+	glm::vec2 pos;        // 8 bytes
+	glm::vec2 size;       // 8 bytes
+
+	glm::vec4 color;      // 16 bytes
+	glm::vec4 border;     // 16 bytes
+
+	float borderWidth;    // 4 bytes
+	float cornerRadius;   // 4 bytes
+	int   shapeId;        // 4 bytes
+	int   blendMode;      // 4 bytes
+
+	float innerRadius;    // 4 bytes
+	float progress;   // 4 bytes
+	glm::vec2   pos2;        // 8bytes
+
+	glm::vec2   pos3;        // 8 bytes
+	glm::vec2   pos4;        // 8 bytes
+
+	float rotation;   // 4 bytes
+	float scale;   // 4 bytes
+	float _pad;   // 4 bytes
+	float _pad1;   // 4 bytes
+
+};
+
 static bool sortPlanes(std::shared_ptr<SSS::GL::PlaneBase>& a, std::shared_ptr<SSS::GL::PlaneBase>& b) {
 
 	return a->getTranslation().z < b->getTranslation().z;
