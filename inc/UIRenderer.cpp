@@ -10,6 +10,15 @@ UIRenderer::UIRenderer()
 
     setShaders(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag"));
 
+    _resolution = glm::vec2(800, 600);
+
+    _proj = glm::ortho(
+        0.0f, (float)1440.f,     // left, right
+        (float)810.f, 0.0f,    // bottom, top (Y down)
+        -1.0f, 1.0f                   // near, far
+    );
+
+
     std::vector<float> vertices = {
     0.0f, 1.0f, 0.0f,  // top
     0.0f, 0.0f, 0.0f,  // left
@@ -23,19 +32,6 @@ UIRenderer::UIRenderer()
     _vbo.edit(vertices, GL_STATIC_DRAW);
 
     _vao.setup([this]() {
-
-
-
-        //glGenBuffers(1, &_vbo);
-
-        //// bind + upload
-        //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-
-
-        //_ibo.bind();
         //Coordinates
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3,
@@ -54,8 +50,6 @@ UIRenderer::UIRenderer()
         nullptr,
         GL_DYNAMIC_DRAW);
 
-
-
     _vao.unbind();
 }
 
@@ -63,18 +57,12 @@ void UIRenderer::render()
 {
     static size_t size;
 
-    
-
-    
-
-
     // bind to binding point 0 (must match GLSL 'binding = 0')
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
-
     UIPrimitive p;
     p.shapeId = SDF_Shapes::sdCircle;
-    p.pos = glm::vec2(0);
+    p.pos = glm::vec2(1440, 810);
     p.size.r = 250;
     p.color = glm::vec4(1);
 
@@ -89,19 +77,17 @@ void UIRenderer::render()
 
     //glm::mat4 const mvp = camera ? camera->getVP() : glm::mat4(1);
 
-    glm::mat4 ortho = glm::ortho(
-        0.0f, (float)800,     // left, right
-        (float)600, 0.0f,    // bottom, top (Y down)
-        -1.0f, 1.0f                   // near, far
-    );
-
-
+    
     shader->use();
-    shader->setVec2("uFrameRes", glm::vec2(800, 600));
+    shader->setVec2("uFrameRes", _resolution);
     shader->setFloat("uProgress", 0.f);
     shader->setInt("uPrimSize", test.size());
-    shader->setMat4("uProj", ortho);
-    shader->setVec2("uSize", glm::vec2(800, 600));
+    //shader->setMat4("uProj", ortho);
+    shader->setMat4("uProj", _proj);
+
+    //Viewport for the UI Element, pos : left upper corner
+    //shader->setVec2("uSize", glm::vec2(1440, 810));
+    shader->setVec2("uSize", _resolution);
     shader->setVec3("uPos", glm::vec3(0, 0, 0));
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
@@ -127,9 +113,16 @@ void UIRenderer::render()
     _vao.bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
     test.clear();
     _vao.unbind();
 }
-
+void UIRenderer::updateResolution(const float _w, const float _h)
+{
+     _resolution = glm::vec2(_w, _h);
+     _proj = glm::ortho(
+         0.0f, _w,     // left, right
+         _h, 0.0f,    // bottom, top (Y down)
+         -1.0f, 1.0f                   // near, far
+     );
+}
 SSS_GL_END;

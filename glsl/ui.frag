@@ -279,7 +279,8 @@ void main()
 //    float w = u_blur*5.0/r;
 
 
-    vec2 Position = (2.0*gl_FragCoord.xy-uFrameRes.xy)/rmin;
+    vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
+//    vec2 Position = (2.0*gl_FragCoord.xy-uFrameRes.xy)/rmin;
     vec2 p = Position;
 
     // Background color

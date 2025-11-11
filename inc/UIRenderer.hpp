@@ -29,6 +29,7 @@ public:
 
     using SharedClass::create;
     virtual void _subjectUpdate(Subject const& subject, int event_id) override {};
+    void updateResolution(const float _w, const float _h);
     //static auto create(Camera::Shared cam, bool clear_depth_buffer = false) {
     //    auto shared = SharedClass::create();
     //    shared->camera = cam;
@@ -43,6 +44,8 @@ private:
     std::vector<int> _nodes;
 
     SceneGraph* _sg;
+    glm::vec2 _resolution;
+    glm::mat4 _proj;
 };
 
 #pragma warning(pop)

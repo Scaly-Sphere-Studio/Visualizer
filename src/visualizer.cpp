@@ -300,6 +300,7 @@ void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
     get()._info._w = static_cast<float>(w);
     get()._info._h = static_cast<float>(h);
+    get().UI_renderer->updateResolution(w,h);
 }
 
 void Visualizer::setup()
@@ -364,7 +365,7 @@ void Visualizer::setup()
     box_renderer->camera = camera;
 
     UI_renderer = SSS::GL::UIRenderer::create();
-    UI_renderer->camera = camera;
+    UI_renderer->updateResolution(_info._w, _info._h);
     
 
     selection_renderer = SSS::GL::PlaneRenderer::create();
@@ -697,23 +698,6 @@ void Visualizer::pop_box(const int& id)
 
 }
 
-//
-//bool Visualizer::check_frustrum_render(Box& b)
-//{
-//    //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-//    //glm::vec3 const cam_pos = camera->getPosition();
-//    //float const dx = glm::abs(cam_pos.x - b.getPos().x);
-//    //float const dxmax = (b.getSize().x + _info._w) * 0.5f;
-//    //float const dy = glm::abs(cam_pos.y - b.getPos().y);
-//    //float const dymax = (b.getSize().y + _info._h) * 0.5f;
-//
-//
-//    //if ((dx < dxmax) && (dy < dymax)) {
-//    //    return true;
-//    //}
-//    return false;
-//}
-
 // TODO: exporter dans GL::Window
 glm::vec3 Visualizer::cursor_map_coordinates()
 {
@@ -866,15 +850,6 @@ void Visualizer::drag_screen()
     //Update the position
     _cur_pos = _otherpos;
 }
-
-//Box::Shared Visualizer::get_hovered_box()
-//{
-//    if (auto window = SSS::GL::Window::get(glfwwindow); window) {
-//        if (auto plane = window->getHovered<BoxPlane>(); plane)
-//            return plane->getBox();
-//    }
-//    return nullptr;
-//}
 
 void Visualizer::parse_info_data_visualizer_to_json(const std::string& path, const bool prettify)
 {
