@@ -3,12 +3,14 @@
 #include "commons.h"
 #include "gui.h"
 
+#include <mutex>
 
 class SceneGraph;
 
-class Node : public SSS::Observer, public SSS::Subject
+class Node : public SSS::Observer, public SSS::Subject, public SSS::_EventRegistry<Node>
 {
 public:
+	friend _EventRegistry;
 	Node();
 	Node(SceneGraph* p_Sg);
 	~Node();
@@ -28,6 +30,7 @@ public:
 	virtual void clear() {};
 
 	virtual void update() {};
+	bool _update = false;
 
 	void pop_child(const int& keyNode);
 	void detach_parent(const int& keyNode);
@@ -44,9 +47,12 @@ public:
 
 
 	virtual std::vector<UIPrimitive> renderUI() const { return _UIprims; };
+	//static std::once_flag _RegistryDone;
 protected:
-
 	std::vector<UIPrimitive> _UIprims;
+
+private:
+	static void _register();
 };
 
 
@@ -76,12 +82,12 @@ public:
 	operator std::string() const;
 	
 	Node* operator[](const int &keyNode);
-	std::unordered_map<int, Node*> _nodeList;
 	std::vector<int> list;
 
 	SSS::GL::PlaneRenderer::Shared _rd;
-private:
+protected:
 
+	std::unordered_map<int, Node*> _nodeList;
 	SSS::GL::Camera::Shared _cam;
 	std::queue<int> _deleteNode;
 

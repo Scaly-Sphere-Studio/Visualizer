@@ -10,7 +10,7 @@ UIRenderer::UIRenderer()
 
     setShaders(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag"));
 
-    _resolution = glm::vec2(800, 600);
+    //_resolution = glm::vec2(800, 600);
 
     _proj = glm::ortho(
         0.0f, (float)1440.f,     // left, right
@@ -51,6 +51,9 @@ UIRenderer::UIRenderer()
         GL_DYNAMIC_DRAW);
 
     _vao.unbind();
+
+    init();
+
 }
 
 void UIRenderer::render()
@@ -60,69 +63,63 @@ void UIRenderer::render()
     // bind to binding point 0 (must match GLSL 'binding = 0')
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
-    UIPrimitive p;
-    p.shapeId = SDF_Shapes::sdCircle;
-    p.pos = glm::vec2(1440, 810);
-    p.size.r = 250;
-    p.color = glm::vec4(1);
-
-    std::vector<UIPrimitive> test;
-    test.push_back(p);
-
     Shaders::Shared shader = getShaders();
     if (!shader) {
         LOG_METHOD_WRN("No shaders bound");
         return;
     }
-
-    //glm::mat4 const mvp = camera ? camera->getVP() : glm::mat4(1);
-
     
     shader->use();
     shader->setVec2("uFrameRes", _resolution);
     shader->setFloat("uProgress", 0.f);
-    shader->setInt("uPrimSize", test.size());
-    //shader->setMat4("uProj", ortho);
-    shader->setMat4("uProj", _proj);
 
-    //Viewport for the UI Element, pos : left upper corner
-    //shader->setVec2("uSize", glm::vec2(1440, 810));
+
+    shader->setMat4("uProj", _proj);
+    //shader->setMat4("uProj", _cam->getProjection());
+
+    //Size and pos of the bounding box
     shader->setVec2("uSize", _resolution);
     shader->setVec3("uPos", glm::vec3(0, 0, 0));
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-        test.size() * sizeof(UIPrimitive),
-        test.data());
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 
-    //for (const auto& node : _nodes) 
-    //{
-    //    Node_UI* n = reinterpret_cast<Node_UI*>(_sg->at(node));
-    //    std::vector<UIPrimitive> prims = n->renderUI();
-    //    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-    //    //    prims.size() * sizeof(UIPrimitive),
-    //    //    prims.data());
-    //    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    //    //shader->setInt("u_PrimsSize", prims.size());
-
-
-    //}
     _vao.bind();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    //if (_sg == nullptr)
+    //    return;
+    for (const auto& node : list)
+    {
+        Node_UI* n = reinterpret_cast<Node_UI*>(at(node));
+        if (n->hidden || n->prims.empty())
+            continue;
+        //std::cout << n->_key << std::endl;
+        shader->setInt("uPrimSize", n->prims.size());
 
-    test.clear();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+            n->prims.size() * sizeof(UIPrimitive),
+            n->prims.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
     _vao.unbind();
 }
 void UIRenderer::updateResolution(const float _w, const float _h)
 {
      _resolution = glm::vec2(_w, _h);
+
+
      _proj = glm::ortho(
          0.0f, _w,     // left, right
          _h, 0.0f,    // bottom, top (Y down)
-         -1.0f, 1.0f                   // near, far
+         -20.f, 20.f                  // near, far
      );
+
+     glm::vec3 camPos = _rd->camera->getPosition();
+     _rd->camera->setPosition(glm::vec3(_w/2.0f, -_h/2.0f, camPos.z));
 }
 SSS_GL_END;

@@ -5,6 +5,13 @@
 #define BLACK glm::vec4(0,0,0,1)
 #define WHITE glm::vec4(1,1,1,1)
 
+void Node_UI::_register()
+{
+	REGISTER_EVENT("NODE_UI_HOVER");
+	REGISTER_EVENT("NODE_UI_MOUSE_LEFT");
+}
+
+
 bool Node_UI::isHovered() const noexcept
 {
 	return false;
@@ -60,7 +67,8 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 		// Cursor enter the UI elem
 		if (!_hover)
 		{
-			_notifyObservers(SSS::EventList::Hover);
+			//_notifyObservers(SSS::EventList::Hover);
+			EMIT_EVENT("NODE_UI_HOVER");
 			SSS::log_msg("Hover the node " + std::to_string(_key));
 		}
 
@@ -71,7 +79,9 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 	// Cursor leave the UI elem
 	if (_hover)
 	{
-		_notifyObservers(SSS::EventList::Leave);
+		//_notifyObservers(SSS::EventList::Leave);
+
+		EMIT_EVENT("NODE_UI_MOUSE_LEFT");
 		SSS::log_msg("Leave the node " + std::to_string(_key));
 	}
 
@@ -79,6 +89,39 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 	return false;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Node_Text::_register()
+{
+	REGISTER_EVENT("NODE_TEXT_RESIZE");
+	REGISTER_EVENT("NODE_TEXT_CONTENT_UPDATE");
+}
 
 Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt)
 	:Node_UI(p_Sg)
@@ -121,12 +164,12 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 
 void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-
-	if (event_id == SSS::EventList::Resize) {
+	if (event_id == EVENT_ID("SSS_TEXTURE_CONTENT")) {
 		auto [w, h] = model->getTexture()->getCurrentDimensions();
 		model->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
 
-		_notifyObservers(SSS::EventList::Resize);
+
+		EMIT_EVENT("NODE_TEXT_RESIZE");
 		return;
 	}
 
@@ -141,7 +184,7 @@ void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 			return;
 
 		_size_update();
-		_notifyObservers(SSS::EventList::Resize);
+		EMIT_EVENT("NODE_TEXT_RESIZE");
 	}
 }
 
@@ -156,7 +199,7 @@ void Node_Text::clear()
 	_sg->_rd->removePlane(model);
 	model.reset();
 	std::cout << "text cleared" << std::endl;
-	_notifyObservers(SSS::EventList::Content);
+	EMIT_EVENT("NODE_TEXT_CONTENT_UPDATE");
 }
 
 void Node_Text::setWrappingMin(const int& min)
@@ -233,4 +276,81 @@ void Node_Text::update()
 void Node_Text::parseText(const std::string& str)
 {
 	model->getTextArea()->parseString(str);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Node_Slider::~Node_Slider()
+{
+}
+
+void Node_Slider::build()
+{
+
+	_min = 0;
+	_max = 255;
+	UIPrimitive ui;
+	ui.shapeId = sdSegment;
+	ui.size.x = 15;
+	ui.pos = glm::vec3(100, 250, 0);
+	ui.pos2 = glm::vec3(400, 250, 0);
+	ui.color = glm::vec4(1.0);
+	ui.blendMode = GROUP;
+	prims.push_back(ui);
+
+	ui.shapeId = sdCircle;
+	ui.pos = glm::vec3(200, 250, 0);
+	ui.size.x = 25;
+	ui.blendMode = GROUP|SUBTRACT;
+	prims.push_back(ui);
+
+	ui.shapeId = sdCircle;
+	ui.size.x = 20;
+	ui.blendMode = DEFAULT;
+	prims.push_back(ui);
+}
+
+
+void Node_Slider::clear()
+{
+
+}
+
+void Node_Slider::getCursorPos(const float& x, const float& y)
+{
+	float cx, cy;
+	cx = std::clamp(x, prims[0].pos.x, prims[0].pos2.x);
+	prims[2].pos.x = cx; 
+	prims[1].pos.x = cx;
+
+	float progress = (cx - prims[0].pos.x) / (prims[0].pos2.x - prims[0].pos.x);
+
+	_current = (_max - _min) * progress + _min;
+
+}
+
+
+void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
+{
 }

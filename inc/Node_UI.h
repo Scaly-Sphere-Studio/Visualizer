@@ -16,9 +16,10 @@ class SceneGraph;
 
 // Utility for Text Nodes
 
-class Node_UI : public Node_Block
+class Node_UI : public Node_Block, public SSS::_EventRegistry<Node_UI>
 {
 public:
+	friend _EventRegistry<Node_UI>;
 	Node_UI() = default;
 	Node_UI(SceneGraph* p_Sg) :Node_Block(p_Sg) {};
 	std::string name() const { return "UI"; };
@@ -59,7 +60,7 @@ public:
 	}
 
 	bool _checkPointCollision(glm::vec2 const& pt);
-
+	std::vector<UIPrimitive> prims;
 
 protected:
 	int _hOffset = -1;	// key node for horizontal offset
@@ -78,11 +79,16 @@ protected:
 		Hover
 	};
 
+private : 
+	static void _register();
+
 };
 
-class Node_Text : public Node_UI
+class Node_Text : public Node_UI, SSS::_EventRegistry<Node_Text>
 {
 public:
+	friend _EventRegistry<Node_Text>;
+
 	Node_Text() = default;
 	~Node_Text();
 	Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
@@ -95,7 +101,6 @@ public:
 	virtual void setWrappingMin(const int& min);
 
 	void clear() override;
-
 	void parseText(const std::string& str);
 	void setMaxStrSize(const int maxSize);
 	void setTextColor(const SSS::RGBA_f& col);
@@ -103,7 +108,36 @@ public:
 	void rotate(const float &rot) { model->rotate(glm::vec3(0, 0,rot)); };
 	virtual void update();
 private:
+	static void _register();
 	void translateElem() { model->translate(_pos); };
 	int _maxStrSize = 600;
 	void _size_update();
+};
+
+
+class  Node_Slider : public Node_UI
+{
+public:
+	Node_Slider() = default;
+	~Node_Slider();
+	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
+	std::string name() const { return "Text"; };
+
+	void build();
+
+	TextPlane::Shared model;
+	int _type = 4;
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+
+	void clear() override;
+
+	virtual void update() {};
+	void getCursorPos(const float& x, const float& y);
+
+	int _min;
+	int _max;
+	int _current;
+private:
+	void _size_update() {};
 };

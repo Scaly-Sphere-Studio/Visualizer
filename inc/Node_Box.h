@@ -10,9 +10,11 @@
 
 
 
-class Node_Box : public Node_UI 
+
+class Node_Box : public Node_UI, public SSS::_EventRegistry<Node_Box>
 {
 public:
+	friend _EventRegistry<Node_Box>;
 	Node_Box() = default;
 	Node_Box(SceneGraph* p_Sg);
 	Node_Box(SceneGraph* p_Sg, const Text_data& td);
@@ -36,7 +38,9 @@ public:
 	Export_Node_Box export_node() const;
 	Text_data getData() const { return _td; };
 
+
 private :
+	static void _register();
 	int minWidth = 600;
 	void _resize();
 	Text_data _td = Text_data{};

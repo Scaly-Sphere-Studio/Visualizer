@@ -117,7 +117,7 @@ Visualizer::Visualizer()
     rng = std::mt19937((float)(std::chrono::steady_clock::now().time_since_epoch().count()));
 
     //TODO Check if the data exists
-    //parse_info_data_visualizer_from_json("save.json");
+    parse_info_data_visualizer_from_json("save.json");
     setup();
 
     // FIRST SETUP OPERATION
@@ -141,24 +141,26 @@ Visualizer& Visualizer::get()
 
 void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-    switch (event_id) {
-    case SSS::EventList::Hover:
+    if (event_id == EVENT_ID("NODE_UI_HOVER"))
     {
         Node* n = (Node*)&subject;
         hovered_box = n->_key;
         SSS::log_msg("Hovered Node updated :" + std::to_string(n->_key));
         return;
     }
-    case SSS::EventList::Leave:
+
+    if (event_id == EVENT_ID("NODE_UI_MOUSE_LEFT"))
     {
         Node* n = (Node*)&subject;
-        if (hovered_box == n->_key) 
+        if (hovered_box == n->_key)
         {
             hovered_box = -1;
             SSS::log_msg("Last hovered node reseted :" + std::to_string(n->_key));
         }
         return;
     }
+
+    switch (event_id) {
     case SSS::EventList::Resize:
     {
         // Node resized, relink
@@ -204,11 +206,36 @@ void Visualizer::run()
     //load();
     refresh();
 
+
+
+    Node_Slider* slider = new Node_Slider();
+    //slider->_rd = UI_renderer;
+    slider->build();
+    UI_renderer->push(slider);
+
+
+    Node_Text* tmin = new Node_Text(UI_renderer.get(), std::to_string(slider->_min));
+    tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
+
+
+    Node_Text* tmax = new Node_Text(UI_renderer.get(), std::to_string(slider->_max));
+    tmax->setPosition(glm::vec3(slider->prims[0].pos2.x - 25, -slider->prims[0].pos2.y + 105, 0));
+
+
+    Node_Text* t = new Node_Text(UI_renderer.get(), std::to_string(slider->_current));
+    t->setPosition(glm::vec3(slider->prims[0].pos2.x + 40, -slider->prims[0].pos2.y + 40, 0));
+
+    float time = 0;
+
     // Main loop
     while (!window->shouldClose()) {
 
+        time += 0.1;
+        //t->setPosition(glm::vec3(500 * cos(time), 500 *sin(time), 0));
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
+        slider->getCursorPos(c_x, c_y);
+        t->parseText(std::to_string(slider->_current));
 
         refresh();
 
@@ -366,6 +393,7 @@ void Visualizer::setup()
 
     UI_renderer = SSS::GL::UIRenderer::create();
     UI_renderer->updateResolution(_info._w, _info._h);
+    //UI_renderer->_sg = &sg;
     
 
     selection_renderer = SSS::GL::PlaneRenderer::create();
@@ -379,8 +407,8 @@ void Visualizer::setup()
     //// Enable or disable debugger
     //debug_renderer->setActivity(false);
 
-    //window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer, UI_renderer });
-    window.setRenderers({ UI_renderer });
+    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer, UI_renderer, UI_renderer->_rd });
+    //window.setRenderers({ UI_renderer });
 }
 
 void Visualizer::input()
@@ -921,8 +949,8 @@ void Visualizer::save()
     //Prepare la liste des nodes a exporter
     fillProjExport();
 
-    //std::string data_str = "data.json";
-    //parse_info_data_project_to_json(data_str, true);
+    std::string data_str = "data.json";
+    parse_info_data_project_to_json(data_str, true);
 
     std::string data_str2 = "data3.json";
     parse_info_data_project_to_json(data_str2, true);
@@ -947,7 +975,7 @@ void Visualizer::load()
     //LOAD THE TEXT DATA FROM TRANSLATOR
     _mt.parse_traduction_data_from_json("project/bohemian/bohemian_eng.json");
     //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
-    parse_info_data_project_from_json("data3.json");
+    parse_info_data_project_from_json("data.json");
     float i = 0;
     for (const auto& td : _mt.text_data)
     {

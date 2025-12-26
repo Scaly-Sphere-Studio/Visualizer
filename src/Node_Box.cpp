@@ -1,8 +1,17 @@
 #include "Node_Box.h"
 
+//std::once_flag _Node_Box_Registry;
+
+void Node_Box::_register()
+{
+}
+
+
 Node_Box::Node_Box(SceneGraph* p_Sg):
 	Node_UI(p_Sg)
 {
+	//std::call_once(_Node_Box_Registry, [&]() { _register(); });
+
 	_td.text_ID = SSS::toString(_key);
 	_td.text = "Text";
 
@@ -28,6 +37,7 @@ Node_Box::Node_Box(SceneGraph* p_Sg):
 Node_Box::Node_Box(SceneGraph* p_Sg, const Text_data& td):
 	Node_UI(p_Sg)
 {
+	_register();
 	_td = td;
 
 	_pos = glm::vec3(150, 350, 0);
@@ -64,12 +74,11 @@ void Node_Box::setTextData(const Text_data& td)
 
 void Node_Box::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
-	switch(event_id)
-	{
-	case SSS::EventList::Resize :
+	if (event_id == EVENT_ID("NODE_TEXT_RESIZE")) {
 		_resize();
 		return;
 	}
+
 }
 
 void Node_Box::update()
@@ -151,5 +160,6 @@ void Node_Box::_resize()
 		t->setWrappingMin(static_cast<unsigned int>(std::ceil(min)));
 	}
 
-	_notifyObservers(SSS::EventList::Resize);
+	//EMIT_EVENT();
+	//_notifyObservers(SSS::EventList::Resize);
 }

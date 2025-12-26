@@ -15,7 +15,7 @@ SSS_GL_BEGIN;
 #pragma warning(disable: 4251)
 #pragma warning(disable: 4275)
 
-class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer {
+class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer, public SceneGraph {
     friend class SharedClass;
     friend class Window;
 
@@ -30,6 +30,7 @@ public:
     using SharedClass::create;
     virtual void _subjectUpdate(Subject const& subject, int event_id) override {};
     void updateResolution(const float _w, const float _h);
+    void setWindow();
     //static auto create(Camera::Shared cam, bool clear_depth_buffer = false) {
     //    auto shared = SharedClass::create();
     //    shared->camera = cam;
@@ -37,15 +38,16 @@ public:
     //    return shared;
     //}
 
+    //SceneGraph* _sg;
 private:
     Basic::VAO _vao;
     Basic::VBO _vbo;
     GLuint ssbo = 0;
     std::vector<int> _nodes;
 
-    SceneGraph* _sg;
     glm::vec2 _resolution;
     glm::mat4 _proj;
+
 };
 
 #pragma warning(pop)
