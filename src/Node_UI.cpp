@@ -11,8 +11,6 @@ void Node_UI::_register()
 	REGISTER_EVENT("NODE_UI_MOUSE_LEFT");
 }
 
-
-
 void Node_UI::setColor(const std::string& hex)
 {
 	setColor(SSS::RGBA_f(hex));
@@ -83,32 +81,9 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* -------------------------------------------------------
+---------------------- TEXT NODES ------------------------
+--------------------------------------------------------*/
 
 void Node_Text::_register()
 {
@@ -500,6 +475,7 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		window.getCursorPos(c_x, c_y);
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+		return;
 	}
 
 	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
@@ -513,6 +489,7 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 			_active ^= true;
 			prims[1].pos = glm::vec3(prims[0].pos,0) + glm::vec3((_radius * 0.6f)*(float)(_active), 0,0);
 		}
+		return;
 	}
 }
 
@@ -595,6 +572,7 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		window.getCursorPos(c_x, c_y);
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+		return;
 	}
 
 	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
@@ -608,5 +586,124 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 			_active ^= true;
 			prims[1].color = glm::mix(glm::vec4(1.0), glm::vec4(0.0), (float)_active);
 		}
+		return;
+	}
+}
+
+/* -------------------------------------------------------
+--------------------- RADIO BUTTONS ----------------------
+--------------------------------------------------------*/
+
+
+void Node_RadioButton::_register()
+{
+	REGISTER_EVENT("SSS_RADIO_TOOK_FOCUS");
+}
+
+Node_RadioButton::Node_RadioButton(const glm::vec2& pos) {
+	_pos = glm::vec3(pos, 0);
+	build(_pos);
+}
+
+void Node_RadioButton::observeRadio(Node_RadioButton &subject)
+{
+	_observe(subject);
+
+	std::cout << std::to_string(subject.isActive()) << std::endl;
+	if (subject.isActive()) {
+		_active = false;
+	}
+	build(_pos);
+}
+
+void Node_RadioButton::build(const glm::vec2& begin) {
+	prims.clear();
+	_radius = 20;
+	float factor = 0.6f;
+	//glm::vec2 begin = glm::vec2(1000, 450);
+	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
+	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
+	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
+
+	UIPrimitive radio;
+	// Background
+	radio.shapeId = sdCircle;
+	radio.pos = begin;
+	radio.size.r = _radius;
+	radio.color = glm::vec4(0.0);
+	radio.border = glm::vec4(1.0);
+	radio.borderWidth = 6.0;
+	radio.blendMode = DEFAULT;
+	prims.push_back(radio);
+
+	// Button
+	radio.shapeId = sdCircle;
+	radio.size.r = _radius * factor;
+	radio.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
+	radio.borderWidth = 0.0;
+	prims.push_back(radio);
+
+	_pos = glm::vec3(begin.x - _radius , begin.y - _radius, 0.f);
+	_size = glm::vec3(_radius * 2, _radius * 2, 0);
+
+
+	////BB
+	//radio.shapeId = sdSegment;
+	//radio.pos = _pos;
+	//radio.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//radio.size.x = 3;
+	//radio.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
+	//prims.push_back(radio);
+
+	//radio.shapeId = sdSegment;
+	//radio.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//radio.pos2 = _pos + _size;
+	//prims.push_back(radio);
+
+	//radio.shapeId = sdSegment;
+	//radio.pos = _pos + _size;
+	//radio.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//prims.push_back(radio);
+
+	//radio.shapeId = sdSegment;
+	//radio.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//radio.pos2 = _pos;
+	//prims.push_back(radio);
+
+}
+
+void Node_RadioButton::_subjectUpdate(SSS::Subject const& subject, int event_id) {
+	if (_hidden)
+		return;
+
+	if (event_id == EVENT_ID("SSS_RADIO_TOOK_FOCUS")) {
+		_focus = false;
+		_active = false;
+		prims[1].color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
+		return;
+	}
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_POSITION")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+
+		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+		return;
+	}
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		auto const& clicks = window.getClickInputs();
+
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+			_focus = _hover;
+			_active = true;
+			EMIT_EVENT("SSS_RADIO_TOOK_FOCUS");
+			prims[1].color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
+		}
+		return;
 	}
 }

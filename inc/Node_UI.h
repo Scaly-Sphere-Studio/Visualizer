@@ -55,7 +55,7 @@ public:
 	bool checkCollision(const glm::vec3& pos);
 	bool _checkPointCollision(glm::vec2 const& pt);
 
-	void observeWindow(SSS::GL::Window* wPtr) { _observe(*wPtr); };
+	void observe(SSS::Subject* wPtr) { _observe(*wPtr); };
 	std::vector<UIPrimitive> prims;
 
 protected:
@@ -189,4 +189,31 @@ private:
 	float _radius;
 	void _size_update() {};
 };
+
+
+class  Node_RadioButton : public Node_UI, public SSS::_EventRegistry<Node_RadioButton>
+{
+friend _EventRegistry<Node_RadioButton>;
+public:
+	Node_RadioButton() = default;
+	Node_RadioButton(const glm::vec2& pos);
+	~Node_RadioButton() = default;
+	std::string name() const { return "Radio button"; };
+	int _type = 4;
+
+	void build(const glm::vec2& begin);
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	void observeRadio(Node_RadioButton& subject);
+private:
+public:
+	bool isActive() { return _active; };
+	bool _active = true;
+private:
+	float _radius;
+	void _size_update() {};
+
+	static void _register();
+};
+
 

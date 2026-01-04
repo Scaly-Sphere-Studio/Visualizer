@@ -214,22 +214,41 @@ void Visualizer::run()
     Node_Slider* slider = new Node_Slider();
     slider->build();
     UI_renderer->push(slider);
-    slider->observeWindow(window);
+    slider->observe(window);
 
     Node_CheckBox* check = new Node_CheckBox();
     check->build();
     UI_renderer->push(check); 
-    check->observeWindow(window);
+    check->observe(window);
 
     Node_Toggle* toggle = new Node_Toggle();
     toggle->build();
     UI_renderer->push(toggle);
-    toggle->observeWindow(window);
+    toggle->observe(window);
 
     Node_MouseInput* mipt= new Node_MouseInput();
     mipt->build();
     UI_renderer->push(mipt);
-    mipt->observeWindow(window);
+    mipt->observe(window);
+
+    Node_RadioButton* radio1 = new Node_RadioButton(glm::vec2(1000, 450));
+    UI_renderer->push(radio1);
+    radio1->observe(window);
+
+    Node_RadioButton* radio2 = new Node_RadioButton(glm::vec2(1000, 500));
+    UI_renderer->push(radio2);
+    radio2->observe(window);
+
+    Node_RadioButton* radio3 = new Node_RadioButton(glm::vec2(1000, 550));
+    UI_renderer->push(radio3);
+    radio3->observe(window);
+
+    radio2->observeRadio(*radio1);
+    radio2->observeRadio(*radio3);
+    radio3->observeRadio(*radio2);
+    radio3->observeRadio(*radio1);
+    radio1->observeRadio(*radio2);
+    radio1->observeRadio(*radio3);
 
     Node_Text* tmin = new Node_Text(UI_renderer.get(), std::to_string(slider->_min));
     tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
@@ -244,8 +263,6 @@ void Visualizer::run()
 
     float time = 0;
 
-
-    
     // Main loop
     while (!window->shouldClose()) {
 
