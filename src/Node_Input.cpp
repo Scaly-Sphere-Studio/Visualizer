@@ -31,15 +31,13 @@ void Node_MouseInput::build()
 	mouse.blendMode = GROUP|SUBTRACT;
 	prims.push_back(mouse);
 
-
 	// Center button
 	mouse.shapeId = sdSegment;
 	mouse.pos = begin + glm::vec2(0, -50);
 	mouse.pos2 = mouse.pos + glm::vec2(0, 80);
 	mouse.size.r = _radius * 0.15;
-	mouse.blendMode = 0;
+	mouse.blendMode = DEFAULT;
 	prims.push_back(mouse);
-
 
 	// left click
 	mouse.shapeId = sdSegment;
@@ -66,7 +64,6 @@ void Node_MouseInput::build()
 	mouse.blendMode = INTERSECT | GROUP;
 	prims.push_back(mouse);
 
-
 	// Right click
 	mouse.shapeId = sdSegment;
 	mouse.pos = begin;
@@ -85,14 +82,12 @@ void Node_MouseInput::build()
 	mouse.blendMode = SUBTRACT;
 	prims.push_back(mouse);
 
-
 	mouse.shapeId = sdOrientedBox;
 	mouse.pos = begin + glm::vec2(-85 + _radius*.8 + 8, -100);
 	mouse.pos2 = mouse.pos + glm::vec2(0, 170);
 	mouse.size.r = _radius * .8;
 	mouse.blendMode = INTERSECT | GROUP;
 	prims.push_back(mouse);
-
 
 	// Side buttons
 	mouse.shapeId = sdRoundedBox;
@@ -111,7 +106,6 @@ void Node_MouseInput::build()
 	mouse.blendMode = DEFAULT;
 	prims.push_back(mouse);
 
-
 	// trackball
 	mouse.shapeId = sdCircle;
 	mouse.pos = begin + glm::vec2(0, 200);
@@ -119,8 +113,7 @@ void Node_MouseInput::build()
 	mouse.size.r = _radius * 0.2;
 	mouse.borderWidth = 5.0;
 	mouse.border = glm::vec4(0.5);
-
-	mouse.blendMode = 0;
+	mouse.blendMode = DEFAULT;
 	prims.push_back(mouse);
 
 	mouse.shapeId = sdCircle;
@@ -131,12 +124,6 @@ void Node_MouseInput::build()
 	prims.push_back(mouse);
 
 	origin = mouse.pos;
-
-
-	_size = glm::vec3(end.x - begin.x + _radius, _radius, 0);
-	_pos = glm::vec3(begin.x - _radius / 2, begin.y - _radius / 2, 0.f);
-
-
 }
 
 

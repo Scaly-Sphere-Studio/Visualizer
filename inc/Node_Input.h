@@ -21,4 +21,3 @@ private:
 	glm::vec2 origin;
 	glm::vec2 old_cpos;
 };
-
