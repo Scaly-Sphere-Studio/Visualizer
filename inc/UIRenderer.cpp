@@ -58,10 +58,7 @@ UIRenderer::UIRenderer()
 
 void UIRenderer::render()
 {
-    static size_t size;
 
-    // bind to binding point 0 (must match GLSL 'binding = 0')
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
     Shaders::Shared shader = getShaders();
     if (!shader) {
@@ -84,16 +81,19 @@ void UIRenderer::render()
 
 
     _vao.bind();
+    // bind to binding point 0 (must match GLSL 'binding = 0')
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
     //if (_sg == nullptr)
     //    return;
+    glDepthFunc(GL_LEQUAL);
+    int offset = 0;
     for (const auto& node : list)
     {
         Node_UI* n = reinterpret_cast<Node_UI*>(at(node));
-        if (n->hidden || n->prims.empty())
+        if (n->isHidden()|| n->prims.empty())
             continue;
-        //std::cout << n->_key << std::endl;
-        shader->setInt("uPrimSize", n->prims.size());
 
+        shader->setInt("uPrimSize", n->prims.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 
@@ -104,6 +104,8 @@ void UIRenderer::render()
 
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        offset += n->prims.size();
     }
 
     _vao.unbind();

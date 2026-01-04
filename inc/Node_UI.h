@@ -30,22 +30,15 @@ public:
 	void setHorizontalOffset(const int& keyHO);		// Set the key Node to horizontal offset
 	void setDepthOffset(const int& keyDO);			// Set the key Node to depth offset
 	virtual void setWrappingMin(const int& min) {};
-	
+
 	virtual void update();
-
-	bool hidden = false;
-	bool movable = false;
-	//bool hidden = false;
-
-	//STATES 
-	bool isHovered() const noexcept;
-	bool isClicked() const noexcept;
-	bool isHeld() const noexcept;
 
 	virtual void setColor(const SSS::RGBA_f& col) { _color = col; };
 	virtual void setColor(const std::string& hex);
+
 	virtual SSS::RGBA_f getColor()const { return _color; };
 
+	virtual bool checkCollision(glm::vec3 pos) const { return false; };
 	bool _checkBoxCollision(glm::vec2 const& r1p, glm::vec2 const& r1s, glm::vec2 const& r2p, glm::vec2 const& r2s)
 	{
 		if (r1p.y + r1s.y >= r2p.y &&      // r1 top edge past r2 bottom
@@ -59,29 +52,43 @@ public:
 		return false;
 	}
 
+	bool checkCollision(const glm::vec3& pos);
 	bool _checkPointCollision(glm::vec2 const& pt);
+
+	void observeWindow(SSS::GL::Window* wPtr) { _observe(*wPtr); };
 	std::vector<UIPrimitive> prims;
 
 protected:
+	SSS::RGBA_f _color;
+
+
 	int _hOffset = -1;	// key node for horizontal offset
 	int _vOffset = -1;	// key node for vertical offset
 	int _dOffset = -1;	// key node for depth offset
 
 	virtual void translateElem() {};
 
-	SSS::RGBA_f _color;
-
 	bool _hover		= false;
 	bool _held		= false;
 	bool _clicked	= false;
+	bool _hidden	= false;
+	bool _movable	= false;
+	bool _focus		= false;
+	bool _disabled	= false;
+	bool _pressed	= false;
 
-	enum Event {
-		Hover
-	};
-
+public:
+	//STATES 
+	bool isHover()		const { return _hover; };
+	bool isHeld()		const { return _held; };
+	bool isClicked()	const { return _clicked; };
+	bool isHidden()		const { return _hidden; };
+	bool isMovable()	const { return _movable; };
+	bool isFocus()		const { return _focus; };
+	bool isDisabled()	const { return _disabled; };
+	bool isPressed()	const { return _pressed; };
 private : 
 	static void _register();
-
 };
 
 class Node_Text : public Node_UI, SSS::_EventRegistry<Node_Text>
@@ -121,23 +128,65 @@ public:
 	Node_Slider() = default;
 	~Node_Slider();
 	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
-	std::string name() const { return "Text"; };
+	std::string name() const { return "Slider"; };
+	int _type = 4;
 
 	void build();
 
-	TextPlane::Shared model;
-	int _type = 4;
+	void clear() override;
 
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
-	void clear() override;
-
-	virtual void update() {};
-	void getCursorPos(const float& x, const float& y);
-
+private:
+public:
 	int _min;
 	int _max;
 	int _current;
 private:
+	void getCursorPos(const float& x, const float& y);
+	void _size_update() {};
+
+	TextPlane::Shared model;
+};
+
+class  Node_Toggle : public Node_UI
+{
+public:
+	Node_Toggle() = default;
+	~Node_Toggle() = default;
+	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
+	std::string name() const { return "Toggle"; };
+	int _type = 4;
+
+	void build();
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+private:
+public:
+	bool _active = false;
+private:
+	float _radius;
 	void _size_update() {};
 };
+
+
+class  Node_CheckBox : public Node_UI
+{
+public:
+	Node_CheckBox() = default;
+	~Node_CheckBox() = default;
+	std::string name() const { return "Checkbox"; };
+	int _type = 4;
+
+	void build();
+
+	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+
+private:
+public:
+	bool _active = false;
+private:
+	float _radius;
+	void _size_update() {};
+};
+

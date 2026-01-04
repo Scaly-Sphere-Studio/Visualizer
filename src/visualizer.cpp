@@ -1,5 +1,6 @@
 #include "visualizer.h"
 #include "Node_Box.h"
+#include "Node_Input.h"
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
@@ -200,6 +201,8 @@ void Visualizer::run()
     clear_color = SSS::RGBA_f{ "#4d5f83" }.to_RGBA();
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
     //load
@@ -209,10 +212,24 @@ void Visualizer::run()
 
 
     Node_Slider* slider = new Node_Slider();
-    //slider->_rd = UI_renderer;
     slider->build();
     UI_renderer->push(slider);
+    slider->observeWindow(window);
 
+    Node_CheckBox* check = new Node_CheckBox();
+    check->build();
+    UI_renderer->push(check); 
+    check->observeWindow(window);
+
+    Node_Toggle* toggle = new Node_Toggle();
+    toggle->build();
+    UI_renderer->push(toggle);
+    toggle->observeWindow(window);
+
+    Node_MouseInput* mipt= new Node_MouseInput();
+    mipt->build();
+    UI_renderer->push(mipt);
+    mipt->observeWindow(window);
 
     Node_Text* tmin = new Node_Text(UI_renderer.get(), std::to_string(slider->_min));
     tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
@@ -227,14 +244,14 @@ void Visualizer::run()
 
     float time = 0;
 
+
+    
     // Main loop
     while (!window->shouldClose()) {
 
         time += 0.1;
-        //t->setPosition(glm::vec3(500 * cos(time), 500 *sin(time), 0));
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
-        slider->getCursorPos(c_x, c_y);
         t->parseText(std::to_string(slider->_current));
 
         refresh();

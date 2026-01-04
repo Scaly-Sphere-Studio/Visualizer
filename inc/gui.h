@@ -20,10 +20,12 @@ namespace SSS
 	};
 }
 
+//Flags
 enum SDF_BlendModes {
-	DEFAULT = 0,
-	GROUP = 1,
-	SUBTRACT = 2
+	DEFAULT		= 0,
+	GROUP		= 1,
+	SUBTRACT	= 2,
+	INTERSECT	= 4
 };
 
 

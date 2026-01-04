@@ -12,10 +12,6 @@ void Node_UI::_register()
 }
 
 
-bool Node_UI::isHovered() const noexcept
-{
-	return false;
-}
 
 void Node_UI::setColor(const std::string& hex)
 {
@@ -67,7 +63,6 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 		// Cursor enter the UI elem
 		if (!_hover)
 		{
-			//_notifyObservers(SSS::EventList::Hover);
 			EMIT_EVENT("NODE_UI_HOVER");
 			SSS::log_msg("Hover the node " + std::to_string(_key));
 		}
@@ -79,8 +74,6 @@ bool Node_UI::_checkPointCollision(glm::vec2 const& pt)
 	// Cursor leave the UI elem
 	if (_hover)
 	{
-		//_notifyObservers(SSS::EventList::Leave);
-
 		EMIT_EVENT("NODE_UI_MOUSE_LEFT");
 		SSS::log_msg("Leave the node " + std::to_string(_key));
 	}
@@ -164,6 +157,9 @@ Node_Text::Node_Text(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layo
 
 void Node_Text::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
+	if (_hidden)
+		return;
+
 	if (event_id == EVENT_ID("SSS_TEXTURE_CONTENT")) {
 		auto [w, h] = model->getTexture()->getCurrentDimensions();
 		model->setScaling(glm::vec3(static_cast<float>(std::min(w, h))));
@@ -198,7 +194,6 @@ void Node_Text::clear()
 {
 	_sg->_rd->removePlane(model);
 	model.reset();
-	std::cout << "text cleared" << std::endl;
 	EMIT_EVENT("NODE_TEXT_CONTENT_UPDATE");
 }
 
@@ -222,8 +217,6 @@ void Node_Text::setTextColor(const  SSS::RGBA_f& col)
 
 void Node_Text::setBackgroundColor(const  SSS::RGBA_f& bgCol)
 {
-
-
 	model->getTextArea()->setClearColor(bgCol);
 }
 
@@ -279,27 +272,9 @@ void Node_Text::parseText(const std::string& str)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* -------------------------------------------------------
+----------------------- SLIDERS --------------------------
+--------------------------------------------------------*/
 
 Node_Slider::~Node_Slider()
 {
@@ -307,12 +282,12 @@ Node_Slider::~Node_Slider()
 
 void Node_Slider::build()
 {
-
 	_min = 0;
 	_max = 255;
 	UIPrimitive ui;
 	ui.shapeId = sdSegment;
 	ui.size.x = 15;
+	ui.size.y = 0;
 	ui.pos = glm::vec3(100, 250, 0);
 	ui.pos2 = glm::vec3(400, 250, 0);
 	ui.color = glm::vec4(1.0);
@@ -325,10 +300,44 @@ void Node_Slider::build()
 	ui.blendMode = GROUP|SUBTRACT;
 	prims.push_back(ui);
 
+	//focus circle 
+	ui.shapeId = sdCircle;
+	ui.size.x = 40;
+	ui.blendMode = DEFAULT;
+	ui.color = glm::vec4(1.0, 1.0, 1.0, 0.5);
+	prims.push_back(ui);
+
 	ui.shapeId = sdCircle;
 	ui.size.x = 20;
-	ui.blendMode = DEFAULT;
+	ui.color = glm::vec4(1.0);
 	prims.push_back(ui);
+
+	_pos = { prims[0].pos.x - prims[3].size.x,  prims[0].pos.y - prims[3].size.x, 0.0 };
+	_size = { prims[0].pos2.x - prims[0].pos.x + 2 * prims[3].size.x, 2 * prims[3].size.x, 0.0 };
+
+
+	//BB
+	//ui.shapeId = sdSegment;
+	//ui.pos = _pos;
+	//ui.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//ui.size.x = 3;
+	//ui.color = glm::vec4(0.0,0.0,0.0, 0.5);
+	//prims.push_back(ui);
+
+	//ui.shapeId = sdSegment;
+	//ui.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//ui.pos2 = _pos + _size;
+	//prims.push_back(ui);
+
+	//ui.shapeId = sdSegment;
+	//ui.pos = _pos + _size;
+	//ui.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//prims.push_back(ui);
+
+	//ui.shapeId = sdSegment;
+	//ui.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//ui.pos2 = _pos;
+	//prims.push_back(ui);
 }
 
 
@@ -343,6 +352,7 @@ void Node_Slider::getCursorPos(const float& x, const float& y)
 	cx = std::clamp(x, prims[0].pos.x, prims[0].pos2.x);
 	prims[2].pos.x = cx; 
 	prims[1].pos.x = cx;
+	prims[3].pos.x = cx;
 
 	float progress = (cx - prims[0].pos.x) / (prims[0].pos2.x - prims[0].pos.x);
 
@@ -350,7 +360,253 @@ void Node_Slider::getCursorPos(const float& x, const float& y)
 
 }
 
+bool Node_UI::checkCollision(const glm::vec3& pos)
+{
+	if (pos.x >= _pos.x && pos.x <= (_pos.x + _size.x)
+		&& pos.y >= _pos.y  && pos.y <= (_pos.y + _size.y)) {
+		return true;
+	}
+	return false;
+}
+
 
 void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
+	if (_hidden)
+		return;
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_POSITION")) {
+		const SSS::GL::Window &window = static_cast<SSS::GL::Window const&>(subject);
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+
+		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+
+		if (!_focus) {
+			float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2*prims[2].size.r);
+			float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
+			prims[2].color.a = 0.5 * factor;
+		}
+
+		if (_held) {
+			getCursorPos(c_x, c_y);
+			prims[2].color.a = 0.6;
+		}
+	}
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		auto const& clicks = window.getClickInputs();
+
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
+			_focus = _hover;
+			_held = _hover;
+		}
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
+			_held = false;
+			if (!_focus) {
+				float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
+				float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
+				prims[2].color.a = 0.5 * factor;
+			}
+		}
+
+		if (_held) {
+			getCursorPos(c_x, c_y);
+			prims[2].color.a = 0.6;
+		}
+	}
+}
+
+
+/* -------------------------------------------------------
+----------------------- TOGGLES --------------------------
+--------------------------------------------------------*/
+
+
+void Node_Toggle::build() {
+	_radius = 40;
+
+	glm::vec2 begin = glm::vec2(810, 250);
+	glm::vec2 end = glm::vec2(810 +  _radius*0.6, 250);
+	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
+	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
+	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
+
+	UIPrimitive toggleButton;
+	// Background
+	toggleButton.shapeId = sdSegment;
+	toggleButton.pos = begin;
+	toggleButton.pos2 = end;
+	toggleButton.cornerRadius = 0.02f;
+	toggleButton.size.r = _radius;
+	//toggleButton.borderWidth = 1.0;
+	//toggleButton.color = mix(emptyColor, color, (float)_active);
+	toggleButton.color = glm::vec4(0.0);
+	toggleButton.border = glm::vec4(1.0);
+	toggleButton.borderWidth = 5.0;
+	toggleButton.blendMode = 0;
+	prims.push_back(toggleButton);
+
+	// Button
+	toggleButton.shapeId = sdCircle;
+	toggleButton.cornerRadius = 0;
+	toggleButton.pos = glm::mix(begin, end, (float)_active);
+	toggleButton.size.r = _radius * 0.35;
+	toggleButton.color = glm::vec4(1.0);
+
+	toggleButton.borderWidth = 0.0;
+
+	//toggleButton.color = background;
+	prims.push_back(toggleButton);
+
+	_size = glm::vec3(end.x - begin.x + _radius, _radius, 0);
+	_pos = glm::vec3(begin.x - _radius/2, begin.y - _radius/2, 0.f);
+
+	//BB
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos;
+	//toggleButton.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//toggleButton.size.x = 3;
+	//toggleButton.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//toggleButton.pos2 = _pos + _size;
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + _size;
+	//toggleButton.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//toggleButton.pos2 = _pos;
+	//prims.push_back(toggleButton);
+
+}
+
+void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
+	if (_hidden)
+		return;
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_POSITION")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+
+		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+	}
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		auto const& clicks = window.getClickInputs();
+
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+			_focus = _hover;
+			_active ^= true;
+			prims[1].pos = glm::vec3(prims[0].pos,0) + glm::vec3((_radius * 0.6f)*(float)(_active), 0,0);
+		}
+	}
+}
+
+
+/* -------------------------------------------------------
+----------------------- TOGGLES --------------------------
+--------------------------------------------------------*/
+
+
+void Node_CheckBox::build() {
+	_radius = 40;
+	float factor = 0.6f;
+	glm::vec2 begin = glm::vec2(1000, 250);
+	glm::vec2 end = glm::vec2(1000 + _radius, 250);
+	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
+	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
+	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
+
+	UIPrimitive toggleButton;
+	// Background
+	toggleButton.shapeId = sdOrientedBox;
+	toggleButton.pos = begin;
+	toggleButton.pos2 = end;
+	toggleButton.size.r = _radius;
+	toggleButton.color = glm::vec4(0.0);
+	toggleButton.border = glm::vec4(1.0);
+	toggleButton.borderWidth = 6.0;
+	toggleButton.blendMode = 0;
+	prims.push_back(toggleButton);
+
+	// Button
+	toggleButton.shapeId = sdOrientedBox;
+	toggleButton.cornerRadius = 0;
+	toggleButton.pos = begin + glm::vec2(_radius * (1-factor) / 2,0);
+	toggleButton.pos2 = end - glm::vec2(_radius * (1 - factor) / 2, 0);
+	//toggleButton.pos = glm::mix(begin, end, (float)_active);
+	toggleButton.size.r = _radius * factor;
+	toggleButton.color = glm::vec4(1.0);
+
+	toggleButton.borderWidth = 0.0;
+
+	//toggleButton.color = background;
+	prims.push_back(toggleButton);
+
+	_size = glm::vec3(_radius, _radius, 0);
+	_pos = glm::vec3(begin.x, begin.y - _radius / 2, 0.f);
+
+	//BB
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos;
+	//toggleButton.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//toggleButton.size.x = 3;
+	//toggleButton.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	//toggleButton.pos2 = _pos + _size;
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + _size;
+	//toggleButton.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//prims.push_back(toggleButton);
+
+	//toggleButton.shapeId = sdSegment;
+	//toggleButton.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
+	//toggleButton.pos2 = _pos;
+	//prims.push_back(toggleButton);
+
+}
+
+void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
+	if (_hidden)
+		return;
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_POSITION")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+
+		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+	}
+
+	if (event_id == EVENT_ID("SSS_WINDOW_MOUSE_INPUT")) {
+		const SSS::GL::Window& window = static_cast<SSS::GL::Window const&>(subject);
+		auto const& clicks = window.getClickInputs();
+
+		int c_y, c_x;
+		window.getCursorPos(c_x, c_y);
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+			_focus = _hover;
+			_active ^= true;
+			prims[1].color = glm::mix(glm::vec4(1.0), glm::vec4(0.0), (float)_active);
+		}
+	}
 }

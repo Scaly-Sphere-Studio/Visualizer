@@ -72,6 +72,9 @@
     <ClCompile Include="inc\UIRenderer.cpp">
       <Filter>Nodes\UIRenderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Node_Input.cpp">
+      <Filter>Nodes\Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
@@ -118,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="inc\UIRenderer.hpp">
       <Filter>Nodes\UIRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Node_Input.h">
+      <Filter>Nodes\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

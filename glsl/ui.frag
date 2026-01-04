@@ -26,6 +26,7 @@ in mat4 proj;
 // SDF Blend Flags
 #define GROUP           1
 #define SUBTRACT        2
+#define INTERSECTION    4
 
 
 out vec4 FragColor;
@@ -201,6 +202,9 @@ float composeSdf(in int blend, const in float d, const in float shape)
 
     if((blend & SUBTRACT) == SUBTRACT)
         return subtract(d, shape);
+
+    if((blend & INTERSECTION) == INTERSECTION)
+        return intersect(d, shape);
     
     return  add(d, shape); 
 }
