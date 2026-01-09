@@ -208,6 +208,7 @@ void Visualizer::run()
     //load
     //load();
     refresh();
+    const auto dim = window->getDimensions();
 
 
 
@@ -216,7 +217,7 @@ void Visualizer::run()
     UI_renderer->push(slider);
     slider->observe(window);
 
-    Node_CheckBox* check = new Node_CheckBox();
+    Node_CheckBox* check = new Node_CheckBox(glm::vec3(1000, 250, 0), 15);
     check->build();
     UI_renderer->push(check); 
     check->observe(window);
@@ -226,12 +227,12 @@ void Visualizer::run()
     UI_renderer->push(toggle);
     toggle->observe(window);
 
-    Node_MouseInput* mipt = new Node_MouseInput(glm::vec3{ 300, 450, 0 }, 200);
+    Node_MouseInput* mipt = new Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
     mipt->build();
     UI_renderer->push(mipt);
     mipt->observe(window);
 
-    Node_RadioButton* radio1 = new Node_RadioButton(glm::vec2(1000, 450));
+    Node_RadioButton* radio1 = new Node_RadioButton(glm::vec2(1000, 450), 15);
     UI_renderer->push(radio1);
     radio1->observe(window);
 

@@ -60,6 +60,7 @@ public:
 
 protected:
 	SSS::RGBA_f _color;
+	float _borderWidth;
 
 
 	int _hOffset = -1;	// key node for horizontal offset
@@ -177,6 +178,7 @@ class  Node_CheckBox : public Node_UI
 {
 public:
 	Node_CheckBox() = default;
+	Node_CheckBox(const glm::vec3& pos, const float& h = 15);
 	~Node_CheckBox() = default;
 	std::string name() const { return "Checkbox"; };
 	int _type = 4;
@@ -199,8 +201,7 @@ class  Node_RadioButton : public Node_UI, public SSS::_EventRegistry<Node_RadioB
 {
 friend _EventRegistry<Node_RadioButton>;
 public:
-	Node_RadioButton() = default;
-	Node_RadioButton(const glm::vec2& pos);
+	Node_RadioButton(const glm::vec2& pos, const float &h = 15);
 	~Node_RadioButton() = default;
 	std::string name() const { return "Radio button"; };
 	int _type = 4;
@@ -210,6 +211,7 @@ public:
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 	void observeRadio(Node_RadioButton& subject);
 private:
+	Node_RadioButton() = default;
 public:
 	bool isActive() { return _active; };
 private:

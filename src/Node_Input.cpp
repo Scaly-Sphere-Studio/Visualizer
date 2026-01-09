@@ -6,12 +6,12 @@ Node_MouseInput::Node_MouseInput(const glm::vec3& pos, const float& r)
 {
 	_pos	= pos;
 	_radius = r;
+	_borderWidth = 3.f;
 	build();
 }
 
 void Node_MouseInput::build()
 {
-	float borderWidth = 3.0;
 
 	glm::vec2 begin		= _pos;
 	glm::vec2 end		= begin + glm::vec2(0, _radius);
@@ -29,13 +29,13 @@ void Node_MouseInput::build()
 	mouse.size.r = _radius;
 	mouse.color = glm::vec4(0.0);
 	mouse.border = glm::vec4(1.0);
-	mouse.borderWidth = borderWidth;
+	mouse.borderWidth = _borderWidth;
 	mouse.blendMode = GROUP;
 	prims.push_back(mouse);
 
 	mouse.shapeId = sdOrientedBox;
 	mouse.pos = begin + glm::vec2(-_radius*0.55, -(_radius*1.1)*0.5);
-	mouse.pos2 = mouse.pos + glm::vec2(0, _radius - 3*borderWidth);
+	mouse.pos2 = mouse.pos + glm::vec2(0, _radius - 3*_borderWidth);
 	mouse.size.r = _radius * 2.5;
 	mouse.blendMode = GROUP|SUBTRACT;
 	prims.push_back(mouse);
@@ -61,14 +61,14 @@ void Node_MouseInput::build()
 	mouse.shapeId = sdSegment;
 	mouse.pos = begin + glm::vec2(0, -_radius / 4);
 	mouse.pos2 = mouse.pos + glm::vec2(0, _radius * 0.4);
-	mouse.size.r = _radius * 0.15 + 2*borderWidth;
+	mouse.size.r = _radius * 0.15 + 2*_borderWidth;
 	mouse.blendMode = SUBTRACT;
 	prims.push_back(mouse);
 
 	mouse.shapeId = sdOrientedBox;
 	mouse.pos = begin + glm::vec2(-_radius / 2 , -_radius/2);
-	mouse.pos2 = glm::vec2(mouse.pos.x , y - borderWidth );
-	mouse.size.r = _radius - borderWidth ;
+	mouse.pos2 = glm::vec2(mouse.pos.x , y - _borderWidth );
+	mouse.size.r = _radius - _borderWidth ;
 	mouse.blendMode = INTERSECT | GROUP;
 	prims.push_back(mouse);
 
@@ -83,28 +83,28 @@ void Node_MouseInput::build()
 	mouse.shapeId = sdSegment;
 	mouse.pos = begin + glm::vec2(0, -_radius / 4);
 	mouse.pos2 = mouse.pos + glm::vec2(0, _radius * 0.4);
-	mouse.size.r = _radius * 0.15 + 2*borderWidth;
+	mouse.size.r = _radius * 0.15 + 2*_borderWidth;
 	mouse.blendMode = SUBTRACT;
 	prims.push_back(mouse);
 
 	mouse.shapeId = sdOrientedBox;
 	mouse.pos = begin + glm::vec2(_radius / 2, -_radius / 2);
-	mouse.pos2 = glm::vec2(mouse.pos.x, y - borderWidth);
-	mouse.size.r = _radius - borderWidth;
+	mouse.pos2 = glm::vec2(mouse.pos.x, y - _borderWidth);
+	mouse.size.r = _radius - _borderWidth;
 	mouse.blendMode = INTERSECT | GROUP;
 	prims.push_back(mouse);
 
 	// Side buttons
 	mouse.shapeId = sdRoundedBox;
 	mouse.size = glm::vec2(_radius*.03, 1.5*_radius*.1);
-	mouse.pos = begin + glm::vec2(-0.5 *_radius - 2*borderWidth - (mouse.size.x)/2, _radius*0.4);
+	mouse.pos = begin + glm::vec2(-0.5 *_radius - 2*_borderWidth - (mouse.size.x)/2, _radius*0.4);
 	mouse.pos2 = glm::vec2(0, 0);
 	mouse.pos3 = glm::vec2(5, 0);
 	mouse.blendMode = DEFAULT;
 	prims.push_back(mouse);
 
 	mouse.shapeId = sdRoundedBox;
-	mouse.pos = mouse.pos + glm::vec2(0, 2*mouse.size.y + borderWidth );
+	mouse.pos = mouse.pos + glm::vec2(0, 2*mouse.size.y + _borderWidth );
 	mouse.pos2 = glm::vec2(5, 0);
 	mouse.pos3 = glm::vec2(0, 0);
 	mouse.size = glm::vec2(_radius * .03, 1.5 * _radius * .1);

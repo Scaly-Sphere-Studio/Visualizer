@@ -485,11 +485,20 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 --------------------------------------------------------*/
 
 
+Node_CheckBox::Node_CheckBox(const glm::vec3& pos, const float& h)
+{
+	_pos = pos;
+	_radius = h;
+	_borderWidth = 2.0;
+	build();
+}
+
 void Node_CheckBox::build() {
-	_radius = 40;
+
+	prims.clear();
 	float factor = 0.6f;
-	glm::vec2 begin = glm::vec2(1000, 250);
-	glm::vec2 end = glm::vec2(1000 + _radius, 250);
+	glm::vec2 begin = _pos;
+	glm::vec2 end = begin + glm::vec2(_radius, 0);
 	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
 	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
 	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
@@ -500,21 +509,27 @@ void Node_CheckBox::build() {
 	toggleButton.pos = begin;
 	toggleButton.pos2 = end;
 	toggleButton.size.r = _radius;
-	toggleButton.color = glm::vec4(0.0);
+	toggleButton.color = glm::vec4(1.0);
 	toggleButton.border = glm::vec4(1.0);
-	toggleButton.borderWidth = 6.0;
-	toggleButton.blendMode = 0;
+	toggleButton.borderWidth = 0;
+	toggleButton.blendMode = GROUP;
+	prims.push_back(toggleButton);
+
+	toggleButton.shapeId = sdOrientedBox;
+	toggleButton.pos.x = begin.x + _borderWidth;
+	toggleButton.pos2.x = end.x - _borderWidth;
+	toggleButton.size.r = _radius - 2* _borderWidth;
+	toggleButton.blendMode = SUBTRACT|GROUP;
 	prims.push_back(toggleButton);
 
 	// Button
 	toggleButton.shapeId = sdOrientedBox;
 	toggleButton.cornerRadius = 0;
-	toggleButton.pos = begin + glm::vec2(_radius * (1-factor) / 2,0);
-	toggleButton.pos2 = end - glm::vec2(_radius * (1 - factor) / 2, 0);
-	//toggleButton.pos = glm::mix(begin, end, (float)_active);
-	toggleButton.size.r = _radius * factor;
-	toggleButton.color = glm::vec4(1.0);
-
+	toggleButton.pos = begin + glm::vec2(2*_borderWidth,0);
+	toggleButton.pos2 = end - glm::vec2(2*_borderWidth, 0);
+	toggleButton.size.r = _radius - 4*_borderWidth;
+	toggleButton.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);;
+	toggleButton.blendMode = DEFAULT;
 	toggleButton.borderWidth = 0.0;
 
 	//toggleButton.color = background;
@@ -524,7 +539,7 @@ void Node_CheckBox::build() {
 	_pos = glm::vec3(begin.x, begin.y - _radius / 2, 0.f);
 
 	//BB
-	boundingBox();
+	//boundingBox();
 }
 
 void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -549,7 +564,7 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
 			_focus = _hover;
 			_active ^= true;
-			prims[1].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
+			prims[2].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
 		}
 		return;
 	}
@@ -565,8 +580,10 @@ void Node_RadioButton::_register()
 	REGISTER_EVENT("SSS_RADIO_TOOK_FOCUS");
 }
 
-Node_RadioButton::Node_RadioButton(const glm::vec2& pos) {
+Node_RadioButton::Node_RadioButton(const glm::vec2& pos, const float& h) {
 	_pos = glm::vec3(pos, 0);
+	_radius = h*0.5;
+	_borderWidth = 4.0;
 	build(_pos);
 }
 
@@ -582,9 +599,8 @@ void Node_RadioButton::observeRadio(Node_RadioButton &subject)
 
 void Node_RadioButton::build(const glm::vec2& begin) {
 	prims.clear();
-	_radius = 20;
 	float factor = 0.6f;
-	//glm::vec2 begin = glm::vec2(1000, 450);
+
 	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
 	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
 	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
@@ -596,13 +612,13 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 	radio.size.r = _radius;
 	radio.color = glm::vec4(0.0);
 	radio.border = glm::vec4(1.0);
-	radio.borderWidth = 6.0;
+	radio.borderWidth = _borderWidth;
 	radio.blendMode = DEFAULT;
 	prims.push_back(radio);
 
 	// Button
 	radio.shapeId = sdCircle;
-	radio.size.r = _radius * factor;
+	radio.size.r = std::max(_radius - _borderWidth, _radius*factor);
 	radio.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
 	radio.borderWidth = 0.0;
 	prims.push_back(radio);
@@ -611,7 +627,6 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 	_size = glm::vec3(_radius * 2, _radius * 2, 0);
 
 	boundingBox();
-
 }
 
 void Node_RadioButton::_subjectUpdate(SSS::Subject const& subject, int event_id) {
