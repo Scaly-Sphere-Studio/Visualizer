@@ -479,6 +479,12 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		window.getCursorPos(c_x, c_y);
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+
+		//if (!_focus) {
+		//	float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
+		//	float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
+		//	prims[2].color.a = 0.5 * factor;
+		//}
 		return;
 	}
 
@@ -521,43 +527,53 @@ void Node_CheckBox::build() {
 	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
 	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
 
-	UIPrimitive toggleButton;
-	// Background
-	toggleButton.shapeId = sdOrientedBox;
-	toggleButton.pos = begin;
-	toggleButton.pos2 = end;
-	toggleButton.size.r = _radius;
-	toggleButton.color = glm::vec4(1.0);
-	toggleButton.border = glm::vec4(1.0);
-	toggleButton.borderWidth = 0;
-	toggleButton.blendMode = GROUP;
-	prims.push_back(toggleButton);
+	UIPrimitive cb;
 
-	toggleButton.shapeId = sdOrientedBox;
-	toggleButton.pos.x = begin.x + _borderWidth;
-	toggleButton.pos2.x = end.x - _borderWidth;
-	toggleButton.size.r = _radius - 2* _borderWidth;
-	toggleButton.blendMode = SUBTRACT|GROUP;
-	prims.push_back(toggleButton);
+	// Focus
+	cb.shapeId = sdRoundedBox;
+	cb.pos = begin + glm::vec2(_radius * 0.5, 0);
+	cb.size = glm::vec2(_radius*0.8);
+	cb.pos2 = glm::vec2(5, 5);
+	cb.pos3 = glm::vec2(5, 5);
+	cb.color = glm::vec4(1.0);
+	cb.color.a = 0.0;
+	cb.blendMode = DEFAULT;
+	prims.push_back(cb);
+
+	// Background
+	cb.shapeId = sdOrientedBox;
+	cb.pos = begin;
+	cb.pos2 = end;
+	cb.size.r = _radius;
+	cb.color = glm::vec4(1.0);
+	cb.border = glm::vec4(1.0);
+	cb.borderWidth = 0;
+	cb.blendMode = GROUP;
+	prims.push_back(cb);
+
+	cb.shapeId = sdOrientedBox;
+	cb.pos.x = begin.x + _borderWidth;
+	cb.pos2.x = end.x - _borderWidth;
+	cb.size.r = _radius - 2* _borderWidth;
+	cb.blendMode = SUBTRACT|GROUP;
+	prims.push_back(cb);
 
 	// Button
-	toggleButton.shapeId = sdOrientedBox;
-	toggleButton.cornerRadius = 0;
-	toggleButton.pos = begin + glm::vec2(2*_borderWidth,0);
-	toggleButton.pos2 = end - glm::vec2(2*_borderWidth, 0);
-	toggleButton.size.r = _radius - 4*_borderWidth;
-	toggleButton.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);;
-	toggleButton.blendMode = DEFAULT;
-	toggleButton.borderWidth = 0.0;
-
-	//toggleButton.color = background;
-	prims.push_back(toggleButton);
+	cb.shapeId = sdOrientedBox;
+	cb.cornerRadius = 0;
+	cb.pos = begin + glm::vec2(2*_borderWidth,0);
+	cb.pos2 = end - glm::vec2(2*_borderWidth, 0);
+	cb.size.r = _radius - 4*_borderWidth;
+	cb.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);;
+	cb.blendMode = DEFAULT;
+	cb.borderWidth = 0.0;
+	prims.push_back(cb);
 
 	_size = glm::vec3(_radius, _radius, 0);
-	_pos = glm::vec3(begin.x, begin.y - _radius / 2, 0.f);
+	_pos = glm::vec3(_pos.x, _pos.y - _radius / 2, 0.f);
 
 	//BB
-	//boundingBox();
+	boundingBox();
 }
 
 void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -570,6 +586,13 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		window.getCursorPos(c_x, c_y);
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+
+
+		if (!_focus) {
+			float dist = std::clamp(glm::distance(prims[0].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[0].size.r);
+			float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[0].size.r);
+			prims[0].color.a = 0.5 * factor;
+		}
 		return;
 	}
 
@@ -579,10 +602,20 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 
 		int c_y, c_x;
 		window.getCursorPos(c_x, c_y);
-		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
 			_focus = _hover;
-			_active ^= true;
-			prims[2].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
+			if (_hover) {
+				_active ^= true;
+				prims[3].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
+			}
+		}
+
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
+			if (!_focus) {
+				float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
+				float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[0].size.r);
+				prims[0].color.a = 0.5 * factor;
+			}
 		}
 		return;
 	}
@@ -643,6 +676,15 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 
 	_pos = glm::vec3(begin.x - _radius , begin.y - _radius, 0.f);
 	_size = glm::vec3(_radius * 2, _radius * 2, 0);
+
+	// Side buttons
+	radio.shapeId = sdCircle;
+	radio.size = glm::vec2(_radius  * 2);
+	radio.pos2 = glm::vec2(5, 5);
+	radio.pos3 = glm::vec2(5, 5);
+	radio.color.a = 0.5;
+	radio.blendMode = DEFAULT;
+	prims.push_back(radio);
 
 	boundingBox();
 }

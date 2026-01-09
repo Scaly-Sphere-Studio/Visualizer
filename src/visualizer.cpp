@@ -264,7 +264,7 @@ void Visualizer::run()
     ttoggle->setPosition(glm::vec3(toggle->prims[0].pos2.x + 40, -toggle->prims[0].pos2.y + 40, 0));
 
     Node_Text* tcheck = new Node_Text(UI_renderer.get(), std::to_string(check->isActive()));
-    tcheck->setPosition(glm::vec3(check->prims[0].pos2.x + 40, -check->prims[0].pos2.y + 40, 0));
+    tcheck->setPosition(glm::vec3(check->prims[1].pos2.x + 40, -check->prims[1].pos2.y + 40, 0));
 
     float time = 0;
 
