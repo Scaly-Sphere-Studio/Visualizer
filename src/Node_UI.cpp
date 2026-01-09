@@ -4,6 +4,9 @@
 
 #define BLACK glm::vec4(0,0,0,1)
 #define WHITE glm::vec4(1,1,1,1)
+#define FOCUS_INTENSITY		0.5f
+#define HOVER_INTENSITY		0.3f
+#define HOVER_RADIUS_EFFECT	0.4f
 
 void Node_UI::boundingBox()
 {
@@ -380,7 +383,7 @@ void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
 		if (!_focus) {
 			float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2*prims[2].size.r);
 			float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
-			prims[2].color.a = 0.5 * factor;
+			prims[2].color.a = FOCUS_INTENSITY * factor;
 		}
 
 		if (_held) {
@@ -402,15 +405,15 @@ void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
 			_held = false;
 			if (!_focus) {
-				float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
-				float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
-				prims[2].color.a = 0.5 * factor;
+				float d = glm::distance(prims[2].pos, glm::vec2(c_x, c_y));
+				float alpha = std::clamp(1.0f - glm::smoothstep(HOVER_RADIUS_EFFECT, _radius * 1.2f, d), 0.f, HOVER_INTENSITY);
+				prims[2].color.a = alpha;
 			}
 		}
 
 		if (_held) {
 			getCursorPos(c_x, c_y);
-			prims[2].color.a = 0.6;
+			prims[2].color.a = FOCUS_INTENSITY;
 		}
 	}
 }
@@ -446,12 +449,24 @@ void Node_Toggle::build() {
 	toggleButton.pos = begin;
 	toggleButton.pos2 = end;
 	toggleButton.cornerRadius = 0.02f;
+	toggleButton.size.r = _radius * 2;
+	toggleButton.color = glm::vec4(1.0);
+	toggleButton.color.a = 0.0;
+	toggleButton.blendMode = 0;
+	prims.push_back(toggleButton);
+
+	// Background
+	toggleButton.shapeId = sdSegment;
+	toggleButton.pos = begin;
+	toggleButton.pos2 = end;
+	toggleButton.cornerRadius = 0.02f;
 	toggleButton.size.r = _radius;
 	toggleButton.color = glm::vec4(0.0);
 	toggleButton.border = glm::vec4(1.0);
 	toggleButton.borderWidth = _borderWidth;
 	toggleButton.blendMode = 0;
 	prims.push_back(toggleButton);
+
 
 	// Button
 	toggleButton.shapeId = sdCircle;
@@ -480,11 +495,11 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
 
-		//if (!_focus) {
-		//	float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
-		//	float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[2].size.r);
-		//	prims[2].color.a = 0.5 * factor;
-		//}
+		if (!_focus) {
+			float d = glm::distance(prims[2].pos + glm::vec2(_radius * .35, 0), glm::vec2(c_x, c_y));
+			float alpha = std::clamp(1.0f - glm::smoothstep(HOVER_RADIUS_EFFECT, _radius*1.2f, d), 0.f, HOVER_INTENSITY);
+			prims[0].color.a = alpha;
+		}
 		return;
 	}
 
@@ -494,10 +509,22 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 
 		int c_y, c_x;
 		window.getCursorPos(c_x, c_y);
-		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
 			_focus = _hover;
-			_active ^= true;
-			prims[1].pos = glm::vec3(prims[0].pos,0) + glm::vec3((_radius * 0.7f)*(float)(_active), 0,0);
+			if (_hover) {
+				_active ^= true;
+				prims[2].pos = glm::vec3(prims[1].pos, 0) + glm::vec3((_radius * 0.7f) * (float)(_active), 0, 0);
+				prims[0].color.a = FOCUS_INTENSITY;
+			}
+		}
+
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
+			if (!_focus) {
+				float d = glm::distance(prims[2].pos + glm::vec2(_radius * .35, 0), glm::vec2(c_x, c_y));
+				float alpha = std::clamp(1.0f - glm::smoothstep(HOVER_RADIUS_EFFECT, _radius * 1.2f, d), 0.f, HOVER_INTENSITY);
+				prims[0].color.a = alpha;
+			}
 		}
 		return;
 	}
@@ -505,7 +532,7 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 
 
 /* -------------------------------------------------------
------------------------ TOGGLES --------------------------
+----------------------- CHECKBOX  ------------------------
 --------------------------------------------------------*/
 
 
@@ -532,7 +559,7 @@ void Node_CheckBox::build() {
 	// Focus
 	cb.shapeId = sdRoundedBox;
 	cb.pos = begin + glm::vec2(_radius * 0.5, 0);
-	cb.size = glm::vec2(_radius*0.8);
+	cb.size = glm::vec2(_radius*0.9);
 	cb.pos2 = glm::vec2(5, 5);
 	cb.pos3 = glm::vec2(5, 5);
 	cb.color = glm::vec4(1.0);
@@ -591,7 +618,7 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (!_focus) {
 			float dist = std::clamp(glm::distance(prims[0].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[0].size.r);
 			float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[0].size.r);
-			prims[0].color.a = 0.5 * factor;
+			prims[0].color.a = FOCUS_INTENSITY * factor;
 		}
 		return;
 	}
@@ -607,14 +634,15 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 			if (_hover) {
 				_active ^= true;
 				prims[3].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
+				prims[0].color.a = FOCUS_INTENSITY;
 			}
 		}
 
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
 			if (!_focus) {
-				float dist = std::clamp(glm::distance(prims[2].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[2].size.r);
-				float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[0].size.r);
-				prims[0].color.a = 0.5 * factor;
+				float d = glm::distance(prims[2].pos, glm::vec2(c_x, c_y));
+				float alpha = std::clamp(1.0f - glm::smoothstep(HOVER_RADIUS_EFFECT, _radius*1.2f, d), 0.f, HOVER_INTENSITY);
+				prims[0].color.a = alpha;
 			}
 		}
 		return;
@@ -677,12 +705,12 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 	_pos = glm::vec3(begin.x - _radius , begin.y - _radius, 0.f);
 	_size = glm::vec3(_radius * 2, _radius * 2, 0);
 
-	// Side buttons
+	// Focus
 	radio.shapeId = sdCircle;
 	radio.size = glm::vec2(_radius  * 2);
 	radio.pos2 = glm::vec2(5, 5);
 	radio.pos3 = glm::vec2(5, 5);
-	radio.color.a = 0.5;
+	radio.color = glm::vec4(1.0, 1.0, 1.0, 0.0);
 	radio.blendMode = DEFAULT;
 	prims.push_back(radio);
 
@@ -706,6 +734,12 @@ void Node_RadioButton::_subjectUpdate(SSS::Subject const& subject, int event_id)
 		window.getCursorPos(c_x, c_y);
 
 		_hover = checkCollision(glm::vec3(c_x, c_y, 0));
+
+		if (!_focus) {
+			float dist = std::clamp(glm::distance(prims[0].pos, glm::vec2(c_x, c_y)), 0.f, 2 * prims[0].size.r);
+			float factor = glm::smoothstep(0.f, 1.0f, 1.0f - dist / prims[0].size.r);
+			prims[2].color.a = FOCUS_INTENSITY * factor;
+		}
 		return;
 	}
 
@@ -715,11 +749,23 @@ void Node_RadioButton::_subjectUpdate(SSS::Subject const& subject, int event_id)
 
 		int c_y, c_x;
 		window.getCursorPos(c_x, c_y);
-		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
+
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
 			_focus = _hover;
-			_active = true;
-			EMIT_EVENT("SSS_RADIO_TOOK_FOCUS");
-			prims[1].color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
+			if (_hover) {
+				EMIT_EVENT("SSS_RADIO_TOOK_FOCUS");
+				_active = true;
+				prims[1].color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);
+				prims[2].color.a = FOCUS_INTENSITY;
+			}
+		}
+
+		if (clicks[GLFW_MOUSE_BUTTON_1].is_released()) {
+			if (!_focus) {
+				float d = glm::distance(prims[2].pos, glm::vec2(c_x, c_y));
+				float alpha = std::clamp(1.0f - glm::smoothstep(HOVER_RADIUS_EFFECT, _radius * 1.2f, d), 0.f, HOVER_INTENSITY);
+				prims[0].color.a = alpha;
+			}
 		}
 		return;
 	}
