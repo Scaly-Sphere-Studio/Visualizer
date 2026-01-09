@@ -282,35 +282,48 @@ Node_Slider::~Node_Slider()
 {
 }
 
-void Node_Slider::build()
+Node_Slider::Node_Slider(const glm::vec3& pos, const float& h)
 {
+	_pos = pos;
+	_radius = h/2.0;
+	_borderWidth = 3.0;
+	_len = 300;
+
 	_min = 0;
 	_max = 255;
+
+	build();
+}
+
+void Node_Slider::build()
+{
+	prims.clear();
+
 	UIPrimitive ui;
 	ui.shapeId = sdSegment;
-	ui.size.x = 15;
+	ui.size.x = std::max(2., _radius *0.5);
 	ui.size.y = 0;
-	ui.pos = glm::vec3(100, 250, 0);
-	ui.pos2 = glm::vec3(400, 250, 0);
+	ui.pos = _pos;
+	ui.pos2 = ui.pos + glm::vec2(ui.pos.x + _len, 0);
 	ui.color = glm::vec4(1.0);
 	ui.blendMode = GROUP;
 	prims.push_back(ui);
 
 	ui.shapeId = sdCircle;
-	ui.pos = glm::vec3(200, 250, 0);
-	ui.size.x = 25;
+	ui.pos = _pos;
+	ui.size.x = _radius + _borderWidth;
 	ui.blendMode = GROUP|SUBTRACT;
 	prims.push_back(ui);
 
 	//focus circle 
 	ui.shapeId = sdCircle;
-	ui.size.x = 40;
+	ui.size.x = _radius*2.f;
 	ui.blendMode = DEFAULT;
 	ui.color = glm::vec4(1.0, 1.0, 1.0, 0.5);
 	prims.push_back(ui);
 
 	ui.shapeId = sdCircle;
-	ui.size.x = 20;
+	ui.size.x = _radius;
 	ui.color = glm::vec4(1.0);
 	prims.push_back(ui);
 

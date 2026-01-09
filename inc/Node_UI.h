@@ -128,7 +128,7 @@ private:
 class  Node_Slider : public Node_UI
 {
 public:
-	Node_Slider() = default;
+	Node_Slider(const glm::vec3& pos, const float& h = 15);
 	~Node_Slider();
 	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Slider"; };
@@ -141,6 +141,7 @@ public:
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
 private:
+	Node_Slider() = default;
 public:
 	int _min;
 	int _max;
@@ -148,7 +149,8 @@ public:
 private:
 	void getCursorPos(const float& x, const float& y);
 	void _size_update() {};
-
+	float _radius;
+	float _len;
 	TextPlane::Shared model;
 };
 

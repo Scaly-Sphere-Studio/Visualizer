@@ -212,8 +212,7 @@ void Visualizer::run()
 
 
 
-    Node_Slider* slider = new Node_Slider();
-    slider->build();
+    Node_Slider* slider = new Node_Slider(glm::vec3(100, 250,0), 15);
     UI_renderer->push(slider);
     slider->observe(window);
 
