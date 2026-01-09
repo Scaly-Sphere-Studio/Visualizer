@@ -218,17 +218,14 @@ void Visualizer::run()
     slider->observe(window);
 
     Node_CheckBox* check = new Node_CheckBox(glm::vec3(1000, 250, 0), 15);
-    check->build();
     UI_renderer->push(check); 
     check->observe(window);
 
-    Node_Toggle* toggle = new Node_Toggle();
-    toggle->build();
+    Node_Toggle* toggle = new Node_Toggle(glm::vec3(810, 250,0));
     UI_renderer->push(toggle);
     toggle->observe(window);
 
     Node_MouseInput* mipt = new Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
-    mipt->build();
     UI_renderer->push(mipt);
     mipt->observe(window);
 

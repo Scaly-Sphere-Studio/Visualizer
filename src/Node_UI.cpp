@@ -408,11 +408,21 @@ void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
 --------------------------------------------------------*/
 
 
-void Node_Toggle::build() {
-	_radius = 40;
+Node_Toggle::Node_Toggle(const glm::vec3& pos, const float& h)
+{
+	_pos = pos;
+	_radius = h;
+	_borderWidth = 3.0;
+	build();
+}
 
-	glm::vec2 begin = glm::vec2(810, 250);
-	glm::vec2 end = glm::vec2(810 +  _radius*0.6, 250);
+void Node_Toggle::build() {
+	prims.clear();
+
+	glm::vec2 begin = _pos;
+	glm::vec2 end = begin + glm::vec2( _radius*0.7, 0);
+
+
 	glm::vec4 color = glm::vec4(0.87, 0.53, 0.56, 1.0);
 	glm::vec4 emptyColor = glm::vec4(0.118, 0.118, 0.118, 1.0);
 	glm::vec4 background = glm::vec4(0.27f, 0.27f, 0.27f, 1.0f);
@@ -424,11 +434,9 @@ void Node_Toggle::build() {
 	toggleButton.pos2 = end;
 	toggleButton.cornerRadius = 0.02f;
 	toggleButton.size.r = _radius;
-	//toggleButton.borderWidth = 1.0;
-	//toggleButton.color = mix(emptyColor, color, (float)_active);
 	toggleButton.color = glm::vec4(0.0);
 	toggleButton.border = glm::vec4(1.0);
-	toggleButton.borderWidth = 5.0;
+	toggleButton.borderWidth = _borderWidth;
 	toggleButton.blendMode = 0;
 	prims.push_back(toggleButton);
 
@@ -438,10 +446,7 @@ void Node_Toggle::build() {
 	toggleButton.pos = glm::mix(begin, end, (float)_active);
 	toggleButton.size.r = _radius * 0.35;
 	toggleButton.color = glm::vec4(1.0);
-
 	toggleButton.borderWidth = 0.0;
-
-	//toggleButton.color = background;
 	prims.push_back(toggleButton);
 
 	_size = glm::vec3(end.x - begin.x + _radius, _radius, 0);
@@ -473,7 +478,7 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
 			_focus = _hover;
 			_active ^= true;
-			prims[1].pos = glm::vec3(prims[0].pos,0) + glm::vec3((_radius * 0.6f)*(float)(_active), 0,0);
+			prims[1].pos = glm::vec3(prims[0].pos,0) + glm::vec3((_radius * 0.7f)*(float)(_active), 0,0);
 		}
 		return;
 	}

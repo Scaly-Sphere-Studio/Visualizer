@@ -155,7 +155,7 @@ private:
 class  Node_Toggle : public Node_UI
 {
 public:
-	Node_Toggle() = default;
+	Node_Toggle(const glm::vec3& pos, const float& h = 15);
 	~Node_Toggle() = default;
 	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Toggle"; };
@@ -165,6 +165,7 @@ public:
 
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 private:
+	Node_Toggle() = default;
 public:
 	bool _active = false;
 	bool isActive() { return _active; };
