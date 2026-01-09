@@ -6,6 +6,7 @@ class  Node_MouseInput : public Node_UI
 {
 public:
 	Node_MouseInput() = default;
+	Node_MouseInput(const glm::vec3 &pos, const float &r );
 	~Node_MouseInput() = default;
 	std::string name() const { return "Mouse Input"; };
 	int _type = 4;

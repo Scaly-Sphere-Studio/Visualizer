@@ -226,7 +226,7 @@ void Visualizer::run()
     UI_renderer->push(toggle);
     toggle->observe(window);
 
-    Node_MouseInput* mipt= new Node_MouseInput();
+    Node_MouseInput* mipt = new Node_MouseInput(glm::vec3{ 300, 450, 0 }, 200);
     mipt->build();
     UI_renderer->push(mipt);
     mipt->observe(window);
@@ -253,13 +253,21 @@ void Visualizer::run()
     Node_Text* tmin = new Node_Text(UI_renderer.get(), std::to_string(slider->_min));
     tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
 
-
     Node_Text* tmax = new Node_Text(UI_renderer.get(), std::to_string(slider->_max));
     tmax->setPosition(glm::vec3(slider->prims[0].pos2.x - 25, -slider->prims[0].pos2.y + 105, 0));
 
-
     Node_Text* t = new Node_Text(UI_renderer.get(), std::to_string(slider->_current));
     t->setPosition(glm::vec3(slider->prims[0].pos2.x + 40, -slider->prims[0].pos2.y + 40, 0));
+
+
+    Node_Text* tradio = new Node_Text(UI_renderer.get(), std::to_string(radio1->isActive()));
+    tradio->setPosition(glm::vec3(radio1->prims[0].pos.x + 40, -radio1->prims[0].pos.y + 40, 0));
+
+    Node_Text* ttoggle = new Node_Text(UI_renderer.get(), std::to_string(toggle->isActive()));
+    ttoggle->setPosition(glm::vec3(toggle->prims[0].pos2.x + 40, -toggle->prims[0].pos2.y + 40, 0));
+
+    Node_Text* tcheck = new Node_Text(UI_renderer.get(), std::to_string(check->isActive()));
+    tcheck->setPosition(glm::vec3(check->prims[0].pos2.x + 40, -check->prims[0].pos2.y + 40, 0));
 
     float time = 0;
 
@@ -270,6 +278,10 @@ void Visualizer::run()
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
         t->parseText(std::to_string(slider->_current));
+
+        tradio->parseText(std::to_string(radio1->isActive()));
+        ttoggle->parseText(std::to_string(toggle->isActive()));
+        tcheck->parseText(std::to_string(check->isActive()));
 
         refresh();
 

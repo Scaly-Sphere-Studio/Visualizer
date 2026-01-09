@@ -77,6 +77,8 @@ protected:
 	bool _disabled	= false;
 	bool _pressed	= false;
 
+	void boundingBox();
+
 public:
 	//STATES 
 	bool isHover()		const { return _hover; };
@@ -164,6 +166,7 @@ public:
 private:
 public:
 	bool _active = false;
+	bool isActive() { return _active; };
 private:
 	float _radius;
 	void _size_update() {};
@@ -184,6 +187,7 @@ public:
 
 private:
 public:
+	bool isActive() { return _active; };
 	bool _active = false;
 private:
 	float _radius;
@@ -208,8 +212,8 @@ public:
 private:
 public:
 	bool isActive() { return _active; };
-	bool _active = true;
 private:
+	bool _active = true;
 	float _radius;
 	void _size_update() {};
 

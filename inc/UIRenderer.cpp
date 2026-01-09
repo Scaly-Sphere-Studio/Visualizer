@@ -85,6 +85,7 @@ void UIRenderer::render()
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
     //if (_sg == nullptr)
     //    return;
+    glClear(GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LEQUAL);
     int offset = 0;
     for (const auto& node : list)

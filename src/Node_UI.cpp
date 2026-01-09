@@ -5,6 +5,33 @@
 #define BLACK glm::vec4(0,0,0,1)
 #define WHITE glm::vec4(1,1,1,1)
 
+void Node_UI::boundingBox()
+{
+	//BB
+	UIPrimitive bb;
+	bb.shapeId = sdSegment;
+	bb.pos = _pos;
+	bb.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	bb.size.x = 3;
+	bb.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
+	prims.push_back(bb);
+
+	bb.shapeId = sdSegment;
+	bb.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
+	bb.pos2 = _pos + _size;
+	prims.push_back(bb);
+
+	bb.shapeId = sdSegment;
+	bb.pos = _pos + _size;
+	bb.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
+	prims.push_back(bb);
+
+	bb.shapeId = sdSegment;
+	bb.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
+	bb.pos2 = _pos;
+	prims.push_back(bb);
+}
+
 void Node_UI::_register()
 {
 	REGISTER_EVENT("NODE_UI_HOVER");
@@ -292,27 +319,7 @@ void Node_Slider::build()
 
 
 	//BB
-	//ui.shapeId = sdSegment;
-	//ui.pos = _pos;
-	//ui.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//ui.size.x = 3;
-	//ui.color = glm::vec4(0.0,0.0,0.0, 0.5);
-	//prims.push_back(ui);
-
-	//ui.shapeId = sdSegment;
-	//ui.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//ui.pos2 = _pos + _size;
-	//prims.push_back(ui);
-
-	//ui.shapeId = sdSegment;
-	//ui.pos = _pos + _size;
-	//ui.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//prims.push_back(ui);
-
-	//ui.shapeId = sdSegment;
-	//ui.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//ui.pos2 = _pos;
-	//prims.push_back(ui);
+	boundingBox();
 }
 
 
@@ -441,28 +448,7 @@ void Node_Toggle::build() {
 	_pos = glm::vec3(begin.x - _radius/2, begin.y - _radius/2, 0.f);
 
 	//BB
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos;
-	//toggleButton.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//toggleButton.size.x = 3;
-	//toggleButton.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//toggleButton.pos2 = _pos + _size;
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + _size;
-	//toggleButton.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//toggleButton.pos2 = _pos;
-	//prims.push_back(toggleButton);
-
+	boundingBox();
 }
 
 void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -538,28 +524,7 @@ void Node_CheckBox::build() {
 	_pos = glm::vec3(begin.x, begin.y - _radius / 2, 0.f);
 
 	//BB
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos;
-	//toggleButton.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//toggleButton.size.x = 3;
-	//toggleButton.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//toggleButton.pos2 = _pos + _size;
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + _size;
-	//toggleButton.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//prims.push_back(toggleButton);
-
-	//toggleButton.shapeId = sdSegment;
-	//toggleButton.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//toggleButton.pos2 = _pos;
-	//prims.push_back(toggleButton);
-
+	boundingBox();
 }
 
 void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -584,7 +549,7 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed() && _hover) {
 			_focus = _hover;
 			_active ^= true;
-			prims[1].color = glm::mix(glm::vec4(1.0), glm::vec4(0.0), (float)_active);
+			prims[1].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
 		}
 		return;
 	}
@@ -609,7 +574,6 @@ void Node_RadioButton::observeRadio(Node_RadioButton &subject)
 {
 	_observe(subject);
 
-	std::cout << std::to_string(subject.isActive()) << std::endl;
 	if (subject.isActive()) {
 		_active = false;
 	}
@@ -646,29 +610,7 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 	_pos = glm::vec3(begin.x - _radius , begin.y - _radius, 0.f);
 	_size = glm::vec3(_radius * 2, _radius * 2, 0);
 
-
-	////BB
-	//radio.shapeId = sdSegment;
-	//radio.pos = _pos;
-	//radio.pos2 = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//radio.size.x = 3;
-	//radio.color = glm::vec4(0.0, 0.0, 0.0, 0.5);
-	//prims.push_back(radio);
-
-	//radio.shapeId = sdSegment;
-	//radio.pos = _pos + glm::vec3(_size.x, 0.0, 0.0);
-	//radio.pos2 = _pos + _size;
-	//prims.push_back(radio);
-
-	//radio.shapeId = sdSegment;
-	//radio.pos = _pos + _size;
-	//radio.pos2 = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//prims.push_back(radio);
-
-	//radio.shapeId = sdSegment;
-	//radio.pos = _pos + glm::vec3(0.0, _size.y, 0.0);
-	//radio.pos2 = _pos;
-	//prims.push_back(radio);
+	boundingBox();
 
 }
 
