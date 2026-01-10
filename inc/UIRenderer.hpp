@@ -30,16 +30,13 @@ public:
     using SharedClass::create;
     virtual void _subjectUpdate(Subject const& subject, int event_id) override {};
     void updateResolution(const float _w, const float _h);
-    void setWindow();
-    //static auto create(Camera::Shared cam, bool clear_depth_buffer = false) {
-    //    auto shared = SharedClass::create();
-    //    shared->camera = cam;
-    //    //shared->clear_depth_buffer = clear_depth_buffer;
-    //    return shared;
-    //}
+    void setWindow(SSS::GL::Window* pWindow) { _window = pWindow; };
 
-    //SceneGraph* _sg;
+    void push(Node_UI* n);
+
 private:
+
+    SSS::GL::Window* _window;
     Basic::VAO _vao;
     Basic::VBO _vbo;
     GLuint ssbo = 0;
@@ -47,7 +44,6 @@ private:
 
     glm::vec2 _resolution;
     glm::mat4 _proj;
-
 };
 
 #pragma warning(pop)

@@ -123,4 +123,10 @@ void UIRenderer::updateResolution(const float _w, const float _h)
      glm::vec3 camPos = _rd->camera->getPosition();
      _rd->camera->setPosition(glm::vec3(_w/2.0f, -_h/2.0f, camPos.z));
 }
+void UIRenderer::push(Node_UI* n)
+{
+    emplace(n);
+    list.push_back(n->_key);
+    n->observe(_window);
+}
 SSS_GL_END;
