@@ -105,8 +105,6 @@ void UIRenderer::render()
 
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        offset += n->prims.size();
     }
 
     _vao.unbind();

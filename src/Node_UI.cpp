@@ -335,7 +335,7 @@ void Node_Slider::build()
 
 
 	//BB
-	boundingBox();
+	//boundingBox();
 }
 
 
@@ -481,7 +481,7 @@ void Node_Toggle::build() {
 	_pos = glm::vec3(begin.x - _radius/2, begin.y - _radius/2, 0.f);
 
 	//BB
-	boundingBox();
+	//boundingBox();
 }
 
 void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -600,7 +600,7 @@ void Node_CheckBox::build() {
 	_pos = glm::vec3(_pos.x, _pos.y - _radius / 2, 0.f);
 
 	//BB
-	boundingBox();
+	//boundingBox();
 }
 
 void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
@@ -714,7 +714,7 @@ void Node_RadioButton::build(const glm::vec2& begin) {
 	radio.blendMode = DEFAULT;
 	prims.push_back(radio);
 
-	boundingBox();
+	//boundingBox();
 }
 
 void Node_RadioButton::_subjectUpdate(SSS::Subject const& subject, int event_id) {

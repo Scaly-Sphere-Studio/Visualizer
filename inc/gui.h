@@ -46,29 +46,28 @@ enum SDF_Shapes {
 
 // ! ordre important !
 struct UIPrimitive {
-	glm::vec2 pos;        // 8 bytes
-	glm::vec2 size;       // 8 bytes
+	glm::vec2 pos		= glm::vec2{};						// 8 bytes
+	glm::vec2 size		= glm::vec2{};						// 8 bytes
 
-	glm::vec4 color;      // 16 bytes
-	glm::vec4 border;     // 16 bytes
+	glm::vec4 color		= glm::vec4{};					// 16 bytes
+	glm::vec4 border	= glm::vec4{};					// 16 bytes
 
-	float borderWidth;    // 4 bytes
-	float cornerRadius;   // 4 bytes
-	int   shapeId;        // 4 bytes
-	int   blendMode;      // 4 bytes
+	float borderWidth	= 0.f;			// 4 bytes
+	float cornerRadius	= 0.f;			// 4 bytes
+	int   shapeId		= sdCircle;     // 4 bytes
+	int   blendMode		= DEFAULT;      // 4 bytes
 
-	float innerRadius;    // 4 bytes
-	float progress;   // 4 bytes
-	glm::vec2   pos2;        // 8bytes
+	float innerRadius	= 0.f;			// 4 bytes
+	float progress		= 0.f;			// 4 bytes
+	glm::vec2   pos2	= glm::vec2{};					// 8bytes
 
-	glm::vec2   pos3;        // 8 bytes
-	glm::vec2   pos4;        // 8 bytes
+	glm::vec2   pos3	= glm::vec2{};					// 8 bytes
+	glm::vec2   pos4	= glm::vec2{};					// 8 bytes
 
-	float rotation;   // 4 bytes
-	float scale;   // 4 bytes
-	float _pad;   // 4 bytes
-	float _pad1;   // 4 bytes
-
+	float rotation		= 0.f;			// 4 bytes
+	float scale			= 0.f;			// 4 bytes
+	float _pad			= 0.f;			// 4 bytes
+	float _pad1			= 0.f;			// 4 bytes
 };
 
 static bool sortPlanes(std::shared_ptr<SSS::GL::PlaneBase>& a, std::shared_ptr<SSS::GL::PlaneBase>& b) {
