@@ -58,10 +58,11 @@ public:
 	void observe(SSS::Subject* wPtr) { _observe(*wPtr); };
 	std::vector<UIPrimitive> prims;
 
+
+
 protected:
 	SSS::RGBA_f _color;
 	float _borderWidth;
-
 
 	int _hOffset = -1;	// key node for horizontal offset
 	int _vOffset = -1;	// key node for vertical offset
@@ -128,7 +129,7 @@ private:
 class  Node_Slider : public Node_UI
 {
 public:
-	Node_Slider(const glm::vec3& pos, const float& h = 15);
+	Node_Slider(const int& min, const int& max, int* cur, const glm::vec3& pos = glm::vec3{0});
 	~Node_Slider();
 	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Slider"; };
@@ -140,12 +141,20 @@ public:
 
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
+	void setMin(int min) {_min = min;};
+	void setMax(int max) {_max = max;};
+	void setCurrentPtr(int* cur) { _current = cur; };
+
+	int getMinValue() { return _min; };
+	int getMaxValue() { return _max; };
+	int getCurValue() { return *_current; };
+
 private:
 	Node_Slider() = default;
 public:
 	int _min;
 	int _max;
-	int _current;
+	int *_current;
 private:
 	void getCursorPos(const float& x, const float& y);
 	void _size_update() {};
@@ -157,7 +166,7 @@ private:
 class  Node_Toggle : public Node_UI
 {
 public:
-	Node_Toggle(const glm::vec3& pos, const float& h = 15);
+	Node_Toggle(bool* b, const glm::vec3& pos = glm::vec3{0});
 	~Node_Toggle() = default;
 	////Node_Slider(SceneGraph* p_Sg, const std::string& s, const SSS::GUI_Layout& lyt = SSS::GUI_Layout{});
 	std::string name() const { return "Toggle"; };
@@ -169,10 +178,10 @@ public:
 private:
 	Node_Toggle() = default;
 public:
-	bool _active = false;
-	bool isActive() { return _active; };
+	bool isActive() { return *_active; };
 private:
 	float _radius;
+	bool *_active;
 	void _size_update() {};
 };
 
@@ -181,7 +190,7 @@ class  Node_CheckBox : public Node_UI
 {
 public:
 	Node_CheckBox() = default;
-	Node_CheckBox(const glm::vec3& pos, const float& h = 15);
+	Node_CheckBox(bool* b, const glm::vec3& pos = glm::vec3{ 0 });
 	~Node_CheckBox() = default;
 	std::string name() const { return "Checkbox"; };
 	int _type = 4;
@@ -192,9 +201,9 @@ public:
 
 private:
 public:
-	bool isActive() { return _active; };
-	bool _active = false;
+	bool isActive() { return *_active; };
 private:
+	bool* _active;
 	float _radius;
 	void _size_update() {};
 };
@@ -204,8 +213,9 @@ class  Node_RadioButton : public Node_UI, public SSS::_EventRegistry<Node_RadioB
 {
 friend _EventRegistry<Node_RadioButton>;
 public:
-	Node_RadioButton(const glm::vec2& pos, const float &h = 15);
+	Node_RadioButton(bool* b, const glm::vec3& pos = glm::vec3{ 0 });
 	~Node_RadioButton() = default;
+
 	std::string name() const { return "Radio button"; };
 	int _type = 4;
 

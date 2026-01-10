@@ -285,15 +285,16 @@ Node_Slider::~Node_Slider()
 {
 }
 
-Node_Slider::Node_Slider(const glm::vec3& pos, const float& h)
+Node_Slider::Node_Slider(const int &min, const int &max, int* cur, const glm::vec3& pos)
 {
 	_pos = pos;
-	_radius = h/2.0;
+	_radius = 15.0/2.0;
 	_borderWidth = 3.0;
 	_len = 300;
 
-	_min = 0;
-	_max = 255;
+	_min = min;
+	_max = max;
+	_current = cur;
 
 	build();
 }
@@ -354,7 +355,7 @@ void Node_Slider::getCursorPos(const float& x, const float& y)
 
 	float progress = (cx - prims[0].pos.x) / (prims[0].pos2.x - prims[0].pos.x);
 
-	_current = (_max - _min) * progress + _min;
+	*_current = (_max - _min) * progress + _min;
 
 }
 
@@ -424,10 +425,11 @@ void Node_Slider::_subjectUpdate(SSS::Subject const& subject, int event_id)
 --------------------------------------------------------*/
 
 
-Node_Toggle::Node_Toggle(const glm::vec3& pos, const float& h)
+Node_Toggle::Node_Toggle(bool* b, const glm::vec3& pos)
 {
+	_active = b;
 	_pos = pos;
-	_radius = h;
+	_radius = 15;
 	_borderWidth = 3.0;
 	build();
 }
@@ -471,7 +473,7 @@ void Node_Toggle::build() {
 	// Button
 	toggleButton.shapeId = sdCircle;
 	toggleButton.cornerRadius = 0;
-	toggleButton.pos = glm::mix(begin, end, (float)_active);
+	toggleButton.pos = glm::mix(begin, end, (float)*_active);
 	toggleButton.size.r = _radius * 0.35;
 	toggleButton.color = glm::vec4(1.0);
 	toggleButton.borderWidth = 0.0;
@@ -513,8 +515,8 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
 			_focus = _hover;
 			if (_hover) {
-				_active ^= true;
-				prims[2].pos = glm::vec3(prims[1].pos, 0) + glm::vec3((_radius * 0.7f) * (float)(_active), 0, 0);
+				*_active ^= true;
+				prims[2].pos = glm::vec3(prims[1].pos, 0) + glm::vec3((_radius * 0.7f) * (float)(*_active), 0, 0);
 				prims[0].color.a = FOCUS_INTENSITY;
 			}
 		}
@@ -536,10 +538,11 @@ void Node_Toggle::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 --------------------------------------------------------*/
 
 
-Node_CheckBox::Node_CheckBox(const glm::vec3& pos, const float& h)
+Node_CheckBox::Node_CheckBox(bool* b, const glm::vec3& pos)
 {
+	_active = b;
 	_pos = pos;
-	_radius = h;
+	_radius = 15;
 	_borderWidth = 2.0;
 	build();
 }
@@ -591,7 +594,7 @@ void Node_CheckBox::build() {
 	cb.pos = begin + glm::vec2(2*_borderWidth,0);
 	cb.pos2 = end - glm::vec2(2*_borderWidth, 0);
 	cb.size.r = _radius - 4*_borderWidth;
-	cb.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)_active);;
+	cb.color = glm::mix(glm::vec4(0.0), glm::vec4(1.0), (float)*_active);
 	cb.blendMode = DEFAULT;
 	cb.borderWidth = 0.0;
 	prims.push_back(cb);
@@ -632,8 +635,8 @@ void Node_CheckBox::_subjectUpdate(SSS::Subject const& subject, int event_id) {
 		if (clicks[GLFW_MOUSE_BUTTON_1].is_pressed()) {
 			_focus = _hover;
 			if (_hover) {
-				_active ^= true;
-				prims[3].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)_active);
+				*_active ^= true;
+				prims[3].color = glm::mix(glm::vec4(0.0),  glm::vec4(1.0), (float)*_active);
 				prims[0].color.a = FOCUS_INTENSITY;
 			}
 		}
@@ -659,10 +662,11 @@ void Node_RadioButton::_register()
 	REGISTER_EVENT("SSS_RADIO_TOOK_FOCUS");
 }
 
-Node_RadioButton::Node_RadioButton(const glm::vec2& pos, const float& h) {
-	_pos = glm::vec3(pos, 0);
-	_radius = h*0.5;
+Node_RadioButton::Node_RadioButton(bool* b, const glm::vec3& pos) {
+	_pos = pos;
+	_radius = 15*0.5;
 	_borderWidth = 4.0;
+	_active = b;
 	build(_pos);
 }
 

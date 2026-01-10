@@ -45,11 +45,15 @@ public:
 	SceneGraph* _sg;
 	SSS::GL::PlaneRenderer::Weak _rd;
 
+	std::string getLabel() { return _label; };
+	void		setLabel(const std::string& lab) { _label = lab; };
+
 
 	virtual std::vector<UIPrimitive> renderUI() const { return _UIprims; };
 	//static std::once_flag _RegistryDone;
 protected:
-	std::vector<UIPrimitive> _UIprims;
+	std::vector<UIPrimitive>	_UIprims;
+	std::string					_label;
 
 private:
 	static void _register();
