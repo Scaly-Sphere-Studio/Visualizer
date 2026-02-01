@@ -4,9 +4,11 @@
 #include <SSS/GL/Objects/Models/Line.hpp>
 #include <SSS/GL/Objects/Renderer.hpp>
 #include <SSS/GL/Objects/Camera.hpp>
+#include <SSS/SceneGraph/scenegraph.h>
 
 
-#include "Node_UI.h"
+#include <SSS/SceneGraph/Node_UI.h>
+
 SSS_GL_BEGIN;
 
 
@@ -15,7 +17,7 @@ SSS_GL_BEGIN;
 #pragma warning(disable: 4251)
 #pragma warning(disable: 4275)
 
-class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer, public SceneGraph {
+class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer, public SSS::SceneGraph {
     friend class SharedClass;
     friend class Window;
 

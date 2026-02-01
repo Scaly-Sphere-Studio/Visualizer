@@ -1,6 +1,9 @@
 #include "visualizer.h"
 #include "Node_Box.h"
-#include "Node_Input.h"
+
+#include <SSS/SceneGraph/Node_Input.h>
+
+#include <SSS/SceneGraph/scenegraph.h>
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
@@ -144,7 +147,7 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
 {
     if (event_id == EVENT_ID("NODE_UI_HOVER"))
     {
-        Node* n = (Node*)&subject;
+        SSS::Node* n = (SSS::Node*)&subject;
         hovered_box = n->_key;
         SSS::log_msg("Hovered Node updated :" + std::to_string(n->_key));
         return;
@@ -152,7 +155,7 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
 
     if (event_id == EVENT_ID("NODE_UI_MOUSE_LEFT"))
     {
-        Node* n = (Node*)&subject;
+        SSS::Node* n = (SSS::Node*)&subject;
         if (hovered_box == n->_key)
         {
             hovered_box = -1;
@@ -161,23 +164,7 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
         return;
     }
 
-    switch (event_id) {
-    case SSS::EventList::Resize:
-    {
-        // Node resized, relink
-        return;
-    }
-    case SSS::EventList::Translated:
-    {
-        if (!_refreshed)
-            _refreshed = true;
-        // Node resized, relink
-        return;
-    }
-    default :
-        SSS::log_err("Unknown event [" + std::to_string(event_id) + "]");
-        return;
-    }
+    
 }
 
 Visualizer::~Visualizer()
@@ -221,26 +208,51 @@ void Visualizer::run()
 
     UI_renderer->setWindow(window);
 
-    Node_Slider* slider = new Node_Slider(0, 255, &cur, glm::vec3(100, 250,0));
-    UI_renderer->push(slider);
 
-    Node_CheckBox* check = new Node_CheckBox(&bch, glm::vec3(1000, 250, 0));
-    UI_renderer->push(check); 
+    auto tex = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
+    auto tex2 = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png");
 
-    Node_Toggle* toggle = new Node_Toggle(&btog, glm::vec3(810, 250,0));
-    UI_renderer->push(toggle);
+    //auto tex = SSS::GL::Texture::create("placeholder");
+    //auto tex = SSS::GL::Texture::create("asset");
 
-    Node_MouseInput* mipt = new Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
+
+    //auto tex = SSS::GL::Texture::create("Sans_titre.png");
+
+    
+  
+    planeTest = SSS::GL::Plane::create(tex);
+    auto plane2 = SSS::GL::Plane::create(tex2);
+    plane2->translate(glm::vec3(500, 0, 0));
+    planeTest->translate(glm::vec3(-500, 0,0));
+    
+    //plane->translate(glm::vec3(250,-125,0));
+
+    sg._rd->addPlane(planeTest);
+    sg._rd->addPlane(plane2);
+
+    //plane->Hide(true);
+
+
+    SSS::Node_MouseInput* mipt = new SSS::Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
     UI_renderer->push(mipt);
 
-    Node_RadioButton* radio1 = new Node_RadioButton(&brad1, glm::vec3(1000, 450, 0));
+    SSS::Node_Slider* slider = new SSS::Node_Slider(0, 255, &cur, glm::vec3(100, 250,0));
+    UI_renderer->push(slider);
+
+    SSS::Node_CheckBox* check = new SSS::Node_CheckBox(&bch, glm::vec3(1000, 250, 0));
+    UI_renderer->push(check); 
+
+    SSS::Node_Toggle* toggle = new SSS::Node_Toggle(&btog, glm::vec3(810, 250,0));
+    UI_renderer->push(toggle);
+
+    SSS::Node_RadioButton* radio1 = new SSS::Node_RadioButton(&brad1, glm::vec3(1000, 450, 0));
+    SSS::Node_RadioButton* radio2 = new SSS::Node_RadioButton(&brad2, glm::vec3(1000, 500, 0));
+    SSS::Node_RadioButton* radio3 = new SSS::Node_RadioButton(&brad3, glm::vec3(1000, 550, 0));
+
     UI_renderer->push(radio1);
-
-    Node_RadioButton* radio2 = new Node_RadioButton(&brad2, glm::vec3(1000, 500, 0));
     UI_renderer->push(radio2);
-
-    Node_RadioButton* radio3 = new Node_RadioButton(&brad3, glm::vec3(1000, 550, 0));
     UI_renderer->push(radio3);
+
 
     radio2->observeRadio(*radio1);
     radio2->observeRadio(*radio3);
@@ -249,26 +261,28 @@ void Visualizer::run()
     radio1->observeRadio(*radio2);
     radio1->observeRadio(*radio3);
 
-    Node_Text* tmin = new Node_Text(UI_renderer.get(), std::to_string(slider->getMinValue()));
+    SSS::Node_Text* tmin = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getMinValue()));
     tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
         
-    Node_Text* tmax = new Node_Text(UI_renderer.get(), std::to_string(slider->getMaxValue()));
+    SSS::Node_Text* tmax = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getMaxValue()));
     tmax->setPosition(glm::vec3(slider->prims[0].pos2.x - 25, -slider->prims[0].pos2.y + 105, 0));
 
-    Node_Text* t = new Node_Text(UI_renderer.get(), std::to_string(slider->getCurValue()));
+    SSS::Node_Text* t = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getCurValue()));
     t->setPosition(glm::vec3(slider->prims[0].pos2.x + 40, -slider->prims[0].pos2.y + 40, 0));
 
 
-    Node_Text* tradio = new Node_Text(UI_renderer.get(), std::to_string(radio1->isActive()));
+    SSS::Node_Text* tradio = new SSS::Node_Text(UI_renderer.get(), std::to_string(radio1->isActive()));
+    glm::vec3 test = glm::vec3(radio1->prims[0].pos.x + 40, -radio1->prims[0].pos.y + 40, 0);
     tradio->setPosition(glm::vec3(radio1->prims[0].pos.x + 40, -radio1->prims[0].pos.y + 40, 0));
 
-    Node_Text* ttoggle = new Node_Text(UI_renderer.get(), std::to_string(toggle->isActive()));
+    SSS::Node_Text* ttoggle = new SSS::Node_Text(UI_renderer.get(), std::to_string(toggle->isActive()));
     ttoggle->setPosition(glm::vec3(toggle->prims[0].pos2.x + 40, -toggle->prims[0].pos2.y + 40, 0));
 
-    Node_Text* tcheck = new Node_Text(UI_renderer.get(), std::to_string(check->isActive()));
+    SSS::Node_Text* tcheck = new SSS::Node_Text(UI_renderer.get(), std::to_string(check->isActive()));
     tcheck->setPosition(glm::vec3(check->prims[1].pos2.x + 40, -check->prims[1].pos2.y + 40, 0));
 
     float time = 0;
+
 
     // Main loop
     while (!window->shouldClose()) {
@@ -286,9 +300,10 @@ void Visualizer::run()
 
         input();
 
+
         for (auto elem : _proj.sg_boxes)
         {
-            Node_UI* node = reinterpret_cast<Node_UI*>(sg.at(elem.second));
+            SSS::Node_UI* node = reinterpret_cast<SSS::Node_UI*>(sg.at(elem.second));
             if(node != nullptr)
                 node->_checkPointCollision(cursor_map_coordinates());
         }
@@ -347,6 +362,8 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
             visu._selectedBoxesID.emplace(b);
         }
     }
+
+
 }
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
@@ -484,6 +501,13 @@ void Visualizer::input()
     if (keys[GLFW_KEY_KP_ADD].is_pressed()) {
         push_box(SSS::RGBA_f(rand_pastel_color()).to_Hex());
     }
+
+    if (keys[GLFW_KEY_F].is_pressed()) {
+        iframe += 1;
+        planeTest->setAnimationFrame(iframe);
+
+    }
+
     //TEST SUPPRESSION
     if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxesID.empty()) {
         for (const int& bId : _selectedBoxesID) {

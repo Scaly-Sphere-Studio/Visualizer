@@ -3,7 +3,7 @@
 //#include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
-#include "scenegraph.h"
+#include <SSS/SceneGraph/scenegraph.h>
 #include "SSS/Commons/eventList.hpp"
 #include "Node_Export.h"
 
@@ -151,6 +151,9 @@ private:
 	GLFWwindow* glfwwindow{ nullptr };
 	double c_x = 0.0, c_y = 0.0;
 
+	SSS::GL::Plane::Shared planeTest;
+	int iframe = 0;
+
 	glm::vec4 clear_color = glm::vec4{ 1.0f };
 	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
 	Traduction_data _td;
@@ -182,7 +185,7 @@ private:
 	std::chrono::steady_clock::time_point end;
 
 	//INTERFACE
-	SceneGraph sg;
+	SSS::SceneGraph sg;
 
 	bool _refreshed;
 };

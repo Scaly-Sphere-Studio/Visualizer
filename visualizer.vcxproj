@@ -27,10 +27,6 @@
     <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\Node_Box.cpp" />
     <ClCompile Include="src\Node_Export.cpp" />
-    <ClCompile Include="src\Node_Input.cpp" />
-    <ClCompile Include="src\Node_Primitive.cpp" />
-    <ClCompile Include="src\Node_UI.cpp" />
-    <ClCompile Include="src\scenegraph.cpp" />
     <ClCompile Include="src\Text_data.cpp" />
     <ClCompile Include="src\visualizer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -42,10 +38,6 @@
     <ClInclude Include="inc\gui.h" />
     <ClInclude Include="inc\Node_Box.h" />
     <ClInclude Include="inc\Node_Export.h" />
-    <ClInclude Include="inc\Node_Input.h" />
-    <ClInclude Include="inc\Node_Primitive.h" />
-    <ClInclude Include="inc\Node_UI.h" />
-    <ClInclude Include="inc\scenegraph.h" />
     <ClInclude Include="inc\Text_data.h" />
     <ClInclude Include="inc\UIRenderer.hpp" />
     <ClInclude Include="inc\_includes.hpp" />

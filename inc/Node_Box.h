@@ -1,23 +1,23 @@
 #pragma once
 
-#include "scenegraph.h"
-#include "Node_UI.h"
+#include <SSS/Commons.hpp>
+#include <SSS/SceneGraph/Node_UI.h>
 
+#include "commons.h"
 #include "Text_data.h"
-#include "SSS/Commons/color.hpp"
-#include "SSS/Commons/eventList.hpp"
+
 #include "Node_Export.h"
 
 
 
 
-class Node_Box : public Node_UI, public SSS::_EventRegistry<Node_Box>
+class Node_Box : public SSS::Node_UI, public SSS::_EventRegistry<Node_Box>
 {
 public:
 	friend _EventRegistry<Node_Box>;
 	Node_Box() = default;
-	Node_Box(SceneGraph* p_Sg);
-	Node_Box(SceneGraph* p_Sg, const Text_data& td);
+	Node_Box(SSS::SceneGraph* p_Sg);
+	Node_Box(SSS::SceneGraph* p_Sg, const Text_data& td);
 	void setTextData(const Text_data& td);
 	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
 
