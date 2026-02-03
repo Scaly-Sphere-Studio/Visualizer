@@ -2,6 +2,7 @@
 #include "Node_Box.h"
 
 #include <SSS/SceneGraph/Node_Input.h>
+#include "Node_Character.h"
 
 #include <SSS/SceneGraph/scenegraph.h>
 
@@ -211,6 +212,7 @@ void Visualizer::run()
 
     auto tex = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
     auto tex2 = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png");
+    //planeTest = SSS::GL::Plane::create(tex);
 
     //auto tex = SSS::GL::Texture::create("placeholder");
     //auto tex = SSS::GL::Texture::create("asset");
@@ -219,16 +221,19 @@ void Visualizer::run()
     //auto tex = SSS::GL::Texture::create("Sans_titre.png");
 
     
+    Node_Character* Char1 = new Node_Character(&sg, "C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
   
-    planeTest = SSS::GL::Plane::create(tex);
-    auto plane2 = SSS::GL::Plane::create(tex2);
-    plane2->translate(glm::vec3(500, 0, 0));
-    planeTest->translate(glm::vec3(-500, 0,0));
+    //auto plane2 = SSS::GL::Plane::create(tex2);
+    //plane2->translate(glm::vec3(500, 0, 0));
+    //planeTest->translate(glm::vec3(-500, 0,0));
     
     //plane->translate(glm::vec3(250,-125,0));
 
-    sg._rd->addPlane(planeTest);
-    sg._rd->addPlane(plane2);
+
+    //sg._rd->addPlane(planeTest);
+    //sg._rd->addPlane(plane2);
+
+    //planeTest->rotate(glm::vec3(0, 180, 0));
 
     //plane->Hide(true);
 

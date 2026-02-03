@@ -22,11 +22,11 @@
     <Filter Include="Nodes\Src">
       <UniqueIdentifier>{73d23d5d-b1ce-4cb7-a056-bfffc681eda6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Nodes\Headers">
-      <UniqueIdentifier>{e398d395-315d-4b08-94ab-1738ac148df5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Nodes\UIRenderer">
       <UniqueIdentifier>{5fa92b60-5db6-4d00-b08e-7e29eb2fbf0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Nodes\Headers">
+      <UniqueIdentifier>{e398d395-315d-4b08-94ab-1738ac148df5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +62,9 @@
     </ClCompile>
     <ClCompile Include="inc\UIRenderer.cpp">
       <Filter>Nodes\UIRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Node_Character.cpp">
+      <Filter>Nodes\Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="inc\UIRenderer.hpp">
       <Filter>Nodes\UIRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Node_Character.h">
+      <Filter>Nodes\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
