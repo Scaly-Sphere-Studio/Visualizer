@@ -66,6 +66,9 @@
     <ClCompile Include="src\Node_Character.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Animation.cpp">
+      <Filter>Nodes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
@@ -106,6 +109,12 @@
     </ClInclude>
     <ClInclude Include="inc\Node_Character.h">
       <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Animation.hpp">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\EaseFunctions.hpp">
+      <Filter>Nodes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

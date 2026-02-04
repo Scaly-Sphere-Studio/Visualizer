@@ -8,6 +8,7 @@
 #include "Node_Export.h"
 
 #include "UIRenderer.hpp"
+#include "Animation.hpp"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -82,7 +83,7 @@ private:
 	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
 
-
+	Animation *a;
 
 
 	/* [BOX METHODS] */

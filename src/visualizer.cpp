@@ -5,6 +5,8 @@
 #include "Node_Character.h"
 
 #include <SSS/SceneGraph/scenegraph.h>
+//#include "EaseFunctions.hpp"
+
 
 /* [MISC] */
 static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
@@ -234,6 +236,9 @@ void Visualizer::run()
     //sg._rd->addPlane(plane2);
 
     //planeTest->rotate(glm::vec3(0, 180, 0));
+    glm::vec3 rot{ 0 };
+    a = new Animation(&rot, glm::vec3{ 0 }, glm::vec3(0, 180, 0), 2.f, Animation::Mode::PingPong);
+    a->setEase(EaseFunction::BounceEaseOut);
 
     //plane->Hide(true);
 
@@ -304,6 +309,8 @@ void Visualizer::run()
         refresh();
 
         input();
+        a->update();
+        Char1->rotate(rot);
 
 
         for (auto elem : _proj.sg_boxes)
@@ -511,6 +518,10 @@ void Visualizer::input()
         iframe += 1;
         planeTest->setAnimationFrame(iframe);
 
+    }
+
+    if (keys[GLFW_KEY_P].is_pressed()) {
+        a->start();
     }
 
     //TEST SUPPRESSION

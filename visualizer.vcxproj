@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="inc\UIRenderer.cpp" />
+    <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\backend.cpp" />
     <ClCompile Include="src\backend_json.cpp" />
     <ClCompile Include="src\commons.cpp" />
@@ -33,9 +34,11 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\Animation.hpp" />
     <ClInclude Include="inc\backend.hpp" />
     <ClInclude Include="inc\backend_json.h" />
     <ClInclude Include="inc\data.hpp" />
+    <ClInclude Include="inc\EaseFunctions.hpp" />
     <ClInclude Include="inc\gui.h" />
     <ClInclude Include="inc\Node_Box.h" />
     <ClInclude Include="inc\Node_Character.h" />
