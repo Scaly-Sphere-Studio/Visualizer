@@ -1,129 +1,94 @@
+#pragma once
+
 #include <SSS/Commons.hpp>
+
 #include <glm/gtc/quaternion.hpp>
-
-#include "EaseFunctions.hpp"
-
-template<typename T>
-T interpolate(const T& a, const T& b, float t) {
-    return glm::mix(a, b, t);
-}
-
-// Specialization for quaternions (use slerp)
-template<>
-inline glm::quat interpolate(const glm::quat& a, const glm::quat& b, float t) {
-    return glm::slerp(a, b, t);
-}
+#include <SSS/Math.hpp>
 
 
-class Animation : public SSS::Subject, public SSS::_EventRegistry<Animation>
+using namespace std::chrono_literals;
+
+class Track : public SSS::Subject, public SSS::_EventRegistry<Track>
 {
 
 public:
-    friend SSS::_EventRegistry<Animation>;
-    Animation() = default;
+    friend SSS::_EventRegistry<Track>;
 
-    enum class Mode
+
+    enum class LectureMode
     {
         Once,
+        Reverse,
         Loop,
         PingPong
     };
 
+    using EaseType  = SSS::Math::EaseType;
+    using TimePoint = std::chrono::steady_clock::time_point;
+    using Duration  = std::chrono::duration<float>;
 
-    using Clock = std::chrono::steady_clock;
-    using Seconds = std::chrono::duration<float>;
-
-    Animation(
-        glm::vec3* _val,
-        glm::vec3 _Begin,
-        glm::vec3 _End,
-        float durationSeconds = 1.0f, 
-        Mode mode = Mode::Once
-    )
-        : m_duration(std::max(0.0001f, durationSeconds))
-        , m_mode(mode), val(_val), Begin(_Begin), End(_End)
-    {}
-
-    Animation(const Animation&) = default;
-    virtual ~Animation() = default;
+    Track() = default;
+    //Track(const Track&) = default;
+    virtual ~Track() = default;
 
 
-    void setMode(Mode mode) { m_mode = mode; }
-    void setEase(EaseFunction ef) { m_ease = ef; }
+    void setLectureMode(LectureMode mode) { _mode = mode; }
+    void setEase(EaseType ef) { _ease = ef; }
 
     // --- Control ---
     void start();
+    void play();
     void stop();
     void pause();
     void resume();
+    void restart();
 
-    bool isRunning() const { return m_running; }
-    bool isPaused()  const { return m_paused; }
+    bool isRunning() const { return _playing; }
+    bool isPaused()  const { return _paused; }
 
-    void setDuration(float seconds) { m_duration = std::max(0.0001f, seconds); }
-    float duration() const { return m_duration; }
+    void setDuration(float seconds) { _duration = std::chrono::duration<float>(seconds); if (_duration == 0s) stop(); }
+    void setSpeed(float sp) { _speed = sp; if (_speed == 0) pause();  }
+    float duration() const { return _duration.count(); }
 
     // Call every frame
     void update();
 
+    void print();
+
 protected:
-    // Override this: t is normalized [0..1]
-    void apply(float t);
-
-    // Optional easing override
-    float ease(const float t, const EaseFunction _ease = EaseFunction::Linear);
-
+    
     float normalizedTime()
     {
-        auto now = Clock::now();
-        Seconds elapsed = std::chrono::duration_cast<Seconds>(now - m_startTime) - m_pauseAccum;
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _startTime) - _pauseAccum;
 
-        float raw = elapsed.count() / m_duration;
-        raw = std::max(0.0f, raw);
+        float raw = (elapsed / _duration);
 
-        switch (m_mode)
-        {
-        case Mode::Once:
-        {
-            float t = std::min(raw, 1.0f);
-            return ease(t, m_ease);
-        }
-
-        case Mode::Loop:
-        {
-            float t = raw - std::floor(raw); // fract
-            return ease(t, m_ease);
-        }
-
-        case Mode::PingPong:
-        {
-            float cycle = raw - std::floor(raw); // 0..1
-            int phase = static_cast<int>(std::floor(raw)) % 2;
-
-            float t = (phase == 0) ? cycle : (1.0f - cycle);
-            return ease(t, m_ease);
-        }
-        }
-
-        return 0.0f;
+        
+        return std::clamp(raw, 0.f, 1.f);
     }
 
-    glm::vec3* val;
-    glm::vec3 Begin;
-    glm::vec3 End;
 
 private:
-    float m_duration = 1.0f;
-    Mode  m_mode = Mode::Once;
-    EaseFunction  m_ease = EaseFunction::Linear;
+    float _speed        = 1.0f;
 
-    bool m_running = false;
-    bool m_paused = false;
-    bool m_forward = true; // reserved for future manual stepping
+    std::chrono::duration<double> _duration     = 0s;
+    std::chrono::duration<double> _currentTime  = 0s;
+    std::chrono::duration<double> _pauseAccum   = 0s;
 
-    Clock::time_point m_startTime{};
-    Clock::time_point m_pauseStart{};
-    Seconds m_pauseAccum{ 0 };
+    bool _playing   = false;
+    bool _paused    = false;
+
+    LectureMode  _mode = LectureMode::Once;
+    EaseType     _ease = EaseType::Linear;
+
+    //bool m_forward = true; // reserved for future manual stepping
+
+
+    std::chrono::steady_clock::time_point _startTime{};
+    std::chrono::steady_clock::time_point _pauseStart{};
 
     static void _register();
 };
+
+
