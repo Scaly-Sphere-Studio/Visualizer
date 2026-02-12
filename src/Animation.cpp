@@ -27,8 +27,9 @@ void Track::play()
 
 void Track::stop()
 {
-    _playing = false;
-    _paused = false;
+    _playing        = false;
+    _paused         = false;
+    _currentTime    = 0s;
 }
 
 void Track::pause()
@@ -56,21 +57,58 @@ void Track::update()
     if (!_playing) return;
 
     auto now = std::chrono::steady_clock::now();
-    Duration elapsed = now - _startTime;
+    auto elapsed = now - _startTime - _pauseAccum;
+
     _currentTime = elapsed * _speed;
 
-    if (_mode == LectureMode::Loop && _currentTime > _duration) 
+    switch (_mode) 
     {
-        _currentTime = std::chrono::duration<double>(std::fmod(_currentTime.count(), _duration.count()));
-        _startTime = now - std::chrono::duration_cast<std::chrono::nanoseconds>(_currentTime/_speed);
-    }
-    else if (_currentTime >= _duration) 
-    {
-        _currentTime = _duration;
-        _playing = false;
-    }
+    case LectureMode::Once: 
+        {
+            if (_currentTime >= _duration) {
+                _currentTime = _duration;
+                stop();
+            }
+            print();
+        }
+        return;
+    case LectureMode::Loop: 
+        {
+            if (_currentTime >= _duration) {
+                _currentTime = std::chrono::duration<double>(std::fmod(_currentTime.count(), _duration.count()));
+                _startTime = now - std::chrono::duration_cast<std::chrono::nanoseconds>(_currentTime / _speed);
+            }
+            print();
+        }
+        return;
+    case LectureMode::PingPong:
+        {
+            auto cycleTime = _duration * 2.0; // Full ping-pong cycle
+            if (_currentTime > cycleTime) { stop(); print(); return; }
 
-    print();
+            auto newTime = std::fmod(_currentTime.count(), cycleTime.count());
+            auto cur =  _currentTime.count();
+
+            if (elapsed > _duration) 
+            {
+                // Reverse phase
+                _currentTime = _duration - (std::chrono::duration<double>(newTime) - _duration);
+            }
+
+            print();
+        }
+        return;
+    case LectureMode::Reverse: 
+        {
+            _currentTime = _duration - (elapsed * _speed);
+            if (_currentTime < 0s) { stop(); }
+            print();
+        }
+        return;
+    default :
+        return;
+    }
+    
 }
 
 void Track::print()

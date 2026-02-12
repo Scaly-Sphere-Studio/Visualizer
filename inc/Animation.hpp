@@ -57,15 +57,35 @@ public:
 
 protected:
     
-    float normalizedTime()
+    double normalizedTime()
     {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _startTime) - _pauseAccum;
+        double raw = 0.;
 
-        float raw = (elapsed / _duration);
+        switch (_mode) 
+        {
+        case LectureMode::Once:
+        case LectureMode::Loop:
+            raw = (_currentTime / _duration) * _speed;
+            break;
+        case LectureMode::Reverse:
+            raw = 1.0 - (_currentTime / _duration) * _speed;
+            break;
+        case LectureMode::PingPong:
+            auto cycleTime = _duration * 2.0; // Full ping-pong cycle
+            if (_currentTime > cycleTime) { stop(); print(); return _currentTime / _duration; }
 
-        
-        return std::clamp(raw, 0.f, 1.f);
+            if (elapsed > _duration) 
+            {
+                auto newTime = std::fmod(_currentTime.count(), cycleTime.count());
+                raw = std::chrono::duration<double>(newTime) / _duration;
+            }
+            else{ raw = (_currentTime / _duration) * _speed; }
+            break;
+        }
+
+        return std::clamp(raw, 0., 1.);
     }
 
 
