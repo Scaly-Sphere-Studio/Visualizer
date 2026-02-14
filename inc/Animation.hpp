@@ -4,10 +4,13 @@
 
 #include <glm/gtc/quaternion.hpp>
 #include <SSS/Math.hpp>
+#include <map>
 
 
 using namespace std::chrono_literals;
 
+
+// Time manager
 class Track : public SSS::Subject, public SSS::_EventRegistry<Track>
 {
 
@@ -35,7 +38,7 @@ public:
     void setLectureMode(LectureMode mode) { _mode = mode; }
     void setEase(EaseType ef) { _ease = ef; }
 
-    // --- Control ---
+    // Controls
     void start();
     void play();
     void stop();
@@ -43,19 +46,25 @@ public:
     void resume();
     void restart();
 
+    // Getters
     bool isRunning() const { return _playing; }
     bool isPaused()  const { return _paused; }
+    std::chrono::duration<double> getDuration() { return _duration; };
+    const double getCurrentTime() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_currentTime).count() / 1000.;};
+    double getDurationSeconds() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_duration).count() / 1000.; };
+    double getNormalizedTime() { return normalizedTime(); };
 
+
+    // Setters
     void setDuration(float seconds) { _duration = std::chrono::duration<float>(seconds); if (_duration == 0s) stop(); }
     void setSpeed(float sp) { _speed = sp; if (_speed == 0) pause();  }
-    float duration() const { return _duration.count(); }
+    double duration() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_duration).count() /1000.; }
 
     // Call every frame
     void update();
 
-    void print();
-
 protected:
+    void print();
     
     double normalizedTime()
     {
@@ -112,3 +121,198 @@ private:
 };
 
 
+template<typename T>
+class PropertyAnimator : public Track {
+public:
+    using Callback = std::function<void(const T&)>;
+
+    PropertyAnimator() = default;
+
+    void addKeyframe(float time, const T& value, EaseType easing = EaseType::Linear) {
+        SSS::Math::GradientPoint<T> kf{ time, value, easing };
+        track.push(kf);
+        setDuration(std::max((float)getDurationSeconds(), track.getDuration()));
+    }
+
+    void addKeyframe(float time, const T& value, SSS::Math::EasingFunction customEasing) {
+        SSS::Math::GradientPoint<T> kf{ time, value, customEasing };
+        track.push(kf);
+        setDuration(std::max((float)getDurationSeconds(), track.getDuration()));
+    }
+
+    void setCallback(Callback cb) {
+        callback = cb;
+    }
+
+    void update() {
+        Track::update();
+
+        if (callback) {
+            T value = track.evaluate(getCurrentTime());
+            callback(value);
+        }
+    }
+
+    T getCurrentValue() const {
+        return track.evaluate(getCurrentTime());
+    }
+
+private:
+    SSS::Math::Gradient<T> track;
+    Callback callback;
+};
+
+// ============================================================================
+// Transform Animator (animates position, rotation, scale together)
+// ============================================================================
+
+class TransformAnimator : public Track {
+    using EaseType = SSS::Math::EaseType;
+    using EasingFunction = SSS::Math::EasingFunction;
+public:
+    struct Transform {
+        glm::vec3 position{ 0.0f };
+        glm::quat rotation{ 1.0f, 0.0f, 0.0f, 0.0f };
+        glm::vec3 scale{ 1.0f };
+    };
+
+    using Callback = std::function<void(const Transform&)>;
+
+    void addPositionKeyframe(float time, const glm::vec3& pos, EaseType easing = EaseType::Linear) {
+        SSS::Math::GradientPoint<glm::vec3> p{time, pos, easing};
+        positionTrack.push(p);
+        updateDuration();
+    }
+
+    void addPositionKeyframe(float time, const glm::vec3& pos, EasingFunction customEasing) {
+        SSS::Math::GradientPoint<glm::vec3> p{ time, pos, customEasing };
+        positionTrack.push(p);
+        updateDuration();
+    }
+
+    void addRotationKeyframe(float time, const glm::quat& rot, EaseType easing = EaseType::Linear) {
+        SSS::Math::GradientPoint<glm::quat> p{ time, rot, easing };
+        rotationTrack.push(p);
+        updateDuration();
+    }
+
+    void addRotationKeyframe(float time, const glm::quat& rot, EasingFunction customEasing) {
+        SSS::Math::GradientPoint<glm::quat> p{ time, rot, customEasing };
+        rotationTrack.push(p);
+        updateDuration();
+    }
+
+    void addScaleKeyframe(float time, const glm::vec3& scale, EaseType easing = EaseType::Linear) {
+        SSS::Math::GradientPoint<glm::quat> p{ time, scale, easing };
+        rotationTrack.push(p);
+        updateDuration();
+    }
+
+    void addScaleKeyframe(float time, const glm::vec3& scale, EasingFunction customEasing) {
+        SSS::Math::GradientPoint<glm::quat> p{ time, scale, customEasing };
+        rotationTrack.push(p);
+        updateDuration();
+    }
+
+    void setCallback(Callback cb) {
+        callback = cb;
+    }
+
+    void update() {
+        Track::update();
+
+        if (callback) {
+            Transform transform;
+            transform.position = positionTrack.evaluate(getCurrentTime());
+            transform.rotation = rotationTrack.evaluate(getCurrentTime());
+            transform.scale = scaleTrack.evaluate(getCurrentTime());
+            callback(transform);
+        }
+    }
+
+    Transform getCurrentTransform() const {
+        Transform transform;
+        transform.position = positionTrack.evaluate(getCurrentTime());
+        transform.rotation = rotationTrack.evaluate(getCurrentTime());
+        transform.scale = scaleTrack.evaluate(getCurrentTime());
+        return transform;
+    }
+
+private:
+    SSS::Math::Gradient<glm::vec3> positionTrack;
+    SSS::Math::Gradient<glm::quat> rotationTrack;
+    SSS::Math::Gradient<glm::vec3> scaleTrack;
+    Callback callback;
+
+    void updateDuration() {
+        float maxDuration = std::max({
+            positionTrack.getDuration(),
+            rotationTrack.getDuration(),
+            scaleTrack.getDuration()
+            });
+        setDuration(maxDuration);
+    }
+};
+
+// ============================================================================
+// Animation Timeline (manages multiple animations)
+// ============================================================================
+
+class Timeline {
+public:
+    void addClip(const std::string& name, std::shared_ptr<Track> track) {
+        tracks[name] = track;
+    }
+
+    void play(const std::string& name) {
+        if (auto it = tracks.find(name); it != tracks.end()) {
+            it->second->play();
+        }
+    }
+
+    void playAll() {
+        for (auto& [name, clip] : tracks) {
+            clip->play();
+        }
+    }
+
+    void pause(const std::string& name) {
+        if (auto it = tracks.find(name); it != tracks.end()) {
+            it->second->pause();
+        }
+    }
+
+    void pauseAll() {
+        for (auto& [name, clip] : tracks) {
+            clip->pause();
+        }
+    }
+
+    void stop(const std::string& name) {
+        if (auto it = tracks.find(name); it != tracks.end()) {
+            it->second->stop();
+        }
+    }
+
+    void stopAll() {
+        for (auto& [name, clip] : tracks) {
+            clip->stop();
+        }
+    }
+
+    void update() {
+        for (auto& [name, clip] : tracks) {
+            clip->update();
+        }
+    }
+
+    std::shared_ptr<Track> getClip(const std::string& name) {
+        auto it = tracks.find(name);
+        return it != tracks.end() ? it->second : nullptr;
+    }
+
+private:
+    std::map<std::string, std::shared_ptr<Track>> tracks;
+};
+
+ // namespace Animation

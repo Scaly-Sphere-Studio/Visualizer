@@ -11,7 +11,6 @@ void Track::_register()
     REGISTER_EVENT("SSS_Track_LOOPED");
 }
 
-
 void Track::start() 
 {
     _playing       = true;
