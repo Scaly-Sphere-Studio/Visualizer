@@ -5,6 +5,9 @@
 #include "Node_Character.h"
 
 #include <SSS/SceneGraph/scenegraph.h>
+
+#include "Animation.hpp"
+#include "Shake_Generator.hpp"
 //#include "EaseFunctions.hpp"
 
 
@@ -196,7 +199,7 @@ void Visualizer::run()
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 
     //load
-    //load();
+    load();
     refresh();
     const auto dim = window->getDimensions();
 
@@ -214,34 +217,12 @@ void Visualizer::run()
 
     auto tex = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
     auto tex2 = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png");
-    //planeTest = SSS::GL::Plane::create(tex);
 
-    //auto tex = SSS::GL::Texture::create("placeholder");
-    //auto tex = SSS::GL::Texture::create("asset");
-
-
-    //auto tex = SSS::GL::Texture::create("Sans_titre.png");
 
     
-    Node_Character* Char1 = new Node_Character(&sg, "C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
-  
-    //auto plane2 = SSS::GL::Plane::create(tex2);
-    //plane2->translate(glm::vec3(500, 0, 0));
-    //planeTest->translate(glm::vec3(-500, 0,0));
-    
-    //plane->translate(glm::vec3(250,-125,0));
+    Node_Character* Char1 = new Node_Character(&sg, "C:/Users/SawsenUser/Desktop/characters/thwomp.png");
 
-
-    //sg._rd->addPlane(planeTest);
-    //sg._rd->addPlane(plane2);
-
-    //planeTest->rotate(glm::vec3(0, 180, 0));
     glm::vec3 rot{ 0 };
-    a = new Animation(&rot, glm::vec3{ 0 }, glm::vec3(0, 180, 0), 2.f, Animation::Mode::PingPong);
-    a->setEase(EaseFunction::BounceEaseOut);
-
-    //plane->Hide(true);
-
 
     SSS::Node_MouseInput* mipt = new SSS::Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
     UI_renderer->push(mipt);
@@ -294,6 +275,20 @@ void Visualizer::run()
     float time = 0;
 
 
+    std::cout << "\n=== Example 3: Camera Shake ===\n";
+
+
+
+    ShakeGenerator::ShakeParams params;
+    params.amplitude = 50.5f;
+    params.frequency = 5.0f;
+    params.decay = 1.f;
+    params.direction = glm::vec3(1.0, 1.0, 0.0);
+
+    ShakeGenerator sh(params);
+    sh.start();
+    sh.setLectureMode(Track::LectureMode::Loop);
+
     // Main loop
     while (!window->shouldClose()) {
 
@@ -309,8 +304,8 @@ void Visualizer::run()
         refresh();
 
         input();
-        a->update();
-        Char1->rotate(rot);
+
+        Char1->translate(sh.shake());
 
 
         for (auto elem : _proj.sg_boxes)
@@ -454,6 +449,7 @@ void Visualizer::setup()
     //SceneGraph
     sg.init();
     sg.setCamera(camera);
+
 
     auto texture = SSS::GL::Texture::create();
     texture->setColor(SSS::RGBA32(200, 220, 240, 80));

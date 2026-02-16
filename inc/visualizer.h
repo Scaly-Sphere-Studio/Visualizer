@@ -83,7 +83,7 @@ private:
 	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
 
-	Animation *a;
+	Track *a;
 
 
 	/* [BOX METHODS] */
