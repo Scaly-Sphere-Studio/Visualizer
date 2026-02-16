@@ -50,8 +50,9 @@ public:
     bool isRunning() const { return _playing; }
     bool isPaused()  const { return _paused; }
     std::chrono::duration<double> getDuration() { return _duration; };
-    const double getCurrentTime() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_currentTime).count() / 1000.;};
     double getDurationSeconds() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_duration).count() / 1000.; };
+    
+    const double getCurrentTime() const { return std::chrono::duration_cast<std::chrono::milliseconds>(_currentTime).count() / 1000.;};
     double getNormalizedTime() { return normalizedTime(); };
 
 
@@ -83,7 +84,10 @@ protected:
             break;
         case LectureMode::PingPong:
             auto cycleTime = _duration * 2.0; // Full ping-pong cycle
-            if (_currentTime > cycleTime) { stop(); print(); return _currentTime / _duration; }
+            if (_currentTime > cycleTime) 
+            { 
+                _currentTime = _currentTime - cycleTime; 
+            }
 
             if (elapsed > _duration) 
             {
@@ -98,7 +102,7 @@ protected:
     }
 
 
-private:
+protected:
     float _speed        = 1.0f;
 
     std::chrono::duration<double> _duration     = 0s;
@@ -117,6 +121,7 @@ private:
     std::chrono::steady_clock::time_point _startTime{};
     std::chrono::steady_clock::time_point _pauseStart{};
 
+private:
     static void _register();
 };
 
@@ -157,7 +162,7 @@ public:
         return track.evaluate(getCurrentTime());
     }
 
-private:
+protected:
     SSS::Math::Gradient<T> track;
     Callback callback;
 };

@@ -69,6 +69,12 @@
     <ClCompile Include="src\Animation.cpp">
       <Filter>Nodes</Filter>
     </ClCompile>
+    <ClCompile Include="src\Node_Animation.cpp">
+      <Filter>Nodes\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="inc\Shake_Generator.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
@@ -113,7 +119,10 @@
     <ClInclude Include="inc\Animation.hpp">
       <Filter>Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="inc\EaseFunctions.hpp">
+    <ClInclude Include="inc\Node_Animation.hpp">
+      <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Shake_Generator.hpp">
       <Filter>Nodes</Filter>
     </ClInclude>
   </ItemGroup>

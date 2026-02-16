@@ -83,7 +83,7 @@ void Track::update()
     case LectureMode::PingPong:
         {
             auto cycleTime = _duration * 2.0; // Full ping-pong cycle
-            if (_currentTime > cycleTime) { stop(); print(); return; }
+            if (_currentTime > cycleTime) { restart(); print(); return; }
 
             auto newTime = std::fmod(_currentTime.count(), cycleTime.count());
             auto cur =  _currentTime.count();
