@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="inc\Shake_Generator.cpp" />
     <ClCompile Include="inc\UIRenderer.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\backend.cpp" />

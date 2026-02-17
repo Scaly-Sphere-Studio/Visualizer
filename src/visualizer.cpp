@@ -657,14 +657,14 @@ void Visualizer::link_boxNode(const int& a_key, const int& b_key)
     using Line = SSS::GL::Polyline;
     Line::Shared seg;
     if (std::abs(a->center().x - b->center().x) < 5.0f) {
-        Col_grdt.push(std::make_pair(0.f, a->_color));
-        Col_grdt.push(std::make_pair(1.f, b->_color));
+        Col_grdt.push(std::make_pair(0.f, glm::vec4{ a->_color }));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4{ b->_color }));
         seg = Line::Segment(a->center(), b->center(), Thk_grdt, Col_grdt);
     }
     else {
         // Couleurs inversées pour Bezier ?
-        Col_grdt.push(std::make_pair(0.f, b->_color));
-        Col_grdt.push(std::make_pair(1.f, a->_color));
+        Col_grdt.push(std::make_pair(0.f, glm::vec4{ b->_color }));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4{ a->_color }));
         seg = Line::Bezier(
             a->center(), a->center() - offset,
             b->center() + offset, b->center(),
@@ -703,14 +703,15 @@ void Visualizer::link_boxNode(const int& key_a)
 
 void Visualizer::link_boxNode_to_cursor(const int& b_key)
 {
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 1);
 
     Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
 
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
+    glm::vec4 col = glm::vec4{ b->_color };
     Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-    Col_grdt.push(std::make_pair(1.f, b->getColor()));
+    Col_grdt.push(std::make_pair(1.f, col));
 
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));

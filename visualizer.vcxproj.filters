@@ -72,9 +72,6 @@
     <ClCompile Include="src\Node_Animation.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
-    <ClCompile Include="inc\Shake_Generator.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\_includes.hpp">
