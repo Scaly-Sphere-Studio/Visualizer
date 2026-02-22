@@ -19,7 +19,7 @@ public:
 
 	void update();
 
-	void translate(const glm::vec3 t) { charAtlas->translate(t); };
+	void translate(const glm::vec3 t) { charAtlas->setTranslation(t); };
 	//void rotate(const glm::vec3 r) { charAtlas->rotate(r); };
 	void rotate(const glm::vec3 r) { charAtlas->setRotation(r); };
 
