@@ -632,6 +632,7 @@ void Visualizer::refresh()
         return;
     
     for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
+        if (it->second == 0) continue;
         if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty())
             link_boxNode(it->second);
     }
@@ -1019,6 +1020,7 @@ void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
 
     for (const auto& [str, id] : _proj.sg_boxes)
     {
+        if (id == 0) continue;
         _proj.expNodes.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->export_node());
         _proj.expData.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->getData());
     }
