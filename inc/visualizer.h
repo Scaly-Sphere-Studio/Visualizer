@@ -9,6 +9,7 @@
 
 #include "UIRenderer.hpp"
 #include "Animation.hpp"
+#include "Node_Box.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -32,8 +33,9 @@ struct PROJECT_DATA {
 
 	// Export
 	//std::unordered_map<std::string, Export_Node_Box> expNodes;
-	std::vector<Export_Node_Box>	expNodes;
-	std::vector<Text_data>			expData;
+	//std::vector<Export_Node_Box>	expNodes;
+	//std::vector<Node_Box*>	expNodesBox;
+	//std::vector<Text_data>			expData;
 };
 
 class Visualizer : public SSS::Observer {
@@ -47,7 +49,7 @@ public:
 
 	void run();
 
-private:
+	public:
 	PROJECT_DATA _proj;
 	VISUALISER_INFO _info;
 	V_STATES _states = V_STATES::DEFAULT;
@@ -92,7 +94,7 @@ private:
 public:
 	//Update all the arrow linked to this box
 	void link_boxNode(const int& a);
-private:
+public:
 	//Create a link from the box to the position of the cursor
 	void link_boxNode_to_cursor(const int& a);
 	//Remove the link between two selected box
@@ -148,7 +150,7 @@ public:
 	SSS::GL::UIRenderer::Shared UI_renderer;
 	Debugger::Shared debug_renderer;
 
-private:
+public:
 	GLFWwindow* glfwwindow{ nullptr };
 	double c_x = 0.0, c_y = 0.0;
 

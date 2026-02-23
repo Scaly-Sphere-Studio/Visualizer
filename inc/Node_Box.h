@@ -16,6 +16,7 @@ class Node_Box : public SSS::Node_UI, public SSS::_EventRegistry<Node_Box>
 public:
 	friend _EventRegistry<Node_Box>;
 	Node_Box() = default;
+	Node_Box(const Node_Box&) = default;
 	Node_Box(SSS::SceneGraph* p_Sg);
 	Node_Box(SSS::SceneGraph* p_Sg, const Text_data& td);
 	void setTextData(const Text_data& td);
@@ -39,9 +40,15 @@ public:
 	Text_data getData() const { return _td; };
 
 
+	Text_data _td = Text_data{};
 private :
 	static void _register();
 	int minWidth = 600;
 	void _resize();
-	Text_data _td = Text_data{};
 };
+
+//void to_json(nlohmann::json& j, const Node_Box& t);
+//void from_json(const nlohmann::json& j, Node_Box& t);
+//
+//void to_json(nlohmann::json& j, const Node_Box*& t);
+//void from_json(const nlohmann::json& j, Node_Box*& t);
