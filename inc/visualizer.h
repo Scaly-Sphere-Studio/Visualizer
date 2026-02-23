@@ -27,15 +27,9 @@ struct VISUALISER_INFO {
 
 struct PROJECT_DATA {
 	~PROJECT_DATA();
-	//std::unordered_map<std::string, Box::Shared> box_map;
+
 	std::string project_name;
 	std::unordered_map<std::string, int> sg_boxes;
-
-	// Export
-	//std::unordered_map<std::string, Export_Node_Box> expNodes;
-	//std::vector<Export_Node_Box>	expNodes;
-	//std::vector<Node_Box*>	expNodesBox;
-	//std::vector<Text_data>			expData;
 };
 
 class Visualizer : public SSS::Observer {
@@ -77,7 +71,6 @@ public:
 	std::string project_path();
 	std::string lang_file_name(std::string& lang);
 
-	void fillProjExport();
 
 public:
 private:

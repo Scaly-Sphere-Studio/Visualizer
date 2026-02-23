@@ -274,8 +274,6 @@ void Visualizer::run()
 
     float time = 0;
 
-    Node_Box n;
-    Node_Box n2;
 
     //n = n2;
     std::cout << "\n=== Example 3: Camera Shake ===\n";
@@ -308,7 +306,7 @@ void Visualizer::run()
 
         input();
 
-        Char1->translate(sh.shake());
+        //Char1->translate(sh.shake());
 
 
         for (auto elem : _proj.sg_boxes)
@@ -770,7 +768,7 @@ std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
     Node_Box* n1 = new Node_Box(&sg, td);
     n1->translate(pos);
-    sg.push(n1);
+    //sg.push(n1);
     n1->update();
 
     _proj.sg_boxes[td.text_ID] = n1->_key;
@@ -987,7 +985,8 @@ void Visualizer::parse_info_data_project_from_json(const std::string& path)
     ifs >> tmp;
     ifs.close();
 
-    this->_proj = tmp;
+    from_json(tmp, _proj);
+    //this->_proj = tmp;
 }
 
 // Nodes from SceneGraph
@@ -1016,42 +1015,18 @@ void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
     this->_info = tmp;
 }
 
- void Visualizer::fillProjExport()
-{
-     //_proj.expNodes.reserve(_proj.sg_boxes.size());
-     //_proj.expData.reserve(_proj.sg_boxes.size());
-
-    for (const auto& [str, id] : _proj.sg_boxes)
-    {
-        if (id == 0) continue;
-        //_proj.expNodes.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->export_node());
-        //_proj.expData.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->getData());
-    }
-}
-
 void Visualizer::save()
 {
     LOG_MSG("SAVED");
     
     //Prepare la liste des nodes a exporter
-    fillProjExport();
 
     std::string data_str = "data.json";
     parse_info_data_project_to_json(data_str, true);
 
-    std::string data_str2 = "data3.json";
-    parse_info_data_project_to_json(data_str2, true);
-    //_proj.expNodes.clear();
-    //_proj.expData.clear();
 
     std::string str = "save.json";
     parse_info_data_visualizer_to_json(str, true);
-
-
-    //Todo save the text data in their own file
-    //for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
-
-    //}
 }
 
 void Visualizer::load()
@@ -1070,41 +1045,6 @@ void Visualizer::load()
     //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
     parse_info_data_project_from_json("data.json");
     SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
-
-    //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
-    //float i = 0;
-    //for (const Text_data& td : _mt.text_data) {
-    //    if (!_proj.box_map.contains(td.text_ID)) {
-    //        push_box(glm::vec3(i*5.0f,-i*5.0f, 10.f),td);
-    //        i += 1.f;
-    //    }
-    //    else
-    //        _proj.box_map[td.text_ID]->set_text_data(td);
-    //}
-
-
-
-
-
-    //for (const auto& expNode: _proj.expNodes) {
-    //    //if (!_proj.sg_boxes.contains(td.text_ID)) {
-    //    //    push_box(glm::vec3(i * 5.0f, -i * 5.0f, 10.f), td);
-    //    //    i += 1.f;
-    //    //}
-    //    //else {
-    //    
-    //    if (_proj.sg_boxes.contains(expNode.id)) {
-    //        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[expNode.id]));
-    //        node->readExport(expNode);
-    //    }
-    //    else {
-    //        push_box(expNode.pos, Text_data{});
-    //    }
-    //    //_proj.sg_boxes[td.text_ID];
-    //    //reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[td.text_ID]))->setTextData(td);
-    //    //}
-    //    //    _proj.box_map[td.text_ID]->set_text_data(td);
-    //}
 
 
     LOG_MSG("LOADED");
@@ -1184,24 +1124,32 @@ void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 
 void to_json(nlohmann::json& j, const PROJECT_DATA& t)
 {
+    std::vector<Export_Node_Box> expNodes;
     j = nlohmann::json{
-        //{"BOX", t.expNodes},
+        {"BOX", expNodes},
         {"PROJECT_NAME", t.project_name}
     };
 
     //optional fields
-    if (j.contains("BOX") && !j["BOX"].is_null()) {
-        //j["BOX"] = t.expNodes;
+    if (j.contains("BOX") && !t.sg_boxes.empty())
+    {
+        for (const auto& [str, id] : t.sg_boxes)
+        {
+            if (id == 0) continue;
+            expNodes.emplace_back(reinterpret_cast<Node_Box*>(Visualizer::get().sg.at(id))->export_node());
+        }
+        j["BOX"] = expNodes;
     }
 }
 
 void from_json(const nlohmann::json& j, PROJECT_DATA& t)
 {
-    //j.at("BOX").get_to(t.box_map);
-    //optional fields
-
     Visualizer::get();
-    if (j.contains("BOX") && !j["BOX"].is_null()) {
+    j.at("PROJECT_NAME").get_to(t.project_name);
+
+    //optional fields
+    if (j.contains("BOX") && !j["BOX"].is_null()) 
+    {
         //j["BOX"].get_to(t.expNodes);
         for (const auto& elem : j["BOX"])
         {
@@ -1219,12 +1167,12 @@ void from_json(const nlohmann::json& j, PROJECT_DATA& t)
             }
         }
     }
-    j.at("PROJECT_NAME").get_to(t.project_name);
 }
 
 PROJECT_DATA::~PROJECT_DATA()
 {
     //box_map.clear();
+    sg_boxes.clear();
 }
 
 
