@@ -186,6 +186,7 @@ Visualizer::~Visualizer()
         win->close();
 }
 
+
 void Visualizer::run()
 {
 
@@ -274,6 +275,12 @@ void Visualizer::run()
 
     float time = 0;
 
+    findNodeBoxEntry();
+    SSS::Node_Text* subtitle = new SSS::Node_Text(UI_renderer.get(), subTitle);
+    subtitle->setMaxStrSize(2000);
+    subtitle->setPosition(glm::vec3(450, -600, 0));
+    //subtitle->setWrappingMin(2000);
+
 
     //n = n2;
     std::cout << "\n=== Example 3: Camera Shake ===\n";
@@ -301,6 +308,7 @@ void Visualizer::run()
         tradio->parseText(std::to_string(radio1->isActive()));
         ttoggle->parseText(std::to_string(toggle->isActive()));
         tcheck->parseText(std::to_string(check->isActive()));
+        subtitle->parseText(subTitle);
 
         refresh();
 
@@ -517,6 +525,18 @@ void Visualizer::input()
 
     }
 
+    if (keys[GLFW_KEY_N].is_pressed()) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(currNodeParcours));
+
+        if (node->link_to.empty()) {
+            findNodeBoxEntry();
+        }
+        else {
+            auto n = *node->link_to.begin();
+            findNextBox(n);
+        }
+    }
+
     if (keys[GLFW_KEY_P].is_pressed()) {
         a->start();
     }
@@ -634,8 +654,13 @@ void Visualizer::refresh()
     
     for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
         if (it->second == 0) continue;
-        if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty())
+        if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty()) 
+        {
+            auto str = reinterpret_cast<Node_Box*>(sg.at(it->second))->getData().text;
+        
             link_boxNode(it->second);
+        }
+
     }
 
     _refreshed = false;
@@ -744,6 +769,39 @@ void Visualizer::pop_Nodelink(const int& a_key, const int& b_key)
     arrow_map.erase(a->getData().text_ID + b->getData().text_ID);
     a->link_to.erase(b->getData().text_ID);
     b->link_from.erase(a->getData().text_ID);
+}
+
+void Visualizer::findNodeBoxEntry()
+{
+    for (const auto& b : _proj.sg_boxes) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+
+        if (node->getData().text_ID == "86bfd78c534d0") {
+            glm::vec3 campos = glm::vec3(node->center().x, node->center().y, camera->getPosition().z);
+            camera->setPosition(campos);
+            currNodeParcours = b.second;
+
+            subTitle = node->getData().text;
+            break;
+        }
+    }
+}
+
+void Visualizer::findNextBox(const std::string& id)
+{
+    for (const auto& b : _proj.sg_boxes) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+        if (b.second == 0) continue;
+
+        if (node->getData().text_ID == id) {
+            glm::vec3 campos = glm::vec3(node->center().x, node->center().y, camera->getPosition().z);
+            camera->setPosition(campos);
+            currNodeParcours = node->_key;
+
+            subTitle = node->getData().text;
+            break;
+        }
+    }
 }
 
 
@@ -1167,6 +1225,8 @@ void from_json(const nlohmann::json& j, PROJECT_DATA& t)
             }
         }
     }
+
+    auto m2 = Visualizer::get()._proj.sg_boxes;
 }
 
 PROJECT_DATA::~PROJECT_DATA()

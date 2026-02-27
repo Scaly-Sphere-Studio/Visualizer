@@ -94,6 +94,11 @@ public:
 	void pop_Nodelink(const int& a, const int& b);
 
 
+	int currNodeParcours = 0;
+	void findNodeBoxEntry();
+	void findNextBox(const std::string& id);
+
+	std::string subTitle;
 
 
 	//Add a new box at the current cursor position
@@ -119,6 +124,8 @@ public:
 
 	glm::vec3 _cur_pos;
 	glm::vec3 _otherpos;
+
+	
 
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
