@@ -313,7 +313,7 @@ float sdTriangle( in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2 )
 
 
 
-float sdBezierCubic(in vec2 p, inout float t, inout float d0, UIPrimitive e)
+float sdBezierCubic(in vec2 p, inout float t, UIPrimitive e)
 {
 
     // test cubic roots
@@ -351,9 +351,9 @@ float sdBezierCubic(in vec2 p, inout float t, inout float d0, UIPrimitive e)
     vec2 pSign = -inverse(mat2(a, b)) * c;
     float q = p.y*p.y - p.x;
     float sgn = sgn0 * ((q > 0.0) && (q-pSign.y+1.0 > 0.0) ? sign(t*t - p.y * t + q) : 1.0);
-    d0 = abs(dist);
+    float d0 = abs(dist);
     
-    return d0;
+    return d0 - e.size.x/2;
 }
 
 // Blend modes
@@ -409,96 +409,88 @@ float borderCoverage(float dist, float thickness)
     return -clamp((inner - outer), 0.0, 1.0) +1 ;
 }
 
-//void main() 
-//{
-//    float rmin = min(uFrameRes.x, uFrameRes.y);
-//    float u_blur = 2.0;
-//
-//    vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
-////    vec2 Position = (2.0*gl_FragCoord.xy-uFrameRes.xy)/rmin;
-//    vec2 p = Position;
-//
-//    // Background color
-//    vec4 col = vec4(0.0);
-//
-//    int loop = 0;
-//
-//    float d  = 1;
-//
-//    for(int i = 0; i < uPrimSize; i++)
-//    {
-//
-//        UIPrimitive e = primitives[i];
-//
-//        transformPixelSpace(e);
-//
-//        if((e.blendMode & GROUP) == GROUP)
-//            loop ^= 1; //switch group mode
-//
-//        p = (e.rotation > 0.0) ? rotate(p, e.rotation): p;
-//
-//        if(e.shapeId == SDCIRCLE      ){d = composeSdf(e.blendMode, d, sdCircle(p- e.pos, e.size.r));}
-//        if(e.shapeId == SDORIENTEDBOX ){d = composeSdf(e.blendMode, d, sdOrientedBox  (p, e.pos, e.pos2, e.size.r));}
-//        if(e.shapeId == SDROUNDEDDBOX ){d = composeSdf(e.blendMode, d, sdRoundedBox  (p- e.pos, e.size, e.pos2, e.pos3));}
-//        if(e.shapeId == SDSEGMENT     ){d = composeSdf(e.blendMode, d, sdSegment      (p, e.pos, e.pos2, e.size.r));}
-//        if(e.shapeId == SDPIE         ){d = composeSdf(e.blendMode, d, sdPie(p, e.progress, e.rotation, e.size.r));}
-//        if(e.shapeId == SDRING        ){d = composeSdf(e.blendMode, d, sdParamRing(p, e.progress, e.rotation, e.size));}
-//        if(e.shapeId == SDARC         ){d = composeSdf(e.blendMode, d, sdArc(p, uProgress, e.rotation, e.size));}
-//        if(e.shapeId == SDTRIANGLE    ){d = composeSdf(e.blendMode, d, sdTriangle(p, e.pos, e.pos2, e.pos3));}
-//        if(e.shapeId == SDROUNEDX     ){d = composeSdf(e.blendMode, d, sdRoundedX(p, e.size.r, e.cornerRadius));}
-//        if(e.shapeId == SDCROSS       ){d = composeSdf(e.blendMode, d, sdCross(p, e.size, e.cornerRadius));}
-//        if(e.shapeId == SDPENTAGON    ){d = composeSdf(e.blendMode, d,sdPentagon(p, e.size.r));}
-//        if(e.shapeId == SDHEXAGON     ){d = composeSdf(e.blendMode, d,sdHexagon(p, e.size.r));}
-//        if(e.shapeId == SDBEZIER_CUBIC){d = composeSdf(e.blendMode, d,sdBezierCubic(p, e.pos, e.pos2, e.pos3, e.pos4));}
-//
-//
-//        if(loop!=0) continue;
-//
-//        d = (e.cornerRadius > 0) ?  d - e.cornerRadius : d;
-//        d = (e.innerRadius> 0) ? d = abs(d) - e.innerRadius : d;
-//
-//        // Anti Aliasing
-//        float w = u_blur*fwidth(d);
-//        float h = smoothstep(-w/2.0, w/2.0, -d); // smooth centered blur AA
-//        
-//
-//        // Alpha blending
-//        float alpha = e.color.a * h;
-//        vec4 src = vec4(e.color.xyz, alpha);
-//        col = over(col, src);
-//
-//        // Border with AA
-//        if(e.borderWidth > 0) {
-//            d = borderCoverage(d, e.borderWidth);
-//            col = mix( vec4(e.border.xyz, 1.0), col, d);
-//        }
-//
-//        d  = 1;
-//    }
-//
-//    FragColor = col;
-//}
-//
-
-
-void main()
+void main() 
 {
     float rmin = min(uFrameRes.x, uFrameRes.y);
     float u_blur = 2.0;
 
     vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
 //    vec2 Position = (2.0*gl_FragCoord.xy-uFrameRes.xy)/rmin;
-//    vec2 p = Position;
-//    vec2 uv = (gl_FragCoord.xy - uFrameRes*0.5) / uFrameRes.x * 2.0;
-//    vec2 mouse = (iMouse.xy - uFrameRes.xy*0.5)/uFrameRes.x * 2.0;
-    // cubic bezier params from https://www.shadertoy.com/view/4sKyzW
+    vec2 p = Position;
 
-    UIPrimitive e;
+    // Background color
+    vec4 col = vec4(0.0);
 
-    e.pos  = vec2(100, 100);
-    e.pos2  = vec2(400, 200);
-    e.pos3  = vec2(100, 400);
-    e.pos4 = vec2(600, 600);
+    int loop = 0;
+
+    float d  = 1;
+    float t = 0;
+
+    for(int i = 0; i < uPrimSize; i++)
+    {
+
+        UIPrimitive e = primitives[i];
+
+        transformPixelSpace(e);
+
+        if((e.blendMode & GROUP) == GROUP)
+            loop ^= 1; //switch group mode
+
+        p = (e.rotation > 0.0) ? rotate(p, e.rotation): p;
+
+        if(e.shapeId == SDCIRCLE      ){d = composeSdf(e.blendMode, d, sdCircle(p- e.pos, e.size.r));}
+        if(e.shapeId == SDORIENTEDBOX ){d = composeSdf(e.blendMode, d, sdOrientedBox  (p, e.pos, e.pos2, e.size.r));}
+        if(e.shapeId == SDROUNDEDDBOX ){d = composeSdf(e.blendMode, d, sdRoundedBox  (p- e.pos, e.size, e.pos2, e.pos3));}
+        if(e.shapeId == SDSEGMENT     ){d = composeSdf(e.blendMode, d, sdSegment      (p, e.pos, e.pos2, e.size.r));}
+        if(e.shapeId == SDPIE         ){d = composeSdf(e.blendMode, d, sdPie(p, e.progress, e.rotation, e.size.r));}
+        if(e.shapeId == SDRING        ){d = composeSdf(e.blendMode, d, sdParamRing(p, e.progress, e.rotation, e.size));}
+        if(e.shapeId == SDARC         ){d = composeSdf(e.blendMode, d, sdArc(p, uProgress, e.rotation, e.size));}
+        if(e.shapeId == SDTRIANGLE    ){d = composeSdf(e.blendMode, d, sdTriangle(p, e.pos, e.pos2, e.pos3));}
+        if(e.shapeId == SDROUNEDX     ){d = composeSdf(e.blendMode, d, sdRoundedX(p, e.size.r, e.cornerRadius));}
+        if(e.shapeId == SDCROSS       ){d = composeSdf(e.blendMode, d, sdCross(p, e.size, e.cornerRadius));}
+        if(e.shapeId == SDPENTAGON    ){d = composeSdf(e.blendMode, d,sdPentagon(p, e.size.r));}
+        if(e.shapeId == SDHEXAGON     ){d = composeSdf(e.blendMode, d,sdHexagon(p, e.size.r));}
+        if(e.shapeId == SDBEZIER_CUBIC){d = composeSdf(e.blendMode, d,sdBezierCubic(p, t, e));}
+
+
+        if(loop!=0) continue;
+
+        d = (e.cornerRadius > 0) ?  d - e.cornerRadius : d;
+        d = (e.innerRadius> 0) ? d = abs(d) - e.innerRadius : d;
+
+        // Anti Aliasing
+        float w = u_blur*fwidth(d);
+        float h = smoothstep(-w/2.0, w/2.0, -d); // smooth centered blur AA
+        
+
+        // Alpha blending
+        float alpha = e.color.a * h;
+        vec4 src = vec4(e.color.xyz, alpha);
+        col = over(col, src);
+
+        // Border with AA
+        if(e.borderWidth > 0) {
+            d = borderCoverage(d, e.borderWidth);
+            col = mix( vec4(e.border.xyz, 1.0), col, d);
+        }
+
+        d  = 1;
+    }
+
+    FragColor = col;
+}
+
+
+
+void main2()
+{
+    float rmin = min(uFrameRes.x, uFrameRes.y);
+    float u_blur = 2.0;
+
+    vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
+
+
+    UIPrimitive e =  primitives[0];
 
     transformPixelSpace(e);
 
@@ -516,9 +508,9 @@ void main()
 	vec2 p3 = e.pos4;
 
     float t = 0;
-    float d0 = 0;
+    float d0 = sdBezierCubic(Position, t, e);
 
-    sdBezierCubic(Position, t, d0, e);
+    
 
 
 
@@ -537,7 +529,7 @@ void main()
     
     // Change the color along the line
     // TODO Add color gradient
-    float alpha = 1.0 - smoothstep(0.046, 0.05, abs(d0)*(1.0/lineSize));
+    float alpha = 1.0 - smoothstep(0.046, 0.1, d0);
 
-    FragColor = vec4(lineColorMix.rgb, alpha);
+    FragColor = vec4(1-d0, 1-d0, 1-d0, alpha);
 }
