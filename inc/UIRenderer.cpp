@@ -52,13 +52,13 @@ UIRenderer::UIRenderer()
 
     _vao.unbind();
 
-    init();
+    //init();
 
 }
 
 void UIRenderer::render()
 {
-
+    
 
     Shaders::Shared shader = getShaders();
     if (!shader) {
@@ -67,16 +67,16 @@ void UIRenderer::render()
     }
     
     shader->use();
-    shader->setVec2("uFrameRes", _resolution);
-    shader->setFloat("uProgress", 0.f);
+    shader->setUniform("uFrameRes", _resolution);
+    shader->setUniform("uProgress", 0.f);
 
 
-    shader->setMat4("uProj", _proj);
+    shader->setUniform("uProj", _proj);
     //shader->setMat4("uProj", _cam->getProjection());
 
     //Size and pos of the bounding box
-    shader->setVec2("uSize", _resolution);
-    shader->setVec3("uPos", glm::vec3(0, 0, 0));
+    shader->setUniform("uSize", _resolution);
+    shader->setUniform("uPos", glm::vec3(0, 0, 0));
 
 
 
@@ -88,13 +88,13 @@ void UIRenderer::render()
     glClear(GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LEQUAL);
     int offset = 0;
-    for (const auto& node : list)
+    for (const auto& node : SSS::SceneGraph::get().list)
     {
-        Node_UI* n = reinterpret_cast<Node_UI*>(at(node));
+        Node_UI* n = reinterpret_cast<Node_UI*>(SceneGraph::at(node));
         if (n->isHidden()|| n->prims.empty())
             continue;
 
-        shader->setInt("uPrimSize", n->prims.size());
+        shader->setUniform("uPrimSize", (int)n->prims.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 
@@ -120,13 +120,13 @@ void UIRenderer::updateResolution(const float _w, const float _h)
          -20.f, 20.f                  // near, far
      );
 
-     glm::vec3 camPos = _rd->camera->getPosition();
-     _rd->camera->setPosition(glm::vec3(_w/2.0f, -_h/2.0f, camPos.z));
+     glm::vec3 camPos = glm::vec3(_w / 2.0f, -_h / 2.0f, 20);
+     SSS::SceneGraph::getUIRenderer()->camera->setPosition(glm::vec3(_w / 2.0f, -_h / 2.0f, camPos.z));
 }
 void UIRenderer::push(Node_UI* n)
 {
-    emplace(n);
-    list.push_back(n->_key);
+    SceneGraph::emplace(n);
+    SceneGraph::get().list.push_back(n->_key);
     n->observe(_window);
 }
 SSS_GL_END;
