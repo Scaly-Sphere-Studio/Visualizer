@@ -8,8 +8,8 @@ UIRenderer::UIRenderer()
 {
     //setShaders(Window::getPresetShaders(static_cast<uint32_t>(Shaders::Preset::Line)));
 
-    setShaders(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag"));
-
+    //setShaders(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag"));
+    addMaterial("default", Material(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag")));
     //_resolution = glm::vec2(800, 600);
 
     _proj = glm::ortho(
@@ -58,33 +58,18 @@ UIRenderer::UIRenderer()
 
 void UIRenderer::render()
 {
-    
-
-    Shaders::Shared shader = getShaders();
-    if (!shader) {
-        LOG_METHOD_WRN("No shaders bound");
-        return;
-    }
-    
-    shader->use();
-    shader->setUniform("uFrameRes", _resolution);
-    shader->setUniform("uProgress", 0.f);
-
-
-    shader->setUniform("uProj", _proj);
-    //shader->setMat4("uProj", _cam->getProjection());
-
-    //Size and pos of the bounding box
-    shader->setUniform("uSize", _resolution);
-    shader->setUniform("uPos", glm::vec3(0, 0, 0));
-
-
+    auto& mat = _materials.at("default");
+    mat.bind();
+    mat.set("uFrameRes", _resolution);
+    mat.set("uProgress", 0.f);
+    mat.set("uProj", _proj);
+    mat.set("uSize", _resolution);
+    mat.set("uPos", glm::vec3(0, 0, 0));
 
     _vao.bind();
-    // bind to binding point 0 (must match GLSL 'binding = 0')
+
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
-    //if (_sg == nullptr)
-    //    return;
+
     glClear(GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LEQUAL);
     int offset = 0;
@@ -93,8 +78,7 @@ void UIRenderer::render()
         Node_UI* n = reinterpret_cast<Node_UI*>(SceneGraph::at(node));
         if (n->isHidden()|| n->prims.empty())
             continue;
-
-        shader->setUniform("uPrimSize", (int)n->prims.size());
+        mat.set("uPrimSize", (int)n->prims.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 
@@ -121,7 +105,6 @@ void UIRenderer::updateResolution(const float _w, const float _h)
      );
 
      glm::vec3 camPos = glm::vec3(_w / 2.0f, -_h / 2.0f, 20);
-     SSS::SceneGraph::getUIRenderer()->camera->setPosition(glm::vec3(_w / 2.0f, -_h / 2.0f, camPos.z));
 }
 void UIRenderer::push(Node_UI* n)
 {

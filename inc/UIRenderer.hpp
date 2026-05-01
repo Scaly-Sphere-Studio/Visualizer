@@ -17,7 +17,7 @@ SSS_GL_BEGIN;
 #pragma warning(disable: 4251)
 #pragma warning(disable: 4275)
 
-class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer, public SSS::SceneGraph {
+class UIRenderer : public Renderer<UIRenderer>,public SSS::Observer{
     friend class SharedClass;
     friend class Window;
 
