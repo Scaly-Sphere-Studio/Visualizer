@@ -144,10 +144,10 @@ public:
 	// Objects
 	SSS::GL::Camera::Shared camera;
 	// Renderers
-	SSS::GL::PlaneRenderer::Shared box_renderer;
-	SSS::GL::LineRenderer::Shared line_renderer;
-	SSS::GL::PlaneRenderer::Shared selection_renderer;
-	SSS::GL::UIRenderer::Shared UI_renderer;
+	SSS::GL::PlaneRenderer::Shared	box_renderer;
+	SSS::GL::LineRenderer::Shared	line_renderer;
+	SSS::GL::PlaneRenderer::Shared	selection_renderer;
+	SSS::GL::UIRenderer::Shared		UI_renderer;
 	Debugger::Shared debug_renderer;
 
 public:
@@ -188,7 +188,7 @@ public:
 	std::chrono::steady_clock::time_point end;
 
 	//INTERFACE
-	SSS::SceneGraph sg;
+	//SSS::SceneGraph sg;
 
 	bool _refreshed;
 };
