@@ -31,6 +31,12 @@ in mat4 proj;
 #define INTERSECTION    4
 
 
+// Clor blending Flags
+#define GRAYSCALE       1
+#define GRADIENT        2
+#define TONEMAP         4
+
+
 out vec4 FragColor;
 
 
@@ -38,22 +44,25 @@ out vec4 FragColor;
 struct UIPrimitive {
     vec2 pos;
     vec2 size;
+
     vec4 color;
+    vec4 color2;
+
     vec4 border;
     float borderWidth;
     float cornerRadius;
     int   shapeId;
     int   blendMode;
-    float innerRadius;  // 4 bytes
     float progress;     // 4 bytes
+    float innerRadius;  // 4 bytes
     vec2   pos2;
     vec2   pos3;        // 8 bytes
     vec2   pos4;        // 8 bytes
 
     float rotation;     // 4 bytes
     float scale;        // 4 bytes
-    float _pad;         // 4 bytes
-    float _pad1;        // 4 bytes
+    int   blendColor;   // 4 bytes
+    int   gradientID;   // 4 bytes
 };
 
 layout(binding = 0, std430) readonly buffer Primitives {
@@ -311,8 +320,6 @@ float sdTriangle( in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2 )
     return -sqrt(d.x)*sign(d.y);
 }
 
-
-
 float sdBezierCubic(in vec2 p, inout float t, UIPrimitive e)
 {
 
@@ -409,6 +416,11 @@ float borderCoverage(float dist, float thickness)
     return -clamp((inner - outer), 0.0, 1.0) +1 ;
 }
 
+// gradient texture 
+uniform sampler2D uGradientTexture;
+// The active gradient ID (0–255)
+uniform int uGradientID;
+
 void main() 
 {
     float rmin = min(uFrameRes.x, uFrameRes.y);
@@ -465,7 +477,30 @@ void main()
 
         // Alpha blending
         float alpha = e.color.a * h;
+
         vec4 src = vec4(e.color.xyz, alpha);
+
+        if((e.blendColor & GRADIENT) == GRADIENT)
+        {
+            src = vec4(mix(e.color.xyz, e.color2.xyz, t), alpha);
+        }
+
+        if((e.blendColor & GRAYSCALE) == GRAYSCALE)
+        {
+            float Clinear = 0.2126 * src.x + 0.7152 * src.y + 0.0722 * src.z;
+            Clinear = (Clinear < 0.0031308) ? Clinear * 12.92 : pow(Clinear,1.0/2.4) * 1.055 - 0.055;
+            src =  vec4(Clinear,Clinear,Clinear, alpha);
+        }
+
+        if((e.blendColor & TONEMAP) == TONEMAP)
+        {
+            float v = uGradientID;
+//            float u = ceil(src.r * 255.0);
+            vec4 gradientColor = texture2D(uGradientTexture, vec2(t, v));
+            src = vec4(gradientColor.xyz, alpha);
+//            src = vec4(t, t, t, alpha);
+        }
+
         col = over(col, src);
 
         // Border with AA
