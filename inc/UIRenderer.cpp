@@ -10,6 +10,10 @@ UIRenderer::UIRenderer()
 
     //setShaders(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag"));
     addMaterial("default", Material(SSS::GL::Shaders::create("glsl/ui.vert", "glsl/ui.frag")));
+
+    auto tex = SSS::GL::Texture::create(std::filesystem::path("C:\\Users\\SawsenUser\\Desktop\\characters\\gradient.png"));
+	_materials.at("default").setTexture("uGradientTexture", tex);
+
     //_resolution = glm::vec2(800, 600);
 
     _proj = glm::ortho(
@@ -59,17 +63,19 @@ UIRenderer::UIRenderer()
 void UIRenderer::render()
 {
     auto& mat = _materials.at("default");
-    mat.bind();
     mat.set("uFrameRes", _resolution);
     mat.set("uProgress", 0.f);
     mat.set("uProj", _proj);
     mat.set("uSize", _resolution);
     mat.set("uPos", glm::vec3(0, 0, 0));
+    mat.bind();
 
     _vao.bind();
 
+
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
+    
     glClear(GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LEQUAL);
     int offset = 0;

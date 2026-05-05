@@ -34,7 +34,7 @@ in mat4 proj;
 // Clor blending Flags
 #define GRAYSCALE       1
 #define GRADIENT        2
-#define TONEMAP         4
+#define COLORMAP        4
 
 
 out vec4 FragColor;
@@ -416,9 +416,9 @@ float borderCoverage(float dist, float thickness)
     return -clamp((inner - outer), 0.0, 1.0) +1 ;
 }
 
-// gradient texture 
-uniform sampler2D uGradientTexture;
-// The active gradient ID (0–255)
+// gradient texture (256 wide × N gradients tall, stored as a 2D array with 1 layer)
+uniform sampler2DArray uGradientTexture;
+// The active gradient ID (0–255), selects the row in the texture
 uniform int uGradientID;
 
 void main() 
@@ -492,13 +492,11 @@ void main()
             src =  vec4(Clinear,Clinear,Clinear, alpha);
         }
 
-        if((e.blendColor & TONEMAP) == TONEMAP)
+        if((e.blendColor & COLORMAP) == COLORMAP)
         {
-            float v = uGradientID;
-//            float u = ceil(src.r * 255.0);
-            vec4 gradientColor = texture2D(uGradientTexture, vec2(t, v));
+            float u = src.r;
+            vec4 gradientColor = texture(uGradientTexture, vec3(u, float(uGradientID/255.0), 0));
             src = vec4(gradientColor.xyz, alpha);
-//            src = vec4(t, t, t, alpha);
         }
 
         col = over(col, src);
@@ -513,58 +511,4 @@ void main()
     }
 
     FragColor = col;
-}
-
-
-
-void main2()
-{
-    float rmin = min(uFrameRes.x, uFrameRes.y);
-    float u_blur = 2.0;
-
-    vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
-
-
-    UIPrimitive e =  primitives[0];
-
-    transformPixelSpace(e);
-
-//	float t0 = mod(iTime*2.+1.5,24.*PI);
-    float scale = 2.0;
-//	vec2 p0 = vec2(-0.4,-0.4);
-//	vec2 p1 = vec2(-0.4,0.4);
-//	vec2 p2 = vec2(0.4,-0.4);
-//	vec2 p3 = vec2(0.4,0.4);
-
-
-    vec2 p0 = e.pos;
-	vec2 p1 = e.pos2;
-	vec2 p2 = e.pos3;
-	vec2 p3 = e.pos4;
-
-    float t = 0;
-    float d0 = sdBezierCubic(Position, t, e);
-
-    
-
-
-
-
-    vec4 clearColor = vec4(0.0, .0, 0.0, 0.0);
-    vec4 lineColor = vec4(1, 1, 0, 1.0);
-    vec4 lineColor2 = vec4(0, 1, 1, 1.0);
-    vec4 lineColorMix = mix(lineColor, lineColor2, t);
-	//col = mix(clearColor, lineColor, 1.0-smoothstep(0.04,0.05,abs(d0)*1.8));
-    
-    //fragColor = vec4(col, 1.0);
-    
-    // Change the line thickness
-    float lineSize = clamp(t, 1.0, 1.0);
-//    lineSize = mix(0.6, 1.0, sqrt(smoothstep(0.0,1.0,t)));
-    
-    // Change the color along the line
-    // TODO Add color gradient
-    float alpha = 1.0 - smoothstep(0.046, 0.1, d0);
-
-    FragColor = vec4(1-d0, 1-d0, 1-d0, alpha);
 }
