@@ -7,7 +7,7 @@ uniform int     uPrimSize;
 uniform vec2    uFrameRes;
 uniform float   uProgress;
 
-in mat4 proj;
+in vec2 vWorldPos;
 
 // Enum SDF_Shapes copy declared in..
 #define SDCIRCLE        0
@@ -426,8 +426,7 @@ void main()
     float rmin = min(uFrameRes.x, uFrameRes.y);
     float u_blur = 2.0;
 
-    vec2 Position = 2.0f*vec2(gl_FragCoord.x, uFrameRes.y-gl_FragCoord.y)/rmin;
-//    vec2 Position = (2.0*gl_FragCoord.xy-uFrameRes.xy)/rmin;
+    vec2 Position = 2.0 * vWorldPos / rmin;
     vec2 p = Position;
 
     // Background color
