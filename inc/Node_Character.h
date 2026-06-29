@@ -14,8 +14,8 @@ class Node_Character : public SSS::Node_UI, public SSS::_EventRegistry<Node_Char
 {
 public:
 	friend _EventRegistry<Node_Character>;
-	Node_Character(SSS::SceneGraph* p_Sg, const std::string& path);
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	Node_Character(const std::string& path);
+	virtual void _subjectUpdate(SSS::Subject const& subject, SSS::Event const& event) override;
 
 	void update();
 

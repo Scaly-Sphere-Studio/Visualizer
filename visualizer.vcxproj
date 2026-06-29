@@ -19,8 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="inc\UIRenderer.cpp" />
-    <ClCompile Include="src\Animation.cpp" />
+<ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\backend.cpp" />
     <ClCompile Include="src\backend_json.cpp" />
     <ClCompile Include="src\commons.cpp" />
@@ -44,8 +43,7 @@
     <ClInclude Include="inc\Node_Export.h" />
     <ClInclude Include="inc\Shake_Generator.hpp" />
     <ClInclude Include="inc\Text_data.h" />
-    <ClInclude Include="inc\UIRenderer.hpp" />
-    <ClInclude Include="inc\_includes.hpp" />
+<ClInclude Include="inc\_includes.hpp" />
     <ClInclude Include="inc\commons.h" />
     <ClInclude Include="inc\Debugger.h" />
     <ClInclude Include="inc\visualizer.h" />

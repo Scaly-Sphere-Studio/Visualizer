@@ -1,10 +1,10 @@
 #include "visualizer.h"
 #include "Node_Box.h"
 
+#include <SSS/SceneGraph/scenegraph.h>
 #include <SSS/SceneGraph/Node_Input.h>
 #include "Node_Character.h"
 
-#include <SSS/SceneGraph/scenegraph.h>
 
 #include "Animation.hpp"
 #include "Shake_Generator.hpp"
@@ -38,8 +38,9 @@ Visualizer& Visualizer::get()
     return *singleton;
 }
 
-void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
+void Visualizer::_subjectUpdate(SSS::Subject const& subject, SSS::Event const& event)
 {
+    int const event_id = event.id;
     if (event_id == EVENT_ID("NODE_UI_HOVER"))
     {
         SSS::Node* n = (SSS::Node*)&subject;
@@ -105,8 +106,8 @@ void Visualizer::run()
     UI_renderer->setWindow(window);
 
 
-    auto tex = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png");
-    auto tex2 = SSS::GL::Texture::create("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png");
+    auto tex = SSS::GL::Texture::create(std::filesystem::path("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png"));
+    auto tex2 = SSS::GL::Texture::create(std::filesystem::path("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png"));
 
 
     

@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 
 #include <SSS/Commons.hpp>
 #include <SSS/SceneGraph/Node_UI.h>
@@ -20,7 +20,7 @@ public:
 	Node_Box(SSS::SceneGraph* p_Sg);
 	Node_Box(SSS::SceneGraph* p_Sg, const Text_data& td);
 	void setTextData(const Text_data& td);
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	virtual void _subjectUpdate(SSS::Subject const& subject, SSS::Event const& event) override;
 
 	void update();
 

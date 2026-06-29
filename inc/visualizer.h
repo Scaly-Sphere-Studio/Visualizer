@@ -50,7 +50,7 @@ public:
 
 	std::mt19937 rng;
 
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	virtual void _subjectUpdate(SSS::Subject const& subject, SSS::Event const& event) override;
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
