@@ -22,6 +22,9 @@
     <Filter Include="Nodes\Src">
       <UniqueIdentifier>{73d23d5d-b1ce-4cb7-a056-bfffc681eda6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Nodes\UIRenderer">
+      <UniqueIdentifier>{5fa92b60-5db6-4d00-b08e-7e29eb2fbf0b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Nodes\Headers">
       <UniqueIdentifier>{e398d395-315d-4b08-94ab-1738ac148df5}</UniqueIdentifier>
     </Filter>
@@ -51,20 +54,20 @@
     <ClCompile Include="src\gui.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\scenegraph.cpp">
-      <Filter>Nodes\Src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Node_Box.cpp">
-      <Filter>Nodes\Src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Node_Primitive.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
     <ClCompile Include="src\Node_Export.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Node_UI.cpp">
+    <ClCompile Include="inc\UIRenderer.cpp">
+      <Filter>Nodes\UIRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Node_Character.cpp">
       <Filter>Nodes\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Animation.cpp">
+      <Filter>Nodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -95,20 +98,23 @@
     <ClInclude Include="inc\gui.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="inc\scenegraph.h">
-      <Filter>Nodes\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="inc\Node_Box.h">
-      <Filter>Nodes\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\Node_Primitive.h">
       <Filter>Nodes\Headers</Filter>
     </ClInclude>
     <ClInclude Include="inc\Node_Export.h">
       <Filter>Nodes\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="inc\Node_UI.h">
+    <ClInclude Include="inc\UIRenderer.hpp">
+      <Filter>Nodes\UIRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Node_Character.h">
       <Filter>Nodes\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Animation.hpp">
+      <Filter>Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Shake_Generator.hpp">
+      <Filter>Nodes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

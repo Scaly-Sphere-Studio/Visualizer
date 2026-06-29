@@ -1,9 +1,13 @@
 #include "scenegraph.h"
 
-#include "Node_Primitive.h"
-#include "Node_UI.h"
+//#include "Node_Primitive.h"
+//#include "Node_UI.h"
 #include <random>
 #include <chrono>
+
+#include <mutex>
+
+
 
 Node::Node()
 {
@@ -11,6 +15,7 @@ Node::Node()
 	std::mt19937 rng(unsigned int(std::chrono::steady_clock::now().time_since_epoch().count()));
 	_key = rng();
 
+	//std::call_once(_RegistryDone, [&]() { _register(); });
 }
 
 Node::Node(SceneGraph* p_Sg)
@@ -35,7 +40,6 @@ Node* Node::push(Node* n)
 void Node::pop()
 {
 	_parent = 0;
-
 	for (const auto& cKey : _children)
 	{
 		if (_sg->contains(cKey.second)) 
@@ -86,6 +90,10 @@ Node::operator std::string() const
 	return to_string();
 }
 
+void Node::_register()
+{
+}
+
 
 SceneGraph::SceneGraph()
 {
@@ -98,10 +106,14 @@ void SceneGraph::init()
 	_cam = SSS::GL::Camera::create();
 	_cam->setPosition({ 0, 0, 20.f });
 	_cam->setZFar(40.f);
-	_cam->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+	//_cam->setProjectionType(SSS::GL::Camera::Projection::UI);
 
 	_rd = SSS::GL::PlaneRenderer::create();
-	_rd->camera = _cam;
+	_rd->camera = SSS::GL::Camera::create();
+	_rd->camera->setPosition({ 0, 0, 20.f });
+	_rd->camera->setZFar(40.f);
+	_rd->camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+
 }
 
 void SceneGraph::update()

@@ -3,9 +3,13 @@
 //#include "Box.h"
 #include "Debugger.h"
 #include "backend.hpp"
-#include "scenegraph.h"
+#include <SSS/SceneGraph/scenegraph.h>
 #include "SSS/Commons/eventList.hpp"
 #include "Node_Export.h"
+
+
+#include "Animation.hpp"
+#include "Node_Box.h"
 
 enum struct V_STATES {
 	DEFAULT = 0,
@@ -23,14 +27,9 @@ struct VISUALISER_INFO {
 
 struct PROJECT_DATA {
 	~PROJECT_DATA();
-	//std::unordered_map<std::string, Box::Shared> box_map;
+
 	std::string project_name;
 	std::unordered_map<std::string, int> sg_boxes;
-
-	// Export
-	//std::unordered_map<std::string, Export_Node_Box> expNodes;
-	std::vector<Export_Node_Box>	expNodes;
-	std::vector<Text_data>			expData;
 };
 
 class Visualizer : public SSS::Observer {
@@ -44,14 +43,14 @@ public:
 
 	void run();
 
-private:
+	public:
 	PROJECT_DATA _proj;
 	VISUALISER_INFO _info;
 	V_STATES _states = V_STATES::DEFAULT;
 
 	std::mt19937 rng;
 
-	virtual void _subjectUpdate(SSS::Subject const& subject, int event_id) override;
+	virtual void _subjectUpdate(SSS::Subject const& subject, SSS::Event const& event) override;
 
 	//CALLBACKS
 	static void resize_callback(GLFWwindow* win, int w, int h);
@@ -72,7 +71,6 @@ private:
 	std::string project_path();
 	std::string lang_file_name(std::string& lang);
 
-	void fillProjExport();
 
 public:
 private:
@@ -80,7 +78,7 @@ private:
 	//void link_box_to_cursor(Box& a);
 	//Remove the link between two selected box
 
-
+	Track *a;
 
 
 	/* [BOX METHODS] */
@@ -89,13 +87,18 @@ private:
 public:
 	//Update all the arrow linked to this box
 	void link_boxNode(const int& a);
-private:
+public:
 	//Create a link from the box to the position of the cursor
 	void link_boxNode_to_cursor(const int& a);
 	//Remove the link between two selected box
 	void pop_Nodelink(const int& a, const int& b);
 
 
+	int currNodeParcours = 0;
+	void findNodeBoxEntry();
+	void findNextBox(const std::string& id);
+
+	std::string subTitle;
 
 
 	//Add a new box at the current cursor position
@@ -122,6 +125,8 @@ private:
 	glm::vec3 _cur_pos;
 	glm::vec3 _otherpos;
 
+	
+
 	/* [VISUALIZER METHODS] */
 	//Check if the box is on the screen
 	//bool check_frustrum_render(Box &b);
@@ -139,14 +144,18 @@ public:
 	// Objects
 	SSS::GL::Camera::Shared camera;
 	// Renderers
-	SSS::GL::PlaneRenderer::Shared box_renderer;
-	SSS::GL::LineRenderer::Shared line_renderer;
-	SSS::GL::PlaneRenderer::Shared selection_renderer;
+	SSS::GL::PlaneRenderer::Shared	box_renderer;
+	SSS::GL::LineRenderer::Shared	line_renderer;
+	SSS::GL::PlaneRenderer::Shared	selection_renderer;
+	SSS::GL::UIRenderer::Shared		UI_renderer;
 	Debugger::Shared debug_renderer;
 
-private:
+public:
 	GLFWwindow* glfwwindow{ nullptr };
 	double c_x = 0.0, c_y = 0.0;
+
+	SSS::GL::Plane::Shared planeTest;
+	int iframe = 0;
 
 	glm::vec4 clear_color = glm::vec4{ 1.0f };
 	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
@@ -179,7 +188,7 @@ private:
 	std::chrono::steady_clock::time_point end;
 
 	//INTERFACE
-	SceneGraph sg;
+	//SSS::SceneGraph sg;
 
 	bool _refreshed;
 };

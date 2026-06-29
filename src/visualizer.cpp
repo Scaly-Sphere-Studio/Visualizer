@@ -1,120 +1,18 @@
 #include "visualizer.h"
 #include "Node_Box.h"
 
-/* [MISC] */
-static std::array<float, 4> BezierCoeffs(float P0, float P1, float P2, float P3)
-{
-    std::array<float, 4> Z;
-    Z[0] = -P0 + 3.0f * P1 + -3.0f * P2 + P3;
-    Z[1] = 3.0f * P0 - 6.0f * P1 + 3.0f * P2;
-    Z[2] = -3.0f * P0 + 3.0f * P1;
-    Z[3] = P0;
-
-    return Z;
-}
+#include <SSS/SceneGraph/scenegraph.h>
+#include <SSS/SceneGraph/Node_Input.h>
+#include "Node_Character.h"
 
 
-static std::array<float, 3> CubicRoots(float a, float b, float c, float d)
-{
+#include "Animation.hpp"
+#include "Shake_Generator.hpp"
 
-    float A = b / a;
-    float B = c / a;
-    float C = d / a;
-
-    float Im;
-
-    float Q = (3.f * B - std::pow(A, 2.f)) / 9.f;
-    float R = (9.f * A * B - 27.f * C - 2.f * std::pow(A, 3.f)) / 54.f;
-    float D = std::pow(Q, 3.f) + std::pow(R, 2.f);    // polynomial discriminant
-
-    std::array<float, 3U> t;
-
-    if (D >= 0)                                 // complex or duplicate roots POI
-    {
-        float S = SSS::Math::signum(R + std::sqrt(D)) * std::pow(std::abs(R + std::sqrt(D)), (1.0f / 3.0f));
-        float T = SSS::Math::signum(R - std::sqrt(D)) * std::pow(std::abs(R - std::sqrt(D)), (1.0f / 3.0f));
-
-        t[0] = -A / 3.0f + (S + T);                         // real root
-        t[1] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
-        t[2] = -A / 3.0f - (S + T) / 2.0f;                  // real part of complex root
-        Im = std::abs(std::sqrt(3.0f) * (S - T) / 2.0f);    // complex part of root pair   
-
-        //discard complex roots//
-        if (Im != 0) {
-            t[1] = -1.f;
-            t[2] = -1.f;
-        }
-
-    }
-    else                                          // distinct real roots
-    {
-        float th = std::acos(R / std::sqrt(-std::pow(Q, 3.f)));
-
-        t[0] = 2.0f * std::sqrt(-Q) * std::cos(th / 3.0f) - A / 3.0f;
-        t[1] = 2.0f * std::sqrt(-Q) * std::cos((th + 2.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
-        t[2] = 2.0f * std::sqrt(-Q) * std::cos((th + 4.0f * glm::pi<float>()) / 3.0f) - A / 3.0f;
-        Im = 0.0f;
-    }
-
-    /*discard out of spec roots*/
-    for (size_t i = 0; i < t.size(); i++) {
-        if (t[i] < 0 || t[i] > 1.0) {
-            t[i] = -1;
-        }
-    }
-
-
-    return t;
-}
-
-//px and py are the coordinates of the start, first tangent, second tangent, end in that order. length = 4
-//lx and ly are the start then end coordinates of the stright line. length = 2
-static bool cubic_bezier_segment_intersection(glm::vec3 b_a, glm::vec3 b_b, glm::vec3 b_c, glm::vec3 b_d,
-    glm::vec3 s_a, glm::vec3 s_b) {
-
-    glm::vec2 X;
-
-
-    float A = s_b.y - s_a.y;      //A=y2-y1
-    float B = s_a.x - s_b.x;      //B=x1-x2
-    float C = s_a.x * (s_a.y - s_b.y) + s_a.y * (s_b.x - s_a.x);  //C=x1*(y1-y2)+y1*(x2-x1)
-
-    std::array<float, 4> bx = BezierCoeffs(b_a.x, b_b.x, b_c.x, b_d.x);
-    std::array<float, 4> by = BezierCoeffs(b_a.y, b_b.y, b_c.y, b_d.y);
-
-    std::array<float, 4> P;
-    P[0] = A * bx[0] + B * by[0];       /*t^3*/
-    P[1] = A * bx[1] + B * by[1];       /*t^2*/
-    P[2] = A * bx[2] + B * by[2];       /*t*/
-    P[3] = A * bx[3] + B * by[3] + C;   /*1*/
-
-    std::array<float, 3> r = CubicRoots(P[0], P[1], P[2], P[3]);
-
-    /*verify the roots are in bounds of the linear segment*/
-    for (size_t i = 0; i < r.size(); i++) {
-        float t = r[i];
-
-        X[0] = bx[0] * t * t * t + bx[1] * t * t + bx[2] * t + bx[3];
-        X[1] = by[0] * t * t * t + by[1] * t * t + by[2] * t + by[3];
-
-        /*above is intersection point assuming infinitely long line segment,
-          make sure we are also in bounds of the line*/
-        float s;
-        if ((s_b.x - s_a.x) != 0) { s = (X[0] - s_a.x) / (s_b.x - s_a.x); }          /*if not vertical line*/
-        else { s = (X[1] - s_a.y) / (s_b.y - s_a.y); }
-
-        /*in bounds?*/
-        if (t > 0 && t < 1.0 && s > 0 && s < 1.0) {
-            return true;
-        }
-    }
-    return false;
-}
-
+//#include "EaseFunctions.hpp"
 
 Visualizer::Visualizer()
 {
-    //TODO RANDSEED 
     rng = std::mt19937((float)(std::chrono::steady_clock::now().time_since_epoch().count()));
 
     //TODO Check if the data exists
@@ -123,11 +21,11 @@ Visualizer::Visualizer()
 
     // FIRST SETUP OPERATION
     // Fill the languages ISO code map 
-    std::string iso_file = "iso_codes/iso.json";
-    if (check_folder_exists(iso_file)) {
-        iso_map = retrieve_iso_codes(iso_file);
-        SSS::log_msg("ISO File found");
-    }
+    //std::string iso_file = "iso_codes/iso.json";
+    //if (check_folder_exists(iso_file)) {
+    //    iso_map = retrieve_iso_codes(iso_file);
+    //    SSS::log_msg("ISO File found");
+    //}
 
     start = std::chrono::steady_clock::now();
 
@@ -140,42 +38,29 @@ Visualizer& Visualizer::get()
     return *singleton;
 }
 
-void Visualizer::_subjectUpdate(SSS::Subject const& subject, int event_id)
+void Visualizer::_subjectUpdate(SSS::Subject const& subject, SSS::Event const& event)
 {
-    switch (event_id) {
-    case SSS::EventList::Hover:
+    int const event_id = event.id;
+    if (event_id == EVENT_ID("NODE_UI_HOVER"))
     {
-        Node* n = (Node*)&subject;
+        SSS::Node* n = (SSS::Node*)&subject;
         hovered_box = n->_key;
         SSS::log_msg("Hovered Node updated :" + std::to_string(n->_key));
         return;
     }
-    case SSS::EventList::Leave:
+
+    if (event_id == EVENT_ID("NODE_UI_MOUSE_LEFT"))
     {
-        Node* n = (Node*)&subject;
-        if (hovered_box == n->_key) 
+        SSS::Node* n = (SSS::Node*)&subject;
+        if (hovered_box == n->_key)
         {
             hovered_box = -1;
             SSS::log_msg("Last hovered node reseted :" + std::to_string(n->_key));
         }
         return;
     }
-    case SSS::EventList::Resize:
-    {
-        // Node resized, relink
-        return;
-    }
-    case SSS::EventList::Translated:
-    {
-        if (!_refreshed)
-            _refreshed = true;
-        // Node resized, relink
-        return;
-    }
-    default :
-        SSS::log_err("Unknown event [" + std::to_string(event_id) + "]");
-        return;
-    }
+
+    
 }
 
 Visualizer::~Visualizer()
@@ -185,10 +70,12 @@ Visualizer::~Visualizer()
     line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
+    UI_renderer.reset();
     auto win = SSS::GL::Window::get(glfwwindow);
     if (win)
         win->close();
 }
+
 
 void Visualizer::run()
 {
@@ -198,26 +85,131 @@ void Visualizer::run()
     clear_color = SSS::RGBA_f{ "#4d5f83" }.to_RGBA();
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-
 
     //load
     load();
     refresh();
+    const auto dim = window->getDimensions();
+
+
+    int cur = 0;
+
+    bool bch = false;
+    bool btog = false;
+    bool brad1 = true;
+    bool brad2 = false;
+    bool brad3 = false;
+
+    UI_renderer->setWindow(window);
+
+
+    auto tex = SSS::GL::Texture::create(std::filesystem::path("C:/Users/SawsenUser/Desktop/characters/animated_femchar.png"));
+    auto tex2 = SSS::GL::Texture::create(std::filesystem::path("C:/Users/SawsenUser/Desktop/characters/femchar_surprised.png"));
+
+
+    
+    Node_Character* Char1 = new Node_Character(&sg, "C:/Users/SawsenUser/Desktop/characters/thwomp.png");
+
+    glm::vec3 rot{ 0 };
+
+    SSS::Node_MouseInput* mipt = new SSS::Node_MouseInput(glm::vec3{ std::get<0>(dim) - 50, std::get<1>(dim) - 100, 0 }, 50);
+    UI_renderer->push(mipt);
+
+    SSS::Node_Slider* slider = new SSS::Node_Slider(0, 255, &cur, glm::vec3(100, 250,0));
+    UI_renderer->push(slider);
+
+    SSS::Node_CheckBox* check = new SSS::Node_CheckBox(&bch, glm::vec3(1000, 250, 0));
+    UI_renderer->push(check); 
+
+    SSS::Node_Toggle* toggle = new SSS::Node_Toggle(&btog, glm::vec3(810, 250,0));
+    UI_renderer->push(toggle);
+
+    SSS::Node_RadioButton* radio1 = new SSS::Node_RadioButton(&brad1, glm::vec3(1000, 450, 0));
+    SSS::Node_RadioButton* radio2 = new SSS::Node_RadioButton(&brad2, glm::vec3(1000, 500, 0));
+    SSS::Node_RadioButton* radio3 = new SSS::Node_RadioButton(&brad3, glm::vec3(1000, 550, 0));
+
+    UI_renderer->push(radio1);
+    UI_renderer->push(radio2);
+    UI_renderer->push(radio3);
+
+
+    radio2->observeRadio(*radio1);
+    radio2->observeRadio(*radio3);
+    radio3->observeRadio(*radio2);
+    radio3->observeRadio(*radio1);
+    radio1->observeRadio(*radio2);
+    radio1->observeRadio(*radio3);
+
+    SSS::Node_Text* tmin = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getMinValue()));
+    tmin->setPosition(glm::vec3(slider->prims[0].pos.x -25, -slider->prims[0].pos.y + 105, 0));
+        
+    SSS::Node_Text* tmax = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getMaxValue()));
+    tmax->setPosition(glm::vec3(slider->prims[0].pos2.x - 25, -slider->prims[0].pos2.y + 105, 0));
+
+    SSS::Node_Text* t = new SSS::Node_Text(UI_renderer.get(), std::to_string(slider->getCurValue()));
+    t->setPosition(glm::vec3(slider->prims[0].pos2.x + 40, -slider->prims[0].pos2.y + 40, 0));
+
+
+    SSS::Node_Text* tradio = new SSS::Node_Text(UI_renderer.get(), std::to_string(radio1->isActive()));
+    glm::vec3 test = glm::vec3(radio1->prims[0].pos.x + 40, -radio1->prims[0].pos.y + 40, 0);
+    tradio->setPosition(glm::vec3(radio1->prims[0].pos.x + 40, -radio1->prims[0].pos.y + 40, 0));
+
+    SSS::Node_Text* ttoggle = new SSS::Node_Text(UI_renderer.get(), std::to_string(toggle->isActive()));
+    ttoggle->setPosition(glm::vec3(toggle->prims[0].pos2.x + 40, -toggle->prims[0].pos2.y + 40, 0));
+
+    SSS::Node_Text* tcheck = new SSS::Node_Text(UI_renderer.get(), std::to_string(check->isActive()));
+    tcheck->setPosition(glm::vec3(check->prims[1].pos2.x + 40, -check->prims[1].pos2.y + 40, 0));
+
+    float time = 0;
+
+    findNodeBoxEntry();
+    SSS::Node_Text* subtitle = new SSS::Node_Text(UI_renderer.get(), subTitle);
+    subtitle->setMaxStrSize(2000);
+    subtitle->setPosition(glm::vec3(450, -600, 0));
+    //subtitle->setWrappingMin(2000);
+
+
+    //n = n2;
+    std::cout << "\n=== Example 3: Camera Shake ===\n";
+
+
+
+    ShakeGenerator::ShakeParams params;
+    params.amplitude = 50.5f;
+    params.frequency = 5.0f;
+    params.decay = 1.f;
+    params.direction = glm::vec3(1.0, 1.0, 0.0);
+
+    ShakeGenerator sh(params);
+    sh.start();
+    sh.setLectureMode(Track::LectureMode::Loop);
 
     // Main loop
     while (!window->shouldClose()) {
 
+        time += 0.1;
         SSS::GL::pollEverything();
         glfwGetCursorPos(glfwwindow, &c_x, &c_y);
+        t->parseText(std::to_string(slider->getCurValue()));
+
+        tradio->parseText(std::to_string(radio1->isActive()));
+        ttoggle->parseText(std::to_string(toggle->isActive()));
+        tcheck->parseText(std::to_string(check->isActive()));
+        subtitle->parseText(subTitle);
 
         refresh();
 
         input();
 
+        //Char1->translate(sh.shake());
+
+
         for (auto elem : _proj.sg_boxes)
         {
-            Node_UI* node = reinterpret_cast<Node_UI*>(sg.at(elem.second));
+            SSS::Node_UI* node = reinterpret_cast<SSS::Node_UI*>(sg.at(elem.second));
             if(node != nullptr)
                 node->_checkPointCollision(cursor_map_coordinates());
         }
@@ -276,6 +268,8 @@ void Visualizer::key_callback(GLFWwindow* window, int key, int scancode, int act
             visu._selectedBoxesID.emplace(b);
         }
     }
+
+
 }
 
 void Visualizer::mouse_callback(GLFWwindow* window, int button, int action, int mods)
@@ -301,16 +295,20 @@ void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 {
     get()._info._w = static_cast<float>(w);
     get()._info._h = static_cast<float>(h);
+    get().UI_renderer->updateResolution(w,h);
 }
 
 void Visualizer::setup()
 {
+
+
     SSS::GL::Window::CreateArgs args;
     args.title = "VISUALIZER";
     args.w = static_cast<int>(_info._w);
     args.h = static_cast<int>(_info._h);
     SSS::GL::Window& window = SSS::GL::Window::create(args);
     glfwwindow = window.getGLFWwindow();
+
 
     window.setVSYNC(true);
     window.setCallback(glfwSetWindowSizeCallback, resize_callback);
@@ -351,6 +349,7 @@ void Visualizer::setup()
     sg.init();
     sg.setCamera(camera);
 
+
     auto texture = SSS::GL::Texture::create();
     texture->setColor(SSS::RGBA32(200, 220, 240, 80));
     Selection_box = SSS::GL::Plane::create(texture);
@@ -361,18 +360,24 @@ void Visualizer::setup()
     box_renderer = SSS::GL::PlaneRenderer::create();
     box_renderer->camera = camera;
 
+    UI_renderer = SSS::GL::UIRenderer::create();
+    UI_renderer->updateResolution(_info._w, _info._h);
+    //UI_renderer->_sg = &sg;
+    
+
     selection_renderer = SSS::GL::PlaneRenderer::create();
     selection_renderer->camera = camera;
     selection_renderer->addPlane(Selection_box);
     selection_renderer->setActivity(false);
 
-    debug_renderer = Debugger::create();
-    debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
-    debug_renderer->camera = camera;
-    // Enable or disable debugger
-    debug_renderer->setActivity(false);
+    //debug_renderer = Debugger::create();
+    //debug_renderer->setShaders(SSS::GL::Shaders::create("glsl/triangle.vert", "glsl/triangle.frag"));
+    //debug_renderer->camera = camera;
+    //// Enable or disable debugger
+    //debug_renderer->setActivity(false);
 
-    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer });
+    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer, UI_renderer, UI_renderer->_rd });
+    //window.setRenderers({ UI_renderer });
 }
 
 void Visualizer::input()
@@ -403,6 +408,29 @@ void Visualizer::input()
     if (keys[GLFW_KEY_KP_ADD].is_pressed()) {
         push_box(SSS::RGBA_f(rand_pastel_color()).to_Hex());
     }
+
+    if (keys[GLFW_KEY_F].is_pressed()) {
+        iframe += 1;
+        planeTest->setAnimationFrame(iframe);
+
+    }
+
+    if (keys[GLFW_KEY_N].is_pressed()) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(currNodeParcours));
+
+        if (node->link_to.empty()) {
+            findNodeBoxEntry();
+        }
+        else {
+            auto n = *node->link_to.begin();
+            findNextBox(n);
+        }
+    }
+
+    if (keys[GLFW_KEY_P].is_pressed()) {
+        a->start();
+    }
+
     //TEST SUPPRESSION
     if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxesID.empty()) {
         for (const int& bId : _selectedBoxesID) {
@@ -515,8 +543,14 @@ void Visualizer::refresh()
         return;
     
     for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
-        if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty())
+        if (it->second == 0) continue;
+        if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty()) 
+        {
+            auto str = reinterpret_cast<Node_Box*>(sg.at(it->second))->getData().text;
+        
             link_boxNode(it->second);
+        }
+
     }
 
     _refreshed = false;
@@ -540,14 +574,14 @@ void Visualizer::link_boxNode(const int& a_key, const int& b_key)
     using Line = SSS::GL::Polyline;
     Line::Shared seg;
     if (std::abs(a->center().x - b->center().x) < 5.0f) {
-        Col_grdt.push(std::make_pair(0.f, a->_color));
-        Col_grdt.push(std::make_pair(1.f, b->_color));
+        Col_grdt.push(std::make_pair(0.f, glm::vec4{ a->_color }));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4{ b->_color }));
         seg = Line::Segment(a->center(), b->center(), Thk_grdt, Col_grdt);
     }
     else {
         // Couleurs inversées pour Bezier ?
-        Col_grdt.push(std::make_pair(0.f, b->_color));
-        Col_grdt.push(std::make_pair(1.f, a->_color));
+        Col_grdt.push(std::make_pair(0.f, glm::vec4{ b->_color }));
+        Col_grdt.push(std::make_pair(1.f, glm::vec4{ a->_color }));
         seg = Line::Bezier(
             a->center(), a->center() - offset,
             b->center() + offset, b->center(),
@@ -586,14 +620,15 @@ void Visualizer::link_boxNode(const int& key_a)
 
 void Visualizer::link_boxNode_to_cursor(const int& b_key)
 {
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 5);
+    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 1);
 
     Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
 
     //Create a bezier curve to link the two boxes
     SSS::Math::Gradient<glm::vec4> Col_grdt;
+    glm::vec4 col = glm::vec4{ b->_color };
     Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-    Col_grdt.push(std::make_pair(1.f, b->getColor()));
+    Col_grdt.push(std::make_pair(1.f, col));
 
     SSS::Math::Gradient<float> Thk_grdt;
     Thk_grdt.push(std::make_pair(0.f, 25.f));
@@ -626,6 +661,39 @@ void Visualizer::pop_Nodelink(const int& a_key, const int& b_key)
     b->link_from.erase(a->getData().text_ID);
 }
 
+void Visualizer::findNodeBoxEntry()
+{
+    for (const auto& b : _proj.sg_boxes) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+
+        if (node->getData().text_ID == "86bfd78c534d0") {
+            glm::vec3 campos = glm::vec3(node->center().x, node->center().y, camera->getPosition().z);
+            camera->setPosition(campos);
+            currNodeParcours = b.second;
+
+            subTitle = node->getData().text;
+            break;
+        }
+    }
+}
+
+void Visualizer::findNextBox(const std::string& id)
+{
+    for (const auto& b : _proj.sg_boxes) {
+        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+        if (b.second == 0) continue;
+
+        if (node->getData().text_ID == id) {
+            glm::vec3 campos = glm::vec3(node->center().x, node->center().y, camera->getPosition().z);
+            camera->setPosition(campos);
+            currNodeParcours = node->_key;
+
+            subTitle = node->getData().text;
+            break;
+        }
+    }
+}
+
 
 
 std::string Visualizer::push_box(std::string boxID)
@@ -648,7 +716,7 @@ std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
     Node_Box* n1 = new Node_Box(&sg, td);
     n1->translate(pos);
-    sg.push(n1);
+    //sg.push(n1);
     n1->update();
 
     _proj.sg_boxes[td.text_ID] = n1->_key;
@@ -689,23 +757,6 @@ void Visualizer::pop_box(const int& id)
     hovered_box = -1;
 
 }
-
-//
-//bool Visualizer::check_frustrum_render(Box& b)
-//{
-//    //CHECK IF A BOX IS IN THE RENDERED WINDOW TROUGH THE SELECTED CAMERA
-//    //glm::vec3 const cam_pos = camera->getPosition();
-//    //float const dx = glm::abs(cam_pos.x - b.getPos().x);
-//    //float const dxmax = (b.getSize().x + _info._w) * 0.5f;
-//    //float const dy = glm::abs(cam_pos.y - b.getPos().y);
-//    //float const dymax = (b.getSize().y + _info._h) * 0.5f;
-//
-//
-//    //if ((dx < dxmax) && (dy < dymax)) {
-//    //    return true;
-//    //}
-//    return false;
-//}
 
 // TODO: exporter dans GL::Window
 glm::vec3 Visualizer::cursor_map_coordinates()
@@ -860,15 +911,6 @@ void Visualizer::drag_screen()
     _cur_pos = _otherpos;
 }
 
-//Box::Shared Visualizer::get_hovered_box()
-//{
-//    if (auto window = SSS::GL::Window::get(glfwwindow); window) {
-//        if (auto plane = window->getHovered<BoxPlane>(); plane)
-//            return plane->getBox();
-//    }
-//    return nullptr;
-//}
-
 void Visualizer::parse_info_data_visualizer_to_json(const std::string& path, const bool prettify)
 {
     nlohmann::json dst;
@@ -891,7 +933,8 @@ void Visualizer::parse_info_data_project_from_json(const std::string& path)
     ifs >> tmp;
     ifs.close();
 
-    this->_proj = tmp;
+    from_json(tmp, _proj);
+    //this->_proj = tmp;
 }
 
 // Nodes from SceneGraph
@@ -920,41 +963,18 @@ void Visualizer::parse_info_data_visualizer_from_json(const std::string& path)
     this->_info = tmp;
 }
 
- void Visualizer::fillProjExport()
-{
-     _proj.expNodes.reserve(_proj.sg_boxes.size());
-     _proj.expData.reserve(_proj.sg_boxes.size());
-
-    for (const auto& [str, id] : _proj.sg_boxes)
-    {
-        _proj.expNodes.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->export_node());
-        _proj.expData.emplace_back(reinterpret_cast<Node_Box*>(sg.at(id))->getData());
-    }
-}
-
 void Visualizer::save()
 {
     LOG_MSG("SAVED");
     
     //Prepare la liste des nodes a exporter
-    fillProjExport();
 
-    //std::string data_str = "data.json";
-    //parse_info_data_project_to_json(data_str, true);
+    std::string data_str = "data.json";
+    parse_info_data_project_to_json(data_str, true);
 
-    std::string data_str2 = "data3.json";
-    parse_info_data_project_to_json(data_str2, true);
-    _proj.expNodes.clear();
-    _proj.expData.clear();
 
     std::string str = "save.json";
     parse_info_data_visualizer_to_json(str, true);
-
-
-    //Todo save the text data in their own file
-    //for (auto it = _proj.box_map.begin(); it != _proj.box_map.end(); ++it) {
-
-    //}
 }
 
 void Visualizer::load()
@@ -964,45 +984,15 @@ void Visualizer::load()
     _fl = _ti.fl;
     //LOAD THE TEXT DATA FROM TRANSLATOR
     _mt.parse_traduction_data_from_json("project/bohemian/bohemian_eng.json");
-    //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
-    parse_info_data_project_from_json("data3.json");
     float i = 0;
     for (const auto& td : _mt.text_data)
     {
         push_box(glm::vec3(i * 35.0f, -i * 35.0f, 0.f), td);
         i += 1.f;
     }
+    //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
+    parse_info_data_project_from_json("data.json");
     SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
-
-    //COMPARE THE TWO FILES, AND ADD MISSING BOXES INTO
-    //float i = 0;
-    //for (const Text_data& td : _mt.text_data) {
-    //    if (!_proj.box_map.contains(td.text_ID)) {
-    //        push_box(glm::vec3(i*5.0f,-i*5.0f, 10.f),td);
-    //        i += 1.f;
-    //    }
-    //    else
-    //        _proj.box_map[td.text_ID]->set_text_data(td);
-    //}
-    for (const auto& expNode: _proj.expNodes) {
-        //if (!_proj.sg_boxes.contains(td.text_ID)) {
-        //    push_box(glm::vec3(i * 5.0f, -i * 5.0f, 10.f), td);
-        //    i += 1.f;
-        //}
-        //else {
-        
-        if (_proj.sg_boxes.contains(expNode.id)) {
-            Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[expNode.id]));
-            node->readExport(expNode);
-        }
-        else {
-            push_box(expNode.pos, Text_data{});
-        }
-        //_proj.sg_boxes[td.text_ID];
-        //reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[td.text_ID]))->setTextData(td);
-        //}
-        //    _proj.box_map[td.text_ID]->set_text_data(td);
-    }
 
 
     LOG_MSG("LOADED");
@@ -1082,30 +1072,57 @@ void from_json(const nlohmann::json& j, VISUALISER_INFO& t)
 
 void to_json(nlohmann::json& j, const PROJECT_DATA& t)
 {
+    std::vector<Export_Node_Box> expNodes;
     j = nlohmann::json{
-        {"BOX", t.expNodes},
+        {"BOX", expNodes},
         {"PROJECT_NAME", t.project_name}
     };
 
     //optional fields
-    if (j.contains("BOX") && !j["BOX"].is_null()) {
-        j["BOX"] = t.expNodes;
+    if (j.contains("BOX") && !t.sg_boxes.empty())
+    {
+        for (const auto& [str, id] : t.sg_boxes)
+        {
+            if (id == 0) continue;
+            expNodes.emplace_back(reinterpret_cast<Node_Box*>(Visualizer::get().sg.at(id))->export_node());
+        }
+        j["BOX"] = expNodes;
     }
 }
 
 void from_json(const nlohmann::json& j, PROJECT_DATA& t)
 {
-    //j.at("BOX").get_to(t.box_map);
-    //optional fields
-    if (j.contains("BOX") && !j["BOX"].is_null()) {
-        j["BOX"].get_to(t.expNodes);
-    }
+    Visualizer::get();
     j.at("PROJECT_NAME").get_to(t.project_name);
+
+    //optional fields
+    if (j.contains("BOX") && !j["BOX"].is_null()) 
+    {
+        //j["BOX"].get_to(t.expNodes);
+        for (const auto& elem : j["BOX"])
+        {
+            Export_Node_Box n;
+            from_json(elem, n);
+
+            auto m = Visualizer::get()._proj.sg_boxes;
+
+            if (Visualizer::get()._proj.sg_boxes.contains(n.id)) {
+                Node_Box* node = reinterpret_cast<Node_Box*>(Visualizer::get().sg.at(Visualizer::get()._proj.sg_boxes[n.id]));
+                node->readExport(n);
+            }
+            else {
+                Visualizer::get().push_box(n.pos, Text_data{});
+            }
+        }
+    }
+
+    auto m2 = Visualizer::get()._proj.sg_boxes;
 }
 
 PROJECT_DATA::~PROJECT_DATA()
 {
     //box_map.clear();
+    sg_boxes.clear();
 }
 
 

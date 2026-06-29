@@ -19,32 +19,31 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+<ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\backend.cpp" />
     <ClCompile Include="src\backend_json.cpp" />
     <ClCompile Include="src\commons.cpp" />
     <ClCompile Include="src\Debugger.cpp" />
     <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\Node_Box.cpp" />
+    <ClCompile Include="src\Node_Character.cpp" />
     <ClCompile Include="src\Node_Export.cpp" />
-    <ClCompile Include="src\Node_Primitive.cpp" />
-    <ClCompile Include="src\Node_UI.cpp" />
-    <ClCompile Include="src\scenegraph.cpp" />
     <ClCompile Include="src\Text_data.cpp" />
     <ClCompile Include="src\visualizer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\Animation.hpp" />
     <ClInclude Include="inc\backend.hpp" />
     <ClInclude Include="inc\backend_json.h" />
     <ClInclude Include="inc\data.hpp" />
     <ClInclude Include="inc\gui.h" />
     <ClInclude Include="inc\Node_Box.h" />
+    <ClInclude Include="inc\Node_Character.h" />
     <ClInclude Include="inc\Node_Export.h" />
-    <ClInclude Include="inc\Node_Primitive.h" />
-    <ClInclude Include="inc\Node_UI.h" />
-    <ClInclude Include="inc\scenegraph.h" />
+    <ClInclude Include="inc\Shake_Generator.hpp" />
     <ClInclude Include="inc\Text_data.h" />
-    <ClInclude Include="inc\_includes.hpp" />
+<ClInclude Include="inc\_includes.hpp" />
     <ClInclude Include="inc\commons.h" />
     <ClInclude Include="inc\Debugger.h" />
     <ClInclude Include="inc\visualizer.h" />
@@ -66,26 +65,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -133,6 +132,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>.\inc</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/obj/</ObjectFileName>
@@ -150,6 +150,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <AdditionalIncludeDirectories>.\inc</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/obj/</ObjectFileName>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -168,6 +169,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <AdditionalIncludeDirectories>.\inc</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/obj/</ObjectFileName>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -185,6 +187,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <AdditionalIncludeDirectories>.\inc</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/obj/</ObjectFileName>
       <LanguageStandard>stdcpp20</LanguageStandard>

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "scenegraph.h"
-#include "Node_Primitive.h"
+#include <SSS/SceneGraph/Node_Primitive.h>
 #include "Text_data.h"
 #include <optional>
 
