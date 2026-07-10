@@ -93,6 +93,16 @@ public:
 	//Remove the link between two selected box
 	void pop_Nodelink(const int& a, const int& b);
 
+private:
+	//World-space link prims accumulated this frame, remapped into linksPlane's local space
+	std::vector<SSS::UIPrimitive> _linkPrimsWorld;
+	//Rebuilds linksPlane's translation/scaling/sdf_prims from _linkPrimsWorld, when dirty
+	void updateLinksPlane();
+	//Cached camera state, used to detect camera movement without flagging every call site
+	glm::vec3 _lastCamPos{};
+	float _lastCamZoom{ 1.f };
+
+public:
 
 	int currNodeParcours = 0;
 	void findNodeBoxEntry();
@@ -145,10 +155,10 @@ public:
 	SSS::GL::Camera::Shared camera;
 	// Renderers
 	SSS::GL::PlaneRenderer::Shared	box_renderer;
-	SSS::GL::LineRenderer::Shared	line_renderer;
 	SSS::GL::PlaneRenderer::Shared	selection_renderer;
 	SSS::GL::UIRenderer::Shared		UI_renderer;
 	Debugger::Shared debug_renderer;
+	SSS::GL::Plane::Shared linksPlane;
 
 public:
 	GLFWwindow* glfwwindow{ nullptr };
@@ -158,7 +168,6 @@ public:
 	int iframe = 0;
 
 	glm::vec4 clear_color = glm::vec4{ 1.0f };
-	std::unordered_map<std::string, SSS::GL::Polyline::Shared> arrow_map;
 	Traduction_data _td;
 
 	//PARSER

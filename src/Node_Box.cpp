@@ -19,15 +19,17 @@ Node_Box::Node_Box():
 
 	_color = rand_pastel_color();
 
-	SSS::Node_Text* first = new SSS::Node_Text(p_Sg, _td.text_ID);
+	SSS::Node_Text* first = new SSS::Node_Text(_td.text_ID);
 	first->set_parent(this->_key);
 	this->_children.emplace("ID", first->_key);
 	_observe(*first);
+	SSS::SceneGraph::getCurrentRenderer()->addPlane(first->model);
 
-	SSS::Node_Text* textNode = new SSS::Node_Text(p_Sg, _td.text);
+	SSS::Node_Text* textNode = new SSS::Node_Text(_td.text);
 	textNode->set_parent(this->_key);
 	this->_children.emplace("TEXT", textNode->_key);
 	_observe(*textNode);
+	SSS::SceneGraph::getCurrentRenderer()->addPlane(textNode->model);
 
 	textNode->setVerticalOffset(first->_key);
 
@@ -36,8 +38,8 @@ Node_Box::Node_Box():
 	SSS::SceneGraph::push(this);
 }
 
-Node_Box::Node_Box(SSS::SceneGraph* p_Sg, const Text_data& td):
-	Node_UI(p_Sg)
+Node_Box::Node_Box(const Text_data& td):
+	Node_UI()
 {
 	_register();
 	_td = td;

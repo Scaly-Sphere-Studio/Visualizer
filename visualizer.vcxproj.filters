@@ -51,17 +51,11 @@
     <ClCompile Include="src\backend_json.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="src\Node_Box.cpp">
       <Filter>Nodes\Src</Filter>
     </ClCompile>
     <ClCompile Include="src\Node_Export.cpp">
       <Filter>Nodes\Src</Filter>
-    </ClCompile>
-    <ClCompile Include="inc\UIRenderer.cpp">
-      <Filter>Nodes\UIRenderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Node_Character.cpp">
       <Filter>Nodes\Src</Filter>
@@ -103,9 +97,6 @@
     </ClInclude>
     <ClInclude Include="inc\Node_Export.h">
       <Filter>Nodes\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\UIRenderer.hpp">
-      <Filter>Nodes\UIRenderer</Filter>
     </ClInclude>
     <ClInclude Include="inc\Node_Character.h">
       <Filter>Nodes\Headers</Filter>

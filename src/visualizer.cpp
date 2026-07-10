@@ -1,6 +1,9 @@
 #include "visualizer.h"
 #include "Node_Box.h"
 
+#include <algorithm>
+#include <limits>
+
 #include <SSS/SceneGraph/scenegraph.h>
 #include <SSS/SceneGraph/Node_Input.h>
 #include "Node_Character.h"
@@ -10,6 +13,10 @@
 #include "Shake_Generator.hpp"
 
 //#include "EaseFunctions.hpp"
+
+// Z depth for linksPlane: below every box (boxes render at z=0), so links
+// are always occluded by boxes via ordinary GPU depth testing.
+constexpr float kLinksPlaneZ = -1.f;
 
 Visualizer::Visualizer()
 {
@@ -65,9 +72,6 @@ void Visualizer::_subjectUpdate(SSS::Subject const& subject, SSS::Event const& e
 
 Visualizer::~Visualizer()
 {
-    arrow_map.clear();
-    //_proj.box_map.clear();
-    line_renderer.reset();
     box_renderer.reset();
     debug_renderer.reset();
     UI_renderer.reset();
@@ -238,6 +242,8 @@ void Visualizer::run()
         }
         }
 
+        updateLinksPlane();
+
         window->drawObjects();
         menu_bar();
 
@@ -300,8 +306,6 @@ void Visualizer::resize_callback(GLFWwindow* win, int w, int h)
 
 void Visualizer::setup()
 {
-
-
     SSS::GL::Window::CreateArgs args;
     args.title = "VISUALIZER";
     args.w = static_cast<int>(_info._w);
@@ -344,26 +348,27 @@ void Visualizer::setup()
     camera->setPosition({ 0, 0, 20.f });
     camera->setZFar(40.f);
     camera->setProjectionType(SSS::GL::Camera::Projection::OrthoFixed);
+    _lastCamPos  = camera->getPosition();
+    _lastCamZoom = camera->getZoom();
 
     //SceneGraph
-    sg.init();
-    sg.setCamera(camera);
+    SSS::SceneGraph::init();
+    //SSS::SceneGraph::setCamera(camera);
 
 
     auto texture = SSS::GL::Texture::create();
     texture->setColor(SSS::RGBA32(200, 220, 240, 80));
     Selection_box = SSS::GL::Plane::create(texture);
 
-    line_renderer = SSS::GL::LineRenderer::create();
-    line_renderer->camera = camera;
-
     box_renderer = SSS::GL::PlaneRenderer::create();
     box_renderer->camera = camera;
 
     UI_renderer = SSS::GL::UIRenderer::create();
     UI_renderer->updateResolution(_info._w, _info._h);
-    //UI_renderer->_sg = &sg;
-    
+
+    linksPlane = SSS::GL::Plane::create();
+    linksPlane->sdf_mode = SSS::GL::PlaneBase::SDFMode::Shape;
+    box_renderer->addPlane(linksPlane);
 
     selection_renderer = SSS::GL::PlaneRenderer::create();
     selection_renderer->camera = camera;
@@ -376,7 +381,11 @@ void Visualizer::setup()
     //// Enable or disable debugger
     //debug_renderer->setActivity(false);
 
-    window.setRenderers({ sg._rd, line_renderer, selection_renderer, debug_renderer, UI_renderer, UI_renderer->_rd });
+    window.setRenderers({ box_renderer, selection_renderer, debug_renderer, UI_renderer});
+
+    SSS::SceneGraph::setUIRenderer(UI_renderer);
+    SSS::SceneGraph::setCurrentRenderer(box_renderer);
+    //window.setRenderers({ line_renderer, selection_renderer, debug_renderer, UI_renderer});
     //window.setRenderers({ UI_renderer });
 }
 
@@ -416,7 +425,7 @@ void Visualizer::input()
     }
 
     if (keys[GLFW_KEY_N].is_pressed()) {
-        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(currNodeParcours));
+        Node_Box* node = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(currNodeParcours));
 
         if (node->link_to.empty()) {
             findNodeBoxEntry();
@@ -434,7 +443,7 @@ void Visualizer::input()
     //TEST SUPPRESSION
     if (keys[GLFW_KEY_KP_SUBTRACT].is_pressed() && !_selectedBoxesID.empty()) {
         for (const int& bId : _selectedBoxesID) {
-            //std::string strId = reinterpret_cast<Node_Box*>(sg.at(bId))->getData().text_ID;
+            //std::string strId = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(bId))->getData().text_ID;
             pop_box(bId);
 
         }
@@ -465,11 +474,11 @@ void Visualizer::input()
         }
         else if (!area) {
             //Box::Shared box = plane->getBox();
-            Node_Box* box = reinterpret_cast<Node_Box*>(sg.at(hovered_box));
+            Node_Box* box = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(hovered_box));
             //Create a selection or switch the two IDs
             if (_selectedBoxesID.size() < 2) {
                 for (const auto& box : _selectedBoxesID) {
-                    Node_Box* nbox = reinterpret_cast<Node_Box*>(sg.at(box));
+                    Node_Box* nbox = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(box));
                     //Reset the Z offset for priority 
                     nbox->setZ(0);
 
@@ -497,7 +506,6 @@ void Visualizer::input()
 
         if (hovered_box == -1) {
             _states = V_STATES::CUTLINE;
-            arrow_map.try_emplace("CUTLINE");
         }
         else {
             _states = V_STATES::CONNECT_LINE;
@@ -537,76 +545,131 @@ void Visualizer::input()
 
 void Visualizer::refresh()
 {
-    sg.update();
+    SSS::SceneGraph::update();
+}
 
-    if (!_refreshed)
+// Rebuilds _linkPrimsWorld (world-space) and linksPlane's translation/
+// scaling/sdf_prims from it, only when something relevant changed this
+// frame: link topology (_refreshed), camera viewport (AABB cull depends on
+// it), or an active connect-drag preview (follows the cursor every frame).
+// Must run once, after input()/the V_STATES switch in run() — i.e. after
+// box drags, camera pans/zooms and link topology changes for this frame
+// have already been applied — so the dirty check and the rebuild always see
+// the same, current-this-frame state instead of racing across two
+// checkpoints.
+void Visualizer::updateLinksPlane()
+{
+    bool const camChanged = camera->getPosition() != _lastCamPos || camera->getZoom() != _lastCamZoom;
+    bool const linkPreviewActive = (_states == V_STATES::CONNECT_LINE && ifirst_link_ID != -1);
+    if (!_refreshed && !camChanged && !linkPreviewActive)
         return;
-    
+
+    _linkPrimsWorld.clear();
     for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
         if (it->second == 0) continue;
-        if (!reinterpret_cast<Node_Box*>(sg.at(it->second))->link_to.empty()) 
-        {
-            auto str = reinterpret_cast<Node_Box*>(sg.at(it->second))->getData().text;
-        
+        if (!reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(it->second))->link_to.empty())
             link_boxNode(it->second);
-        }
+    }
+    if (linkPreviewActive)
+        link_boxNode_to_cursor(ifirst_link_ID);
 
+    if (_linkPrimsWorld.empty()) {
+        linksPlane->sdf_prims.clear();
+    }
+    else {
+        // A cubic Bezier's control points bound its curve exactly (convex
+        // hull property), so the prims' control points bound every curve.
+        glm::vec2 lo(std::numeric_limits<float>::max());
+        glm::vec2 hi(std::numeric_limits<float>::lowest());
+        float maxSize = 0.f;
+        for (SSS::UIPrimitive const& prim : _linkPrimsWorld) {
+            lo = glm::min(lo, glm::min(glm::min(prim.pos, prim.pos2), glm::min(prim.pos3, prim.pos4)));
+            hi = glm::max(hi, glm::max(glm::max(prim.pos, prim.pos2), glm::max(prim.pos3, prim.pos4)));
+            maxSize = std::max(maxSize, std::max(prim.size.x, prim.size.y));
+        }
+        // Pad for stroke half-thickness + AA feather.
+        glm::vec2 const margin(maxSize);
+        lo -= margin;
+        hi += margin;
+
+        glm::vec2 const center = (lo + hi) * 0.5f;
+        glm::vec2 const extent = hi - lo;
+        // Uniform scale (not per-axis): the plane-local SDF math assumes
+        // isotropic space, so a non-uniform scale would stretch the strokes.
+        float const scale = std::max({ extent.x, extent.y, 1.f });
+
+        linksPlane->setTranslation(glm::vec3(center, kLinksPlaneZ));
+        linksPlane->setScaling(glm::vec3(scale, scale, 1.f));
+
+        linksPlane->sdf_prims.clear();
+        linksPlane->sdf_prims.reserve(_linkPrimsWorld.size());
+        for (SSS::UIPrimitive prim : _linkPrimsWorld) {
+            prim.pos    = (prim.pos    - center) / scale;
+            prim.pos2   = (prim.pos2   - center) / scale;
+            prim.pos3   = (prim.pos3   - center) / scale;
+            prim.pos4   = (prim.pos4   - center) / scale;
+            prim.size   = prim.size / scale;
+            linksPlane->sdf_prims.push_back(prim);
+        }
     }
 
-    _refreshed = false;
-    std::cout << "refresh" << std::endl;
-
+    _refreshed   = false;
+    _lastCamPos  = camera->getPosition();
+    _lastCamZoom = camera->getZoom();
 }
 
 void Visualizer::link_boxNode(const int& a_key, const int& b_key)
 {
-    Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(a_key));
-    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
+    Node_Box* a = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(a_key));
+    Node_Box* b = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b_key));
 
-    glm::vec3 offset{ 0.f, std::abs(a->getPosition().y - b->getPosition().y) / 2.f, 0.f };
-    
-    //Create a bezier curve to link the two boxes
-    SSS::Math::Gradient<glm::vec4> Col_grdt;
-    SSS::Math::Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.f, 25.f));
-    Thk_grdt.push(std::make_pair(1.f, 25.f));
-
-    using Line = SSS::GL::Polyline;
-    Line::Shared seg;
-    if (std::abs(a->center().x - b->center().x) < 5.0f) {
-        Col_grdt.push(std::make_pair(0.f, glm::vec4{ a->_color }));
-        Col_grdt.push(std::make_pair(1.f, glm::vec4{ b->_color }));
-        seg = Line::Segment(a->center(), b->center(), Thk_grdt, Col_grdt);
-    }
-    else {
-        // Couleurs inversées pour Bezier ?
-        Col_grdt.push(std::make_pair(0.f, glm::vec4{ b->_color }));
-        Col_grdt.push(std::make_pair(1.f, glm::vec4{ a->_color }));
-        seg = Line::Bezier(
-            a->center(), a->center() - offset,
-            b->center() + offset, b->center(),
-            Thk_grdt, Col_grdt,
-            Line::JointType::BEVEL, Line::TermType::SQUARE
-        );
-    }
-
-    //Add the dst box to the 'link to' list of the src box
-    //And add the src box to the 'link from' list of the dst box
+    // Update link membership
     if (!a->link_to.contains(b->getData().text_ID)) {
         a->link_to.emplace(b->getData().text_ID);
+        _refreshed = true;
     }
-
     if (!b->link_from.contains(a->getData().text_ID)) {
         b->link_from.emplace(a->getData().text_ID);
+        _refreshed = true;
     }
 
-    //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map[a->getData().text_ID + b->getData().text_ID] = seg;
+    // Bezier control points in world coordinates
+    float     dy     = std::abs(a->getPosition().y - b->getPosition().y);
+    glm::vec2 offset = { 0.f, dy * 0.5f };
+    glm::vec2 p0     = glm::vec2(a->center());
+    glm::vec2 p3     = glm::vec2(b->center());
+    glm::vec2 p1     = (std::abs(p0.x - p3.x) < 5.f) ? p0 : p0 - offset;
+    glm::vec2 p2     = (std::abs(p0.x - p3.x) < 5.f) ? p3 : p3 + offset;
+
+    // AABB cull against camera viewport
+    float     zoom  = camera->getZoom();
+    glm::vec2 vpSize = glm::vec2(_info._w, _info._h) / zoom;
+    glm::vec2 vpMin  = glm::vec2(camera->getPosition()) - vpSize * 0.5f;
+    glm::vec2 vpMax  = vpMin + vpSize;
+
+    glm::vec2 lo = glm::min(glm::min(p0, p1), glm::min(p2, p3));
+    glm::vec2 hi = glm::max(glm::max(p0, p1), glm::max(p2, p3));
+    if (hi.x < vpMin.x || lo.x > vpMax.x || hi.y < vpMin.y || lo.y > vpMax.y)
+        return;
+
+    // Build SDF primitive
+    SSS::UIPrimitive prim{};
+    prim.shapeId    = SSS::SDF_Shapes::sdBezierCubic;
+    prim.pos        = p0;
+    prim.pos2       = p1;
+    prim.pos3       = p2;
+    prim.pos4       = p3;
+    prim.size       = { 25.f, 25.f };
+    prim.color      = glm::vec4(a->_color);   // t=0
+    prim.color2     = glm::vec4(b->_color);   // t=1
+    prim.blendColor = SSS::SDF_ColorModes::GRADIENT;
+
+    _linkPrimsWorld.push_back(prim);
 }
 
 void Visualizer::link_boxNode(const int& key_a)
 {
-    const Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(key_a));
+    const Node_Box* a = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(key_a));
 
     for (const std::string& lt : a->link_to) {
         if (int to = _proj.sg_boxes[lt]; to)
@@ -620,51 +683,39 @@ void Visualizer::link_boxNode(const int& key_a)
 
 void Visualizer::link_boxNode_to_cursor(const int& b_key)
 {
-    glm::vec3 c_pos = cursor_map_coordinates() + glm::vec3(0, 0, 1);
+    Node_Box* b = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b_key));
+    glm::vec2 c_pos = glm::vec2(cursor_map_coordinates());
+    glm::vec2 p0    = glm::vec2(b->center());
+    glm::vec2 p1    = p0 - glm::vec2(0.f, 400.f);
 
-    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
+    SSS::UIPrimitive prim{};
+    prim.shapeId    = SSS::SDF_Shapes::sdBezierCubic;
+    prim.pos        = p0;
+    prim.pos2       = p1;
+    prim.pos3       = c_pos;
+    prim.pos4       = c_pos;
+    prim.size       = { 25.f, 25.f };
+    prim.color      = glm::vec4(0.f, 0.f, 0.f, 1.f);
+    prim.color2     = glm::vec4(b->_color);
+    prim.blendColor = SSS::SDF_ColorModes::GRADIENT;
 
-    //Create a bezier curve to link the two boxes
-    SSS::Math::Gradient<glm::vec4> Col_grdt;
-    glm::vec4 col = glm::vec4{ b->_color };
-    Col_grdt.push(std::make_pair(0.f, glm::vec4(0.f, 0.f, 0.f, 1.f)));
-    Col_grdt.push(std::make_pair(1.f, col));
-
-    SSS::Math::Gradient<float> Thk_grdt;
-    Thk_grdt.push(std::make_pair(0.f, 25.f));
-    Thk_grdt.push(std::make_pair(1.f, 25.f));
-
-    auto seg = SSS::GL::Polyline::Bezier(
-        b->center() + glm::vec3(0, 0, 5), b->center() + glm::vec3(0, -400, 5),
-        c_pos, c_pos,
-        Thk_grdt, Col_grdt,
-        SSS::GL::Polyline::JointType::BEVEL, SSS::GL::Polyline::TermType::SQUARE
-    );
-
-    if (arrow_map.contains(b->getData().text_ID)) {
-        arrow_map.at(b->getData().text_ID) = seg;
-        return;
-    }
-
-    //The arrow ID is the cat of the two boxes ID as it keeps the order
-    arrow_map.insert(std::make_pair(b->getData().text_ID, seg));
-
+    _linkPrimsWorld.push_back(prim);
 }
 
 void Visualizer::pop_Nodelink(const int& a_key, const int& b_key)
 {
-    Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(a_key));
-    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(b_key));
-    
-    arrow_map.erase(a->getData().text_ID + b->getData().text_ID);
+    Node_Box* a = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(a_key));
+    Node_Box* b = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b_key));
+
     a->link_to.erase(b->getData().text_ID);
     b->link_from.erase(a->getData().text_ID);
+    _refreshed = true;
 }
 
 void Visualizer::findNodeBoxEntry()
 {
     for (const auto& b : _proj.sg_boxes) {
-        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+        Node_Box* node = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b.second));
 
         if (node->getData().text_ID == "86bfd78c534d0") {
             glm::vec3 campos = glm::vec3(node->center().x, node->center().y, camera->getPosition().z);
@@ -680,7 +731,7 @@ void Visualizer::findNodeBoxEntry()
 void Visualizer::findNextBox(const std::string& id)
 {
     for (const auto& b : _proj.sg_boxes) {
-        Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b.second));
+        Node_Box* node = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b.second));
         if (b.second == 0) continue;
 
         if (node->getData().text_ID == id) {
@@ -700,11 +751,11 @@ std::string Visualizer::push_box(std::string boxID)
 {
     glm::vec3 position = cursor_map_coordinates();
 
-    Node_Box* n1 = new Node_Box(&sg);
+    Node_Box* n1 = new Node_Box();
     n1->_pos = position;
     n1->setColor(boxID);
     n1->update();
-    sg.push(n1);
+    SSS::SceneGraph::push(n1);
     _proj.sg_boxes[std::to_string(n1->_key)] = n1->_key;
 
     _observe(*n1);
@@ -714,9 +765,9 @@ std::string Visualizer::push_box(std::string boxID)
 
 std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 {
-    Node_Box* n1 = new Node_Box(&sg, td);
+    Node_Box* n1 = new Node_Box(td);
     n1->translate(pos);
-    //sg.push(n1);
+    //SSS::SceneGraph::push(n1);
     n1->update();
 
     _proj.sg_boxes[td.text_ID] = n1->_key;
@@ -728,26 +779,18 @@ std::string Visualizer::push_box(glm::vec3 pos, const Text_data& td)
 void Visualizer::pop_box(const int& id)
 {
 
-    Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(id));
+    Node_Box* b = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(id));
     std::string b_ID = b->getData().text_ID;
     if (!_selectedBoxesID.empty()) {
         //Clear the connected arrows and remove the ID from the ID lists 
 
         //Erase the arrows connected to the box
         //Erase the ID from their 'Link to' list
-        for (std::string f_ID : b->link_from) {
-            arrow_map.erase(f_ID + b_ID);
+        for (std::string f_ID : b->link_from)
             b->link_to.erase(b_ID);
-        }
 
-        //Clear all the arrows connected to other boxes
-
-        //Erase the arrows that connect to other boxes
-        //Erase the ID from their 'link from' list
-        for (std::string l_ID : b->link_to) {
-            arrow_map.erase(b_ID + l_ID);
+        for (std::string l_ID : b->link_to)
             b->link_from.erase(b_ID);
-        }
 
         //Clear the box from the map
         _proj.sg_boxes.erase(b_ID);
@@ -755,7 +798,7 @@ void Visualizer::pop_box(const int& id)
 
     b->pop();
     hovered_box = -1;
-
+    _refreshed = true;
 }
 
 // TODO: exporter dans GL::Window
@@ -771,7 +814,7 @@ void Visualizer::drag_boxes()
 {
     //SI LA SELECTION EST DE 1 LE METTRE EN PRIO
     if (_selectedBoxesID.size() == 1) {
-        reinterpret_cast<Node_Box*>(sg.at(*_selectedBoxesID.begin()))->setZ(2);
+        reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(*_selectedBoxesID.begin()))->setZ(2);
     }
     //CHECK THE MAP FOR A COLLISION WITH A BOX 
 
@@ -784,10 +827,11 @@ void Visualizer::drag_boxes()
     //Update only if the box has moved
     if (delta != glm::vec3(0)) {
         for (const int& b : _selectedBoxesID) {
-            Node_Box* node = reinterpret_cast<Node_Box*>(sg.at(b));
+            Node_Box* node = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(b));
             node->translate(delta);
         }
         _cur_pos = new_pos;
+        _refreshed = true;
     }
 
     if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
@@ -797,23 +841,20 @@ void Visualizer::drag_boxes()
 
 void Visualizer::cut_link_line()
 {
-    using Line = SSS::GL::Polyline;
     if (_states == V_STATES::CUTLINE) {
         glm::vec3 second_cursor_pos = cursor_map_coordinates();
-        arrow_map["CUTLINE"] = Line::Segment({ _cur_pos.x, _cur_pos.y, 5.f }, second_cursor_pos, 10.f, SSS::RGBA_f{ "#03070e" }.to_RGBA(), Line::JointType::BEVEL, Line::TermType::ROUND);
 
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-            arrow_map.erase("CUTLINE");
             static std::vector<std::pair<std::string, std::string>> cut_lines_selection;
 
             for (auto it = _proj.sg_boxes.begin(); it != _proj.sg_boxes.end(); it++) {
                 
-                const Node_Box* b1 = reinterpret_cast<Node_Box*>(sg.at(it->second));
+                const Node_Box* b1 = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(it->second));
                 glm::vec3 offset{ 0, 400, 0 }; //TODO
 
                 for (std::string s : b1->link_to) {
-                    const Node_Box* b2 = reinterpret_cast<Node_Box*>(sg.at(_proj.sg_boxes[s]));
-                    if (cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
+                    const Node_Box* b2 = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(_proj.sg_boxes[s]));
+                    if (SSS::Math::cubic_bezier_segment_intersection(b1->center(), b1->center() - offset,
                         b2->center() + offset, b2->center(),
                         _cur_pos, second_cursor_pos)) {
                         cut_lines_selection.emplace_back(std::make_pair(b1->getData().text_ID, b2->getData().text_ID));
@@ -835,38 +876,31 @@ void Visualizer::cut_link_line()
 void Visualizer::connect_drag_line()
 {
     if (ifirst_link_ID != -1) {
-        //link_box_to_cursor(*_proj.box_map.at(first_link_ID));
-        link_boxNode_to_cursor(ifirst_link_ID);
-
+        // Live preview prim (this box -> cursor) is built in updateLinksPlane(),
+        // once per frame, after this state machine has run.
         if (glfwGetMouseButton(glfwwindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
             //second_link_ID = get_hovered_box() ? get_hovered_box()->_id : "";
             isecond_link_ID = hovered_box;
 
-            Node_Box* a = reinterpret_cast<Node_Box*>(sg.at(ifirst_link_ID));
+            Node_Box* a = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(ifirst_link_ID));
             
             if (ifirst_link_ID != isecond_link_ID && isecond_link_ID!= -1) {
-                Node_Box* b = reinterpret_cast<Node_Box*>(sg.at(isecond_link_ID));
+                Node_Box* b = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(isecond_link_ID));
                 //First look out if the link between boxes already exists
                 //auto it = std::find(_proj.box_map.at(first_link_ID)->link_to.begin(), _proj.box_map.at(first_link_ID)->link_to.end(), second_link_ID);
 
                 //if(!_proj.sg_boxes.contains(a->getData().text_ID+ b->getData().text_ID))
 
-                if (arrow_map.contains(a->getData().text_ID + b->getData().text_ID)) {
-                    //If it already exists delete it
-                    //Erase the arrows connected to the box
-                    //Erase the ID from their 'Link to' and 'Link from' list
-                    arrow_map.erase(a->getData().text_ID + b->getData().text_ID);
+                if (a->link_to.contains(b->getData().text_ID)) {
                     a->link_to.erase(b->getData().text_ID);
                     b->link_from.erase(a->getData().text_ID);
+                    _refreshed = true;
                 }
                 else {
-                    //If it doesn't, create the link between the two boxes
-                    //link_box(*_proj.box_map.at(first_link_ID), *_proj.box_map.at(second_link_ID));
                     link_boxNode(ifirst_link_ID, isecond_link_ID);
                 }
             }
-            
-            arrow_map.erase(a->getData().text_ID);
+
             ifirst_link_ID = -1;
             isecond_link_ID = -1;
 
@@ -889,7 +923,7 @@ void Visualizer::multi_select()
     Selection_box->setScaling(glm::vec3(glm::abs(diff), 1.f));
 
     for (auto [id, box] : _proj.sg_boxes) {
-        if (reinterpret_cast<Node_Box*>(sg.at(box))->checkCollision(Selection_box))
+        if (reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(box))->checkCollision(Selection_box))
             _selectedBoxesID.emplace(box);
         else
             _selectedBoxesID.erase(box);
@@ -992,7 +1026,7 @@ void Visualizer::load()
     }
     //LOAD THE PROJECT DATA FOR VIZUALIZER : BOX POS...
     parse_info_data_project_from_json("data.json");
-    SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
+    //SSS::GL::Window::get(glfwwindow)->setTitle("VIZUALIZER - " + _proj.project_name);
 
 
     LOG_MSG("LOADED");
@@ -1084,7 +1118,7 @@ void to_json(nlohmann::json& j, const PROJECT_DATA& t)
         for (const auto& [str, id] : t.sg_boxes)
         {
             if (id == 0) continue;
-            expNodes.emplace_back(reinterpret_cast<Node_Box*>(Visualizer::get().sg.at(id))->export_node());
+            expNodes.emplace_back(reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(id))->export_node());
         }
         j["BOX"] = expNodes;
     }
@@ -1107,7 +1141,7 @@ void from_json(const nlohmann::json& j, PROJECT_DATA& t)
             auto m = Visualizer::get()._proj.sg_boxes;
 
             if (Visualizer::get()._proj.sg_boxes.contains(n.id)) {
-                Node_Box* node = reinterpret_cast<Node_Box*>(Visualizer::get().sg.at(Visualizer::get()._proj.sg_boxes[n.id]));
+                Node_Box* node = reinterpret_cast<Node_Box*>(SSS::SceneGraph::at(Visualizer::get()._proj.sg_boxes[n.id]));
                 node->readExport(n);
             }
             else {
